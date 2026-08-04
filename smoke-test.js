@@ -54,13 +54,28 @@ JSDOM.fromFile(ROOT+"/index.html", { runScripts:"dangerously", resources:new Loc
         ok("费用台账弹窗打开(mLedger.show)", document.getElementById('mLedger').classList.contains('show'));
         const rows = document.querySelectorAll('#lgTable table.lg tbody tr');
         ok("费用台账有数据行(含合计)", rows.length >= 2); // 至少 全程 + 合计
-        // 直接调 updCost 写 Day1 住宿 500
-        window.updCost('1','stay','500');
-        ok("填 500 后合计含 500", /500/.test(document.getElementById('lgSum').innerHTML));
-        ok("填 500 后固定=500(未误判预估)", /固定 <b>¥500<\/b>/.test(document.getElementById('lgSum').innerHTML));
+        // 直接调 updCost 写 Day1 门票 500（已有初始数据，用增量断言）
+        const sumBefore = document.getElementById('lgSum').innerHTML;
+        const fixedBeforeMatch = sumBefore.match(/固定 <b>¥([\d.]+)<\/b>/);
+        const totalBeforeMatch = sumBefore.match(/合计 <b>¥([\d.]+)<\/b>/);
+        const fixedBefore = fixedBeforeMatch ? parseFloat(fixedBeforeMatch[1]) : 0;
+        const totalBefore = totalBeforeMatch ? parseFloat(totalBeforeMatch[1]) : 0;
+        window.updCost('1','ticket','500');
+        const sumAfter = document.getElementById('lgSum').innerHTML;
+        const fixedAfterMatch = sumAfter.match(/固定 <b>¥([\d.]+)<\/b>/);
+        const totalAfterMatch = sumAfter.match(/合计 <b>¥([\d.]+)<\/b>/);
+        const fixedAfter = fixedAfterMatch ? parseFloat(fixedAfterMatch[1]) : 0;
+        const totalAfter = totalAfterMatch ? parseFloat(totalAfterMatch[1]) : 0;
+        ok("填 500 后固定增加 500", Math.abs(fixedAfter - (fixedBefore + 500)) < 0.01);
+        ok("填 500 后合计增加 500", Math.abs(totalAfter - (totalBefore + 500)) < 0.01);
         // 切换预估
-        window.togCost('1','stay');
-        ok("切换预估后 固定归零 预估=500", /固定 <b>¥0<\/b>/.test(document.getElementById('lgSum').innerHTML) && /预估 <b>¥500<\/b>/.test(document.getElementById('lgSum').innerHTML));
+        window.togCost('1','ticket');
+        const sumToggle = document.getElementById('lgSum').innerHTML;
+        const fixedToggleMatch = sumToggle.match(/固定 <b>¥([\d.]+)<\/b>/);
+        const estToggleMatch = sumToggle.match(/预估 <b>¥([\d.]+)<\/b>/);
+        const fixedToggle = fixedToggleMatch ? parseFloat(fixedToggleMatch[1]) : -1;
+        const estToggle = estToggleMatch ? parseFloat(estToggleMatch[1]) : -1;
+        ok("切换预估后 固定恢复原值 预估=500", Math.abs(fixedToggle - fixedBefore) < 0.01 && estToggle === 500);
         // 输入框 wiring：找一个 num 输入框，设值并派发 input
         const inp = document.querySelector('#lgTable input.num');
         if(inp){
