@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末雷达 · 偏好匹配层 Demo</title>
+<style>
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fa;margin:0;padding:24px;color:#1f2937}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b7280;font-size:13px;margin-bottom:20px}
+  .sec{font-size:14px;font-weight:700;color:#374151;margin:24px 0 10px}
+  .card{border-radius:16px;padding:16px 18px;margin-bottom:14px;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.08);position:relative;overflow:hidden}
+  .card h3{margin:0 0 6px;font-size:17px}
+  .tag{display:inline-block;background:rgba(255,255,255,.25);border-radius:999px;padding:2px 10px;font-size:12px;margin:0 6px 6px 0}
+  .tag-good{position:absolute;top:14px;right:14px;background:#fff;color:#15803d;font-size:12px;font-weight:700;border-radius:8px;padding:3px 8px}
+  .tag-badge{position:absolute;top:14px;right:14px;background:#fff;color:#7c3aed;font-size:12px;font-weight:700;border-radius:8px;padding:3px 8px}
+  .meta{font-size:12.5px;line-height:1.7;background:rgba(0,0,0,.12);border-radius:10px;padding:8px 10px;margin-top:8px}
+  .why{font-size:13px;line-height:1.6;margin-top:8px}
+  .blocked{border-radius:14px;padding:12px 16px;margin-bottom:12px;background:#fff;border:1px dashed #fca5a5;color:#7f1d1d;font-size:13px;display:flex;align-items:center;gap:10px}
+  .blocked .x{font-size:18px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row .card{flex:1;min-width:280px}
+  .note{font-size:12px;color:#9ca3af;margin-top:6px}
+  .notebox{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px 16px;margin:16px 0;font-size:13px;color:#4b5563;line-height:1.7}
+  .notebox b{color:#1f2937}
+  .flow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:6px 0 2px}
+  .pill{background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600}
+  .op{font-size:20px;color:#9ca3af;font-weight:700}
+  .loop{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px 16px;margin:10px 0;font-size:13px;color:#166534;line-height:1.8}
+  .loop b{color:#14532d}
+</style>
+</head>
+<body>
+<h1>周末雷达 · 偏好匹配层（视觉 Demo）</h1>
+<div class="sub">仅展示"匹配层"在你 app 里的呈现形态。确认方向后我才改 app/index.html。数据均为示意。</div>
+
+<div class="sec">① 匹配层是什么：先过"客观质量"，再过"你家偏好"</div>
+<div class="notebox">
+  每个候选地要进你的推荐榜，必须同时过两关：<br>
+  <div class="flow">
+    <span class="pill">别人说好 + 少人避坑</span>
+    <span class="op">∩</span>
+    <span class="pill">符合全家偏好画像</span>
+    <span class="op">=</span>
+    <span class="pill">推荐给你</span>
+  </div>
+  网上口碑再好，不符合你家口味（纯购物古城 / 太累 / 老景区）也不推；符合你家口味但大众都说雷的也不推。<br>
+  <b>关键：</b>内部对候选地按你 13 个偏好维度加权算分 + 排斥项硬拦截——<b>分数只用于过滤/排序，你永远看不到数字和标签</b>。卡片只给"去哪 + 为什么好玩/适合你们"。
+</div>
+
+<div class="sec">② 洁梅视角 · 推荐给你的（无分数、无标签，只有好玩理由）</div>
+<div class="row">
+  <div class="card" style="background:linear-gradient(135deg,#15803d,#86efac)">
+    <span class="tag-good">✅ 推荐</span>
+    <h3>🐼 成都 · 熊猫基地 + 周边</h3>
+    <div><span class="tag">5-7天</span><span class="tag">高铁/飞机</span><span class="tag">亲子·适合</span></div>
+    <div class="meta">🚄 高铁7h / ✈️ 2.5h · 全年可去（夏避高温）</div>
+    <div class="why">大熊猫基地铄铄肯定疯爱，自然风光也干净；青城山幽静可徒步、宽窄巷子出片漂亮适合你发小红书。老人坐缆车不累，全家通吃，是"猜中你们心意"的典型。</div>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,#7c3aed,#c4b5fd)">
+    <span class="tag-good">✅ 推荐</span>
+    <h3>🎢 北京 · 环球影城</h3>
+    <div><span class="tag">5-7天</span><span class="tag">没去过</span><span class="tag">大IP一次性</span></div>
+    <div class="meta">✈️ 飞机2.5h · 建议淡季平日</div>
+    <div class="why">大IP没去过，人多点也值得去一次。哈利波特园区沉浸感拉满、夜间城堡秀出片；铄铄能玩一整天不喊累。人多+物价偏高，但大IP豁免，标"错峰/买快速通"提示就够了。</div>
+  </div>
+</div>
+<div class="row">
+  <div class="card" style="background:linear-gradient(135deg,#0f7b5f,#3bb08f)">
+    <span class="tag-good">✅ 推荐</span>
+    <h3>🦁 清远 · 长隆森林王国</h3>
+    <div><span class="tag">1-2天</span><span class="tag">自驾1.5h</span><span class="tag">动物乐园</span></div>
+    <div class="meta">🚗 番禺自驾1.5h · 新开</div>
+    <div class="why">省内新动物乐园，活动丰富能躺平：动物巡游+大马戏、酒店有儿童乐园+温泉可玩整天，自驾近不折腾。你爱的"chill 度假酒店 + 动物乐园"一次满足。</div>
+  </div>
+  <div class="card" style="background:linear-gradient(135deg,#0369a1,#7dd3fc)">
+    <span class="tag-good">✅ 推荐</span>
+    <h3>🌊 惠州 · 双月湾</h3>
+    <div><span class="tag">1-2天</span><span class="tag">自驾2.5h</span><span class="tag">看海出片</span></div>
+    <div class="meta">🚗 番禺自驾2.5h · 10-4月最佳</div>
+    <div class="why">海边躺平泡酒店、日落出片当小红书素材，是你"自然风光+拍照"强需求的短途解。沙滩选对酒店、避开吵闹段即可，老人小孩都轻松。</div>
+  </div>
+</div>
+
+<div class="sec">③ 被拦截的 · 证明过滤确实生效（你平时看不到这些）</div>
+<div class="blocked"><span class="x">🚫</span><div><b>某纯购物古城</b> · 已拦截 —— 命中"过度商业化古城 + 没看点"。只有商店、小孩没啥可玩，不符合你家偏好，网上口碑也是逛吃打卡型，不进榜。</div></div>
+<div class="blocked"><span class="x">🚫</span><div><b>肇庆七星岩</b> · 已拦截 —— 命中"老/假/萧条景区"。你原话"大避雷"，老牌景区维护差，不推。</div></div>
+<div class="blocked"><span class="x">🚫</span><div><b>上海迪士尼</b> · 已拦截（新推荐榜）—— 已去过。你说过"人不多再去玩可以"，所以只在人少时单独提示，不占新推荐位。</div></div>
+<div class="blocked"><span class="x">🚫</span><div><b>贵州黄果树瀑布</b> · 已拦截 —— 命中"贵州避开清单"。从小去过太多次，按你的规则避开；但茂兰这种新地方仍可推。</div></div>
+<div class="note">拦截来源：① 你的个人排斥项（老景区/脏海/过度商业化/人多物价贵/无聊/贵不值/停车难）；② 已去过三档（block永不推 / exclude默认不推 / revisit仅条件可推）；③ 特殊清单（贵州12个、大IP人多豁免）。</div>
+
+<div class="sec">④ 反馈闭环 · 偏好持续进化（你每次反馈都在教它）</div>
+<div class="loop">
+  每张卡片底部三个按钮，你随手一点就回流学习器：<br>
+  👍 <b>想去</b> → 该地命中的偏好维度权重上调，记 changelog「X月X日 洁梅想去·某维度+」<br>
+  👎 <b>不感兴趣</b> → 该地命中的偏好维度权重下调，未来同类降权<br>
+  ✅ <b>去过了</b> → 写入已去过库（三档），以后按规则处理<br>
+  偏好不是写死的：今天"户外运动"从机制升级为明确强维度，就是一次进化。以后你每条点评都让画像更贴近你们全家的心意。
+</div>
+
+<div class="sec">⑤ 设计原则（你 08-04 明确要求）</div>
+<div class="notebox">
+  <b>界面不展示打分数字、不展示内部标签。</b>你看到的只有"推荐地去哪 + 为什么好玩/适合全家（自然语言理由）"。目标是——<b>推荐的你都觉得好玩且愿意去</b>。<br>
+  内部打分只在 app 后台运行，用于排序和拦截；需要调参时我读 <code>data/taste-profile.json</code>（偏好真值源，含 13 维度权重 + 你的原话证据 + changelog）。
+</div>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "status": "none",
+  "note": "当前未确认目的地。在「🗓️ 下一个假期」触发搜罗并点「✅ 确认去这里」后，雪花写入此处并同步生成「🗺️ 旅行路线」中的规划中路线。",
+  "destination": null,
+  "dateRange": null,
+  "days": null,
+  "tier": null,
+  "confirmedAt": null,
+  "why": null
+}

@@ -1,0 +1,13 @@
+{
+  "note": "洁梅实测驾驶数据，用于校准车程（洁梅实际用时通常低于地图预估）。每次去过反馈可补充样本。",
+  "samples": [
+    { "route": "珠海→广州", "actual_hours": 2.0, "context": "晚间19:33出发" },
+    { "route": "深圳→广州", "actual_hours": 2.5, "context": "常规" },
+    { "route": "汕头→广州", "actual_hours": 5.0, "context": "常规" },
+    { "route": "番禺→南昌", "actual_hours": 9.0, "context": "春节 8:30-17:30 含服务区休息<1h" }
+  ],
+  "reach": {
+    "weekend_2d": { "max_hours": 3.0, "circle": "珠三角：珠海/深圳/惠州/清远/佛山/东莞/中山/江门/肇庆" },
+    "holiday_3d": { "max_hours": 6.0, "circle": "潮州/汕头/赣州/湛江/阳江/韶关北部" }
+  }
+}

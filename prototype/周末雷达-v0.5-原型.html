@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末雷达 v0.5 原型 ❄️</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1f2937; --sub:#6b7280; --line:#e8eaee;
+    --brand:#0f7b5f; --brand-soft:#e6f4ef; --amber:#b45309; --amber-soft:#fdf3e3;
+    --rose:#be185d; --rose-soft:#fbe9f1; --blue:#1d4ed8; --blue-soft:#e8eefc;
+    --violet:#6d28d9; --violet-soft:#f1ebfc;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+  body{background:var(--bg);color:var(--ink);min-height:100vh;}
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .topbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;}
+  .logo .dot{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0f7b5f,#3bb08f);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;}
+  .logo small{font-size:12px;color:var(--sub);font-weight:400;}
+  nav{display:flex;gap:4px;}
+  nav button{border:none;background:none;padding:8px 14px;border-radius:9px;font-size:14px;color:var(--sub);cursor:pointer;transition:.15s;}
+  nav button:hover{background:#f0f1f4;color:var(--ink);}
+  nav button.on{background:var(--brand-soft);color:var(--brand);font-weight:600;}
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 24px 80px;}
+  .weekbar{background:linear-gradient(120deg,#0f7b5f 0%,#2c9d7c 60%,#57b795 100%);color:#fff;border-radius:16px;padding:18px 22px;margin-bottom:14px;}
+  .weekbar h2{font-size:19px;margin-bottom:5px;}
+  .weekbar p{font-size:12.5px;opacity:.92;}
+  .weekrow{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+  .swap{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:13px;padding:9px 16px;border-radius:10px;cursor:pointer;white-space:nowrap;}
+  .swap:hover{background:rgba(255,255,255,.28);}
+  .hintbar{font-size:12.5px;color:#0f5132;background:#d1fae5;border:1px solid #a7f3d0;border-radius:10px;padding:10px 14px;margin-bottom:16px;line-height:1.6;}
+  .hintbar a{color:var(--brand);font-weight:600;cursor:pointer;text-decoration:underline;}
+  .notice{font-size:12px;color:#92700a;background:#fdf6dd;border:1px solid #f5e6a8;border-radius:10px;padding:8px 14px;margin-bottom:16px;line-height:1.6;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:860px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:.2s;display:flex;flex-direction:column;}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(31,41,55,.08);}
+  .card.dimmed{opacity:.45;filter:grayscale(.7);}
+  .card.bonus{border:2px dashed #86efac;position:relative;}
+  .card.bonus::before{content:"🎡 铄铄专属彩蛋位 · 不占主榜名额";position:absolute;z-index:2;top:-1px;left:-1px;background:#15803d;color:#fff;font-size:11px;padding:3px 10px;border-radius:14px 0 10px 0;}
+  .cover{height:110px;position:relative;display:flex;align-items:flex-end;padding:12px 16px;color:#fff;}
+  .cover .emoji{position:absolute;right:14px;top:10px;font-size:34px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));}
+  .cover .rank{position:absolute;left:14px;top:12px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4);padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600;}
+  .cover h3{font-size:17px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.3);line-height:1.3;}
+  .cbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:9px;flex:1;}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .tag{font-size:12px;padding:3px 9px;border-radius:20px;font-weight:500;}
+  .t-nature{background:var(--brand-soft);color:var(--brand);}
+  .t-quiet{background:var(--blue-soft);color:var(--blue);}
+  .t-mall{background:var(--amber-soft);color:var(--amber);}
+  .t-art{background:var(--violet-soft);color:var(--violet);}
+  .t-rich{background:var(--rose-soft);color:var(--rose);}
+  .t-kid{background:#e7f7ee;color:#15803d;border:1px dashed #86efac;}
+  .t-best{background:#fef3c7;color:#92400e;}
+  .t-safe{background:#fee2e2;color:#991b1b;}
+  .meta{display:flex;gap:12px;font-size:12.5px;color:var(--sub);flex-wrap:wrap;}
+  .meta b{color:var(--ink);font-weight:600;}
+  .src{font-size:12px;color:var(--sub);background:#f4f5f7;border-radius:8px;padding:6px 10px;}
+  .src .hot{color:#e0483e;font-weight:600;}
+  .match{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+  .bar{flex:1;height:6px;border-radius:4px;background:#eef0f3;overflow:hidden;}
+  .bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#0f7b5f,#3bb08f);}
+  .match b{color:var(--brand);font-size:14px;}
+  .why{font-size:13px;line-height:1.6;color:#374151;}
+  .kidline{font-size:12.5px;color:#15803d;background:#f0faf4;border-radius:8px;padding:5px 10px;}
+  .warn{font-size:12px;color:var(--amber);background:var(--amber-soft);border-radius:8px;padding:5px 10px;}
+  .acts{display:flex;gap:8px;margin-top:auto;padding-top:4px;}
+  .acts button{flex:1;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 0;font-size:13px;cursor:pointer;transition:.15s;color:#374151;}
+  .acts button:hover{border-color:var(--brand);color:var(--brand);}
+  .acts button.did{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
+  .acts .confirm{flex:2;background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+  .acts .confirm:hover{background:#0a624c;}
+  .filtered{margin-top:20px;background:#fff;border:1px dashed #d5d8de;border-radius:14px;padding:14px 18px;font-size:13px;color:var(--sub);line-height:1.9;}
+  .filtered b{color:var(--ink);}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:16px;}
+  .panel h3{font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .empty{color:var(--sub);font-size:13.5px;text-align:center;padding:30px 0;}
+  .bigbtn{display:inline-flex;align-items:center;gap:8px;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(15,123,95,.25);}
+  .bigbtn:hover{background:#0a624c;}
+  .bigbtn:disabled{background:#9ca3af;cursor:not-allowed;box-shadow:none;}
+  .holiday-info{font-size:14px;line-height:2;color:#374151;margin-bottom:16px;}
+  .holiday-info b{color:var(--brand);}
+  .route-meta{font-size:12px;color:var(--sub);display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+  .route-meta span{background:#f4f5f7;border-radius:6px;padding:3px 8px;}
+  .calendarbtn{display:inline-flex;align-items:center;gap:6px;background:#1f2937;color:#fff;border:none;border-radius:9px;padding:9px 16px;font-size:13px;cursor:pointer;margin-top:10px;}
+  .calendarbtn:hover{background:#111827;}
+  .page{display:none;}
+  .page.on{display:block;}
+  #toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);background:#1f2937;color:#fff;padding:11px 22px;border-radius:12px;font-size:13.5px;opacity:0;transition:.3s;z-index:200;pointer-events:none;max-width:80vw;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .posts{margin-top:2px;border-top:1px dashed var(--line);padding-top:10px;}
+  .posts-title{font-size:12px;color:var(--sub);font-weight:600;margin-bottom:8px;}
+  .post{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;margin-bottom:6px;text-decoration:none;color:inherit;font-size:12.5px;transition:.15s;}
+  .post:hover{border-color:var(--brand);background:var(--brand-soft);}
+  .post-pf{flex-shrink:0;background:#eef2ff;color:#4338ca;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600;}
+  .post-t{flex:1;color:var(--ink);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .post-m{flex-shrink:0;color:var(--sub);font-size:11px;white-space:nowrap;}
+  .posts-toggle{display:inline-flex;align-items:center;gap:6px;background:#f4f5f7;border:1px solid var(--line);border-radius:8px;padding:5px 11px;font-size:12px;color:var(--sub);cursor:pointer;margin-bottom:6px;}
+  .posts-toggle:hover{background:var(--brand-soft);color:var(--brand);border-color:var(--brand);}
+  .posts-box{display:none;}
+  .posts-box.open{display:block;}
+  .route-body{margin-top:4px;}
+  .route-card{margin-bottom:16px;}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+  <div class="logo"><div class="dot">❄️</div><div>周末雷达<br><small>雪花帮你选好了，直接出发</small></div></div>
+  <nav id="nav">
+    <button class="on" data-p="hot">🔥 本周最热</button>
+    <button data-p="holiday">🗓️ 下一个假期</button>
+    <button data-p="wish">⭐ 心愿单</button>
+    <button data-p="route">🗺️ 旅行路线</button>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+  <!-- 本周最热 -->
+  <div class="page on" id="p-hot">
+    <div class="weekbar"><div class="weekrow">
+      <div>
+        <h2>第 31 周 · 本周最热周边榜</h2>
+        <p>周末 2 天档 · 更新于 2026-07-28 · 来源：全网搜罗（小红书/携程/马蜂窝/去哪儿/抖音）</p>
+      </div>
+      <button class="swap" onclick="toast('指令已复制：换一批')">🔄 这批都不合适，换一批</button>
+    </div></div>
+    <div class="hintbar">💡 下一个法定节假日是 <a onclick="switchTab('holiday')">中秋 9.25-27（3天）</a>，点这里做专项假期规划。</div>
+    <div class="notice">ℹ️ 本期按周末 2 天档筛选：珠三角圈自驾 ≤3h；已过滤近期台风影响的海岛与高海拔风险地。</div>
+    <div class="grid" id="hotCards"></div>
+    <div class="filtered"><b>本周已替你过滤：</b><br><span style="color:#9ca3af;text-decoration:line-through;margin-right:2px;">阳江海陵岛</span>（台风季风浪大） · <span style="color:#9ca3af;text-decoration:line-through;margin-right:2px;">郴州仰天湖</span>（盘山国道多，老人不友好） · <span style="color:#9ca3af;text-decoration:line-through;margin-right:2px;">赣州八卦脑</span>（热度骤降且车程偏紧）</div>
+  </div>
+
+  <!-- 下一个假期 -->
+  <div class="page" id="p-holiday">
+    <div class="panel">
+      <h3>🗓️ 下一个法定节假日</h3>
+      <div class="holiday-info">
+        <b>中秋</b> 2026-09-25 ~ 2026-09-27（3 天）<br>
+        默认档位：<b>3-4 天档 · 广东+邻省</b>（自驾 ≤6h）<br>
+        已请假：暂无（可在下面添加，雪花会自动拼假）
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+        <input type="date" id="leaveDate" value="2026-09-28" style="border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;">
+        <select id="leaveHalf" style="border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;">
+          <option value="full">全天</option><option value="am">上午</option><option value="pm">下午</option>
+        </select>
+        <button onclick="addLeaveDemo()" style="border:1px solid var(--brand);background:var(--brand-soft);color:var(--brand);border-radius:8px;padding:7px 14px;font-size:13px;cursor:pointer;">＋ 添加请假</button>
+      </div>
+      <div id="leaveHint" style="font-size:13px;color:var(--sub);margin-bottom:14px;">试试添加 9.28 请假一天，可拼成 4 天窗口。</div>
+      <button id="findBtn" class="bigbtn" onclick="startFinding()">🚀 帮我找目的地</button>
+    </div>
+
+    <div id="findingPanel" style="display:none;">
+      <div class="notice">ℹ️ 已进入「目的地推荐模式」：每天早 8:00 雪花会给你推荐 1-3 个候选地，直到你点击「确认去这里」。你可以随时说"不找了"停止。</div>
+      <div class="grid" id="holidayCards"></div>
+    </div>
+
+    <div id="confirmedPanel" class="panel" style="display:none;border-color:var(--brand);">
+      <h3>✅ 已确认目的地</h3>
+      <div id="confirmedText" style="font-size:15px;line-height:1.8;"></div>
+      <button class="bigbtn" onclick="switchTab('route')" style="margin-top:12px;">去看旅行路线 →</button>
+    </div>
+  </div>
+
+  <!-- 旅行路线 -->
+  <div class="page" id="p-route">
+    <div class="hintbar">🗺️ 这里记录你<b>所有走过的路线</b>和<b>正在规划的路线</b>。点击任意一条展开看完整 Day-by-Day 行程（对齐你飞书手工表格式）。规划中路线可「📅 全部加入 iPhone 日历」，走过的路线作为历史存档。确认新目的地后，雪花会自动新增一条「规划中」路线。</div>
+    <div id="routeList"></div>
+  </div>
+
+  <!-- 心愿单 -->
+  <div class="page" id="p-wish">
+    <div class="hintbar">⭐ 这里收集你想去的所有地方，<b>跨假期保存</b>。下次规划「下一个假期」时，雪花会<b>优先匹配</b>这里适合当前档位的心愿地。可在本周最热 / 下一个假期卡片点「⭐ 收心愿」加入，或在对话里说"我想去 XX"。</div>
+    <div class="grid" id="wishCards"></div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+const HOT = [
+  {id:1,name:"增城 · 琶堤溪谷",emoji:"🏞️",grad:"linear-gradient(135deg,#0f7b5f,#3bb08f)",tags:[["自然风光","t-nature"],["人少","t-quiet"]],drive:"番禺自驾 1.5h",src:"携程社区 · 近7天",hot:"3.2w 收藏",match:91,why:"广州小仙本那，果冻水溯溪，老人可走平缓步道，铄铄能玩水。",kid:"铄铄适合：浅水区安全玩水、捡石头",warn:"周末中午人略多，建议9点前到",
+    posts:[
+      {platform:"小红书",title:"广州周边溯溪天花板！琶堤溪谷果冻水绝了",url:"https://www.xiaohongshu.com/explore",fav:"3.2w",like:"1.1w",view:"52w"},
+      {platform:"抖音",title:"广州小仙本那！1.5h直达的玩水秘境",url:"https://www.douyin.com/",fav:"2.1w",like:"5.6w",view:"130w"},
+      {platform:"携程",title:"增城琶堤溪谷一日游攻略（带娃版）",url:"https://you.ctrip.com/",fav:"8800",like:"4200",view:"19w"},
+      {platform:"马蜂窝",title:"琶堤溪谷徒步路线+停车攻略",url:"https://www.mafengwo.cn/",fav:"4600",like:"2100",view:"8.3w"},
+      {platform:"去哪儿",title:"周末广州周边玩水top5，琶堤排第一",url:"https://www.qunar.com/",fav:"6700",like:"3300",view:"12w"}
+    ]},
+  {id:2,name:"佛山 · 儒溪村",emoji:"🏘️",grad:"linear-gradient(135deg,#b45309,#fbbf24)",tags:[["艺术","t-art"],["人少","t-quiet"]],drive:"番禺自驾 1h",src:"小红书 · 近14天",hot:"1.7w 赞",match:87,why:"南海大地艺术节常设区，老村改造+当代艺术装置，慢慢逛很 chill。",kid:"铄铄一般：有部分装置可互动",warn:"村内石板路，推车/轮椅不太友好",
+    posts:[
+      {platform:"小红书",title:"南海大地艺术节！儒溪村逛一天太chill",url:"https://www.xiaohongshu.com/explore",fav:"1.7w",like:"9800",view:"41w"},
+      {platform:"抖音",title:"广东小濑户内海？儒溪村艺术装置打卡",url:"https://www.douyin.com/",fav:"1.2w",like:"3.4w",view:"88w"},
+      {platform:"马蜂窝",title:"佛山儒溪村+听音湖慢游攻略",url:"https://www.mafengwo.cn/",fav:"5200",like:"2600",view:"9.1w"},
+      {platform:"携程",title:"周末广佛艺术漫游2日",url:"https://you.ctrip.com/",fav:"4300",like:"1900",view:"7.2w"},
+      {platform:"去哪儿",title:"佛山小众艺术村推荐",url:"https://www.qunar.com/",fav:"3100",like:"1500",view:"5.6w"}
+    ]},
+  {id:3,name:"惠州 · 盐洲岛",emoji:"🏝️",grad:"linear-gradient(135deg,#1d4ed8,#60a5fa)",tags:[["自然风光","t-nature"],["人少","t-quiet"]],drive:"番禺自驾 2.5h",src:"马蜂窝 · 近14天",hot:"2.4w 赞",match:86,why:"原生态海岛，滩涂日落+白鹭，没有旅行团扎堆。",kid:"铄铄适合：沙滩、赶海、看鸟",warn:"岛上餐饮少，建议自带干粮",
+    posts:[
+      {platform:"小红书",title:"惠州盐洲岛！原生态海岛日落白鹭",url:"https://www.xiaohongshu.com/explore",fav:"2.4w",like:"1.3w",view:"60w"},
+      {platform:"抖音",title:"广东最美海岛之一，盐洲岛自驾攻略",url:"https://www.douyin.com/",fav:"1.9w",like:"4.2w",view:"110w"},
+      {platform:"携程",title:"盐洲岛+双月湾3日游",url:"https://you.ctrip.com/",fav:"7600",like:"3500",view:"21w"},
+      {platform:"马蜂窝",title:"盐洲岛赶海+摄影机位",url:"https://www.mafengwo.cn/",fav:"5400",like:"2700",view:"10w"},
+      {platform:"去哪儿",title:"惠州小众海岛推荐",url:"https://www.qunar.com/",fav:"4300",like:"2000",view:"7.8w"}
+    ]},
+  {id:4,name:"清远 · 长隆森林王国",emoji:"🦁",grad:"linear-gradient(135deg,#15803d,#4ade80)",tags:[["亲子","t-kid"],["自然风光","t-nature"]],drive:"番禺自驾 1.5h",src:"抖音 · 近7天",hot:"6.8w 点赞",match:84,why:"新开园区，27km 自驾观兽环线，黑犀牛、长颈鹿 approachable。",kid:"铄铄超爱：自驾看动物+儿童乐园",warn:"暑期周末排队长，建议工作日或夜场",
+    posts:[
+      {platform:"抖音",title:"清远长隆开园！27km自驾看动物",url:"https://www.douyin.com/",fav:"6.8w",like:"9.2w",view:"240w"},
+      {platform:"小红书",title:"长隆森林王国夜场攻略（带娃必看）",url:"https://www.xiaohongshu.com/explore",fav:"3.1w",like:"1.5w",view:"55w"},
+      {platform:"携程",title:"清远长隆一日票+酒店套餐",url:"https://you.ctrip.com/",fav:"1.1w",like:"6000",view:"28w"},
+      {platform:"马蜂窝",title:"长隆森林王国亲子路线",url:"https://www.mafengwo.cn/",fav:"6800",like:"3200",view:"14w"},
+      {platform:"去哪儿",title:"广州周边亲子乐园top",url:"https://www.qunar.com/",fav:"5200",like:"2600",view:"9.5w"}
+    ]},
+  {id:5,name:"珠海 · 唐家湾古镇",emoji:"☕",grad:"linear-gradient(135deg,#be185d,#f9a8d4)",tags:[["艺术","t-art"],["人少","t-quiet"]],drive:"番禺自驾 2h",src:"去哪儿 · 近14天",hot:"热度 +180%",match:82,why:"老洋房改咖啡馆和小展览，散步式逛法，晚上开车回广州也顺。",kid:"铄铄一般：小店逛吃、海边公园",warn:"部分小店周一二休",
+    posts:[
+      {platform:"小红书",title:"珠海唐家湾！老洋房咖啡馆散步",url:"https://www.xiaohongshu.com/explore",fav:"1.4w",like:"8200",view:"33w"},
+      {platform:"抖音",title:"珠海唐家湾+北山，周末chill半日",url:"https://www.douyin.com/",fav:"9800",like:"2.6w",view:"70w"},
+      {platform:"携程",title:"珠海唐家湾古镇游览攻略",url:"https://you.ctrip.com/",fav:"4100",like:"1900",view:"8.4w"},
+      {platform:"马蜂窝",title:"珠海老街区citywalk路线",url:"https://www.mafengwo.cn/",fav:"3200",like:"1500",view:"6.1w"},
+      {platform:"去哪儿",title:"珠海小众文艺地推荐",url:"https://www.qunar.com/",fav:"2600",like:"1200",view:"4.8w"}
+    ]}
+];
+
+const HOLIDAY_RECS = [
+  {id:101,name:"潮州 + 南澳岛 4 天",emoji:"🌊",grad:"linear-gradient(135deg,#1d4ed8,#60a5fa)",tags:[["自然风光","t-nature"],["美食","t-rich"],["最佳时间","t-best"]],drive:"番禺自驾 5h",src:"小红书 · 近7天",hot:"4.1w 收藏",why:"9 月底台风季尾声、海水尚暖，南澳环岛自驾 friendly，潮州古城老人孩子都能逛。",best:"9 月下旬：气温 26-30℃，海鲜肥美，避开暑假人潮",safe:"✅ 全高速/国道平缓；南澳大桥跨海，无盘山险路",kid:"铄铄适合：沙滩、潮州牛肉火锅、古城牌楼",warn:"南澳岛节假日进岛可能堵车，建议 8 点前上桥"},
+  {id:102,name:"赣州 + 三百山 4 天",emoji:"⛰️",grad:"linear-gradient(135deg,#0f7b5f,#3bb08f)",tags:[["自然风光","t-nature"],["人少","t-quiet"],["最佳时间","t-best"]],drive:"番禺自驾 5.5h",src:"携程 · 近14天",hot:"1.2w 收藏",match:88,why:"东江源头、客家围屋，9 月秋色初显，三百山有缆车+电瓶车，老人友好。",best:"9-10 月：山林渐变色，湿度下降",safe:"✅ 索道+观光车直达核心景观；海拔约 800m，无高反",kid:"铄铄适合：缆车、森林氧吧、围屋探洞",warn:"部分步道湿滑，建议穿防滑鞋"},
+  {id:103,name:"郴州小东江 + 高椅岭 4 天",emoji:"🌫️",grad:"linear-gradient(135deg,#6d28d9,#a78bfa)",tags:[["自然风光","t-nature"],["最佳时间","t-best"]],drive:"番禺自驾 5h",src:"马蜂窝 · 热度榜",hot:"#3",match:85,why:"9 月底晨雾概率高，高椅岭丹霞地貌壮观，可开车到观景台。",best:"9-10 月：晨雾稳定，气温舒适",safe:"⚠️ 高椅岭有陡坡台阶，老人量力而行；小东江全程平路",kid:"铄铄适合：看雾撒网、游船",warn:"高椅岭建议只走短环线，避开正午"}
+];
+
+const PLAN = [
+  {date:"2026/9/30",mode:"高铁",plan:"下午请假，广州→成都，晚10点到，住成都东站附近；高铁上完成物资采购直送酒店",hotel:"Zsmart智尚酒店(成都东站)",route:""},
+  {date:"2026/10/1",mode:"行车",plan:"8点拿车吃早餐，装车去卧龙，玩熊猫基地，结束直接回酒店休息",hotel:"卧龙文玥民宿(1900)",route:"10点出发→卧龙约1点，220km"},
+  {date:"2026/10/2",mode:"行车",plan:"8点出发去四姑娘山，11点进双桥沟玩5小时，下午猫鼻梁看日照金山，住四姑娘山",hotel:"四姑娘山雪山情民宿(3100)",route:"到双桥沟约3h/81km，猫鼻梁14km半小时"},
+  {date:"2026/10/3",mode:"行车",plan:"9点半进长坪沟徒步，走1.5h掉头，下午去甲居藏寨，住甲居",hotel:"伴山月望山民宿(甲居藏寨)",route:"甲居约3h"},
+  {date:"2026/10/4",mode:"行车",plan:"9点出发雅拉雪山观景台→墨石公园→姑弄村→塔公草原→木雅大寺→鱼子西，住新都桥",hotel:"岗噶布酒店(新都桥店 3500)",route:"甲居→新都桥160km/3.5h"},
+  {date:"2026/10/5",mode:"行车",plan:"新都桥→居里寺垭口→甲根坝→红海子→康定，住康定",hotel:"康定云颂酒店",route:""},
+  {date:"2026/10/6",mode:"行车",plan:"康定→木格措→泸定桥(可选)→雅安→三星堆，住三星堆",hotel:"广汉七朵酒店(三星堆店)",route:"221km"},
+  {date:"2026/10/7",mode:"高铁",plan:"上午玩三星堆，下午回广州",hotel:"—",route:""}
+];
+
+const ROUTES = [
+  {title:"成都 5 天亲子路线：熊猫+三星堆+都江堰",url:"https://www.xiaohongshu.com/discovery/item/demo1",platform:"小红书",fav:"2.8w",like:"1.1w",view:"45w",why:"Day1 下午到成都住市区，Day2 熊猫基地上午避开人流，Day3 三星堆请讲解 3h，Day4 都江堰+青城山前山（索道），Day5 返程。",tags:["熊猫必去","博物馆密集","老人友好"]},
+  {title:"成都 6 天深度：大熊猫+川博+武侯祠+乐山大佛",url:"https://www.mafengwo.cn/i/demo2.html",platform:"马蜂窝",fav:"1.5w",like:"6.2k",view:"28w",why:"博物馆日安排宽松，乐山大佛坐船看全貌不爬山，适合一家四代。",tags:["熊猫必去","文化深度","自驾友好"]},
+  {title:"成都周边自驾 5 天：卧龙熊猫苑+四姑娘山双桥沟",url:"https://www.douyin.com/video/demo3",platform:"抖音",fav:"9.8k",like:"3.4w",view:"120w",why:"卧龙近距离看熊猫更野趣，双桥沟全程观光车直达，海拔约 2900-3800m。",tags:["熊猫必去","自然风光","高原注意"]}
+];
+
+// 路线库：记录所有走过的路线 + 规划中的路线（每条含完整 Day-by-Day 行程）
+const ROUTE_DB = [
+  {
+    id:'r-chengdu-2026',
+    name:'成都-卧龙-四姑娘山-新都桥-康定-三星堆',
+    status:'done', isExample:false,
+    dateRange:'2026-09-30 ~ 2026-10-07',
+    days:8, tier:'5-7天',
+    daily: PLAN,
+    candidateRoutes: ROUTES
+  },
+  {
+    id:'r-zhuhai-demo',
+    name:'珠海·唐家湾古镇 + 东澳岛',
+    status:'done', isExample:true,
+    dateRange:'2026-06-13 ~ 2026-06-14',
+    days:2, tier:'1-2天',
+    daily:[
+      {date:'2026/6/13',mode:'自驾',plan:'9点出发，番禺→珠海唐家湾古镇，逛老洋房咖啡馆+北山艺术区，傍晚情侣路看日落，住珠海市区',hotel:'珠海市区·中等酒店',route:'番禺→珠海约2h/120km'},
+      {date:'2026/6/14',mode:'自驾',plan:'上午坐船登东澳岛，环岛电瓶车，中午回珠海吃饭，下午开车回广州',hotel:'—',route:'珠海→东澳岛船程约40min'}
+    ],
+    candidateRoutes: ROUTES
+  }
+];
+
+const WISH = [
+  {id:201,name:"四川 · 成都看大熊猫 + 三星堆",emoji:"🐼",level:"强",tier:"5-7天",source:"洁梅自提",addedAt:"2026-07-31",note:"想看大熊猫胜地，顺带三星堆；等铄铄再大一点？",status:"want"},
+  {id:202,name:"陕西 · 西安（陕博 + 兵马俑）",emoji:"🏛️",level:"强",tier:"5-7天",source:"雪花推荐",addedAt:"2026-07-28",note:"陕博必看，老人孩子都能逛",status:"want"},
+  {id:203,name:"甘肃 · 敦煌莫高窟（三大石窟之一）",emoji:"🕉️",level:"中",tier:"5-7天",source:"雪花推荐",addedAt:"2026-07-28",note:"和陕博串成西北线",status:"want"},
+  {id:204,name:"湖南 · 长沙（湖南博物院·辛追夫人）",emoji:"🦖",level:"中",tier:"3-4天",source:"雪花推荐",addedAt:"2026-07-28",note:"暑假人多，考虑错峰",status:"want"},
+  {id:205,name:"云南 · 大理洱海",emoji:"🏞️",level:"弱",tier:"5-7天",source:"洁梅自提",addedAt:"2026-07-20",note:"未来远途档再考虑",status:"want"}
+];
+
+let confirmed = null;
+let finding = false;
+let dayCount = 0;
+
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2800);}
+function parsePost(s){const n=parseFloat(s);const u=s.slice(-1);return u==='w'?n*10000:u==='k'?n*1000:n;}
+function togglePosts(id){
+  const box=document.getElementById('pt-box-'+id);
+  const btn=document.getElementById('pt-btn-'+id);
+  const count=box.querySelectorAll('a.post').length;
+  if(box.classList.contains('open')){box.classList.remove('open');btn.textContent='🔽 展开 '+count+' 个推荐帖';}
+  else{box.classList.add('open');btn.textContent='🔼 收起推荐帖';}
+}
+function switchTab(p){document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));document.querySelectorAll('.page').forEach(x=>x.classList.toggle('on',x.id==='p-'+p));renderRoute();renderWish();}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>switchTab(b.dataset.p));
+
+function cardHTML(d, i, isBonus, withConfirm){
+  const tags = d.tags.map(t=>`<span class="tag ${t[1]}">${t[0]}</span>`).join('');
+  const matchBar = d.match?`<div class="match"><span>匹配度</span><div class="bar"><i style="width:${d.match}%"></i></div><b>${d.match}%</b></div>`:'';
+  const best = d.best?`<div class="why" style="color:#92400e;background:#fffbeb;border-radius:8px;padding:6px 10px;">🌟 最佳时间：${d.best}</div>`:'';
+  const safe = d.safe?`<div class="warn">${d.safe}</div>`:'';
+  const confirm = withConfirm?`<button class="confirm" onclick="confirmDest(${d.id})">✅ 确认去这里</button>`:'';
+  return `<div class="card${isBonus?' bonus':''}">
+    <div class="cover" style="background:${d.grad}"><span class="rank">${isBonus?'🎁 彩蛋':'No.'+(i+1)}</span><span class="emoji">${d.emoji}</span><h3>${d.name}</h3></div>
+    <div class="cbody">
+      <div class="tags">${tags}</div>
+      <div class="meta"><span>🚗 <b>${d.drive}</b></span><span class="src">📡 ${d.src} <span class="hot">🔥 ${d.hot}</span></span></div>
+      ${matchBar}
+      <div class="why">${d.why}</div>
+      ${best}${safe}
+      <div class="kidline">🧒 ${d.kid}</div>
+      ${d.warn?`<div class="warn">⚠️ ${d.warn}</div>`:''}
+      ${d.posts?(()=>{
+        const list=[...d.posts].sort((a,b)=>parsePost(b.fav)-parsePost(a.fav)).slice(0,5);
+        return `<div class="posts">
+          <button class="posts-toggle" id="pt-btn-${d.id}" onclick="togglePosts(${d.id})">🔽 展开 ${list.length} 个推荐帖</button>
+          <div class="posts-box" id="pt-box-${d.id}">
+            <div class="posts-title">🔗 热门推荐帖（收藏最多 Top5）</div>
+            ${list.map(p=>`<a class="post" href="${p.url}" target="_blank"><span class="post-pf">${p.platform}</span><span class="post-t">${p.title}</span><span class="post-m">❤️${p.fav} · 👍${p.like} · 👁${p.view}</span></a>`).join('')}
+          </div>
+        </div>`;
+      })():''}
+      <div class="acts">
+        ${confirm}
+        <button onclick="addWish(${d.id})">⭐ 收心愿</button>
+        <button onclick="toast('已记录不感兴趣')">👎 没兴趣</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+document.getElementById('hotCards').innerHTML = HOT.map((d,i)=>cardHTML(d,i,false,false)).join('');
+
+function addLeaveDemo(){
+  const d=document.getElementById('leaveDate').value;
+  const h=document.getElementById('leaveHalf').value;
+  if(d==='2026-09-28'){
+    document.querySelector('.holiday-info').innerHTML = '<b>中秋</b> 2026-09-25 ~ 2026-09-27（3 天）<br>默认档位：<b>5-7 天档 · 跨省中长途</b>（飞+当地租车）<br>已请假：2026-09-28 全天 + 后续周末 → 拼成 <b>6 天窗口</b>（9.25-9.30）';
+    document.getElementById('leaveHint').textContent = '拼假成功：9.25-9.30 连续 6 天，可从“广东+邻省”升级到“跨省中长途”档。';
+    toast('已添加请假，拼假结果已更新');
+  } else {
+    toast('demo 仅演示 9.28 请假一天的场景');
+  }
+}
+
+function startFinding(){
+  finding = true;
+  document.getElementById('findBtn').disabled = true;
+  document.getElementById('findBtn').textContent = '🔍 正在每天推荐中…';
+  document.getElementById('findingPanel').style.display = 'block';
+  dayCount = 1;
+  document.getElementById('holidayCards').innerHTML = HOLIDAY_RECS.slice(0,2).map((d,i)=>cardHTML(d,i,false,true)).join('') +
+    `<div style="grid-column:1/-1;text-align:center;padding:18px 0;"><button class="bigbtn" onclick="loadMore()">🌅 模拟明天再给我推一批</button></div>`;
+  toast('已触发「帮我找目的地」，今天先推荐 2 个');
+}
+
+function loadMore(){
+  dayCount++;
+  const more = HOLIDAY_RECS.slice(2,3).map((d,i)=>cardHTML(d,i+2,false,true)).join('');
+  const btn = document.querySelector('#holidayCards > div:last-child');
+  btn.insertAdjacentHTML('beforebegin', more);
+  btn.querySelector('button').textContent = '🌅 已模拟第 ' + dayCount + ' 天推荐';
+  toast('模拟第 ' + dayCount + ' 天推荐已加载');
+}
+
+function confirmDest(id){
+  const d = HOLIDAY_RECS.find(x=>x.id===id);
+  confirmed = d;
+  ROUTE_DB.unshift({
+    id:'r-planned-'+Date.now(),
+    name:d.name+'（规划中）',
+    status:'planned', isExample:false,
+    dateRange:'按拼假窗口待定',
+    days:6, tier:'5-7天',
+    daily: genPlan(d.name, 6),
+    candidateRoutes: ROUTES
+  });
+  document.getElementById('confirmedPanel').style.display = 'block';
+  document.getElementById('confirmedText').innerHTML = `🎯 <b>${d.name}</b><br>📅 窗口：2026-09-25 ~ 09-30（6 天）<br>🚗 交通：${d.drive}<br>📝 选择理由：${d.why}<br><span style="color:var(--brand);">✅ 已自动写入「🗺️ 旅行路线」路线库（规划中）</span>`;
+  document.getElementById('findingPanel').style.display = 'none';
+  document.getElementById('findBtn').textContent = '✅ 已确认目的地';
+  toast('已确认目的地：' + d.name + '，停止新目的地推荐');
+}
+function genPlan(name,days){
+  const arr=[];
+  for(let i=1;i<=days;i++){
+    arr.push({date:'规划中',mode:'待定',plan:`Day${i} 行程待排（在对话里说"排一下 ${name} 的 Day${i}"）`,hotel:'待定',route:''});
+  }
+  return arr;
+}
+
+function routePlanTableHTML(daily){
+  const head = `<tr style="background:#f4f5f7;font-weight:600;"><th style="padding:8px;border:1px solid #e8eaee;text-align:left;">日期</th><th style="padding:8px;border:1px solid #e8eaee;">方式</th><th style="padding:8px;border:1px solid #e8eaee;text-align:left;">当天计划</th><th style="padding:8px;border:1px solid #e8eaee;text-align:left;">住宿</th><th style="padding:8px;border:1px solid #e8eaee;text-align:left;">行程时间</th></tr>`;
+  const rows = daily.map((d,i)=>`<tr>
+    <td style="padding:8px;border:1px solid #e8eaee;white-space:nowrap;font-weight:600;color:var(--brand);">Day${i+1}<br>${d.date}</td>
+    <td style="padding:8px;border:1px solid #e8eaee;text-align:center;">${d.mode}</td>
+    <td style="padding:8px;border:1px solid #e8eaee;line-height:1.6;">${d.plan}</td>
+    <td style="padding:8px;border:1px solid #e8eaee;line-height:1.6;color:#374151;">${d.hotel}</td>
+    <td style="padding:8px;border:1px solid #e8eaee;line-height:1.6;color:#6b7280;">${d.route||'—'}</td>
+  </tr>`).join('');
+  return `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;">${head}${rows}</table></div>`;
+}
+
+function routeCandidatesHTML(cands){
+  const sorted=[...cands].sort((a,b)=>parsePost(b.fav)-parsePost(a.fav)||parsePost(b.like)-parsePost(a.like)||parsePost(b.view)-parsePost(a.view));
+  return `<div class="grid">${sorted.map(r=>`
+    <div class="card"><div class="cbody">
+      <div style="font-size:15px;font-weight:700;line-height:1.4;">${r.title}</div>
+      <div class="route-meta"><span>📌 ${r.platform}</span><span>❤️ 收藏 ${r.fav}</span><span>👍 ${r.like}</span><span>👁 ${r.view}</span></div>
+      <div class="tags">${r.tags.map(t=>`<span class="tag t-nature">${t}</span>`).join('')}</div>
+      <div class="why">${r.why}</div>
+      <a href="${r.url}" target="_blank" style="font-size:13px;color:var(--brand);font-weight:600;">🔗 打开原帖 →</a>
+    </div></div>`).join('')}</div>`;
+}
+
+function renderRoute(){
+  const box=document.getElementById('routeList');
+  if(!ROUTE_DB.length){
+    box.innerHTML='<div class="panel"><div class="empty">还没有任何路线。确认目的地后会自动生成「规划中」路线；走过的路线我会帮你记录在这里。</div></div>';
+    return;
+  }
+  box.innerHTML = ROUTE_DB.map(r=>{
+    const stTag = r.status==='done' ? '<span class="tag" style="background:#dcfce7;color:#15803d;">✅ 已走过</span>'
+      : '<span class="tag t-best">🧭 规划中</span>';
+    const exTag = r.isExample ? '<span class="tag" style="background:#f1f5f9;color:#64748b;">示例数据</span>' : '';
+    const calBtn = r.status==='done'
+      ? '<span class="tag" style="background:#f1f5f9;color:#94a3b8;font-size:12px;padding:6px 12px;">行程已结束</span>'
+      : `<button class="calendarbtn" onclick="addAllToCal('${r.id}')">📅 全部加入 iPhone 日历</button>`;
+    return `<div class="card route-card">
+      <div class="cbody">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px;" onclick="toggleRoute('${r.id}')">
+          <div>
+            <div style="font-size:16px;font-weight:700;">${r.name}</div>
+            <div class="meta" style="margin-top:6px;"><span>📅 ${r.dateRange}</span><span>🗓 ${r.days} 天</span><span>🏷 ${r.tier}</span></div>
+          </div>
+          <div style="font-size:20px;color:var(--sub);" id="caret-${r.id}">▾</div>
+        </div>
+        <div class="tags" style="margin-top:8px;">${stTag}${exTag}</div>
+        <div id="body-${r.id}" class="route-body">
+          <div class="panel" style="margin-bottom:12px;"><h3>🗓️ 完整行程计划（每天一行，对齐你飞书手工表）</h3>${routePlanTableHTML(r.daily)}<div style="font-size:12.5px;color:#9ca3af;margin-top:10px;">想调整？在对话里说"Day3 太赶了 / Day5 想换酒店"，雪花迭代。</div></div>
+          <div class="panel" style="margin-bottom:12px;"><h3>🔗 候选路线参考（收藏 > 点赞 > 浏览）</h3>${routeCandidatesHTML(r.candidateRoutes)}</div>
+          <div>${calBtn}</div>
+          <div id="cal-${r.id}"></div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleRoute(id){
+  const b=document.getElementById('body-'+id);
+  const c=document.getElementById('caret-'+id);
+  if(b.style.display==='none'){b.style.display='block';c.textContent='▾';}
+  else{b.style.display='none';c.textContent='▸';}
+}
+
+function renderWish(){
+  const box = document.getElementById('wishCards');
+  if(!WISH.length){
+    box.innerHTML = '<div class="empty">还没有心愿目的地。在本周最热 / 下一个假期卡片点「⭐ 收心愿」，或在对话里告诉雪花"我想去 XX"。</div>';
+    return;
+  }
+  const lvMap={'强':'🔥 强','中':'🌤 中','弱':'🌫 弱'};
+  const stMap={'want':['想去中','var(--brand)'],'scheduled':['已安排','var(--amber)'],'done':['已去过','#9ca3af']};
+  box.innerHTML = WISH.map(w=>{
+    const st=stMap[w.status];
+    return `<div class="card">
+      <div class="cbody">
+        <div style="font-size:16px;font-weight:700;line-height:1.4;">${w.emoji} ${w.name}</div>
+        <div class="tags">
+          <span class="tag t-best">想去 ${lvMap[w.level]}</span>
+          <span class="tag t-nature">${w.tier}</span>
+          <span class="tag" style="background:#eef2ff;color:#4338ca;">${w.source}</span>
+          <span class="tag" style="background:${st[1]}1a;color:${st[1]};border:1px solid ${st[1]}55;">${st[0]}</span>
+        </div>
+        <div class="meta"><span>📅 添加 ${w.addedAt}</span></div>
+        <div class="why">📝 ${w.note||'（无备注）'}</div>
+        <div class="acts" style="flex-wrap:wrap;">
+          <button onclick="cycleLevel(${w.id})">调想去程度</button>
+          <button onclick="editNote(${w.id})">编辑备注</button>
+          <button onclick="markDone(${w.id})">${w.status==='done'?'↩️ 改回想去':'标记已去过'}</button>
+          <button onclick="delWish(${w.id})" style="color:var(--rose);border-color:#f3c0d6;">删除</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function addWish(id){
+  const src=[...HOT,...HOLIDAY_RECS].find(x=>x.id===id);
+  if(!src){toast('未找到该目的地');return;}
+  if(WISH.find(w=>w.name===src.name)){toast('已在心愿单：'+src.name);return;}
+  const tier=src.drive.includes('飞')?'5-7天':/([5-9]|1\d)\s*h/.test(src.drive)?'3-4天':'1-2天';
+  WISH.unshift({id:300+Math.floor(Math.random()*600),name:src.name,emoji:src.emoji,level:'中',tier,source:'雪花推荐',addedAt:'2026-07-31',note:'',status:'want'});
+  toast('已收进心愿单：'+src.name);
+  if(document.querySelector('#nav button.on').dataset.p==='wish') renderWish();
+}
+
+function cycleLevel(id){
+  const w=WISH.find(x=>x.id===id);if(!w)return;
+  w.level={'强':'中','中':'弱','弱':'强'}[w.level];
+  toast('想去程度已调为：'+w.level);renderWish();
+}
+function editNote(id){
+  const w=WISH.find(x=>x.id===id);if(!w)return;
+  const t=prompt('编辑备注（'+w.name+'）',w.note||'');
+  if(t!==null){w.note=t;renderWish();toast('备注已更新');}
+}
+function markDone(id){
+  const w=WISH.find(x=>x.id===id);if(!w)return;
+  if(w.status==='done'){w.status='want';renderWish();toast('已改回：'+w.name+' → 想去中');}
+  else{w.status='done';renderWish();toast('已标记为去过：'+w.name);}
+}
+function delWish(id){
+  const i=WISH.findIndex(x=>x.id===id);if(i<0)return;
+  WISH.splice(i,1);renderWish();toast('已从心愿单删除');
+}
+
+function addAllToCal(routeId){
+  const r=ROUTE_DB.find(x=>x.id===routeId); if(!r)return;
+  const events = r.daily.map((d,i)=>`<div style="padding:10px 0;border-bottom:1px solid #f1f2f5;font-size:13px;">
+    <div style="font-weight:700;color:var(--brand);">📌 Day${i+1} · ${d.date}（${d.mode}）</div>
+    <div style="color:#374151;margin-top:3px;line-height:1.6;">${d.plan}</div>
+    <div style="color:#6b7280;margin-top:3px;">🏨 ${d.hotel}${d.route?' · 🚗 '+d.route:''}</div>
+  </div>`).join('');
+  const box=document.getElementById('cal-'+routeId);
+  box.innerHTML = `<div class="panel" style="border-color:var(--brand);margin-top:10px;"><h3>📲 将生成 ${r.daily.length} 个日历事件（合并为一个 .ics）</h3><div style="max-height:280px;overflow-y:auto;margin-top:6px;">${events}</div><div style="margin-top:12px;"><button class="calendarbtn" onclick="toast('已生成 ${r.name}.ics，手机点开即导入全部 ${r.daily.length} 天')">⬇️ 下载并导入 iPhone 日历</button></div></div>`;
+  toast('已预览 '+r.daily.length+' 个日历事件，每天一行完整行程');
+}
+
+renderRoute();
+renderWish();
+</script>
+</body>
+</html>

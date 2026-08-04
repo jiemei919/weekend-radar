@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末雷达 · 推荐引擎增强 Demo</title>
+<style>
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fa;margin:0;padding:24px;color:#1f2937}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:#6b7280;font-size:13px;margin-bottom:20px}
+  .sec{font-size:14px;font-weight:700;color:#374151;margin:24px 0 10px}
+  .card{border-radius:16px;padding:16px 18px;margin-bottom:14px;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.08);position:relative;overflow:hidden}
+  .card h3{margin:0 0 6px;font-size:17px}
+  .tag{display:inline-block;background:rgba(255,255,255,.25);border-radius:999px;padding:2px 10px;font-size:12px;margin:0 6px 6px 0}
+  .tag-badge{position:absolute;top:14px;right:14px;background:#fff;color:#b91c1c;font-size:12px;font-weight:700;border-radius:8px;padding:3px 8px}
+  .tag-good{position:absolute;top:14px;right:14px;background:#fff;color:#15803d;font-size:12px;font-weight:700;border-radius:8px;padding:3px 8px}
+  .meta{font-size:12.5px;line-height:1.7;background:rgba(0,0,0,.12);border-radius:10px;padding:8px 10px;margin-top:8px}
+  .why{font-size:13px;line-height:1.6;margin-top:8px}
+  .blocked{border-radius:14px;padding:12px 16px;margin-bottom:12px;background:#fff;border:1px dashed #fca5a5;color:#7f1d1d;font-size:13px;display:flex;align-items:center;gap:10px}
+  .blocked .x{font-size:18px}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row .card{flex:1;min-width:280px}
+  .note{font-size:12px;color:#9ca3af;margin-top:6px}
+</style>
+</head>
+<body>
+<h1>周末雷达 · 推荐引擎增强（视觉 Demo）</h1>
+<div class="sub">仅展示新版卡片形态与拦截逻辑，确认方向后我才改 app/index.html。数据均为示意。</div>
+
+<div class="sec">① 新增「🏨 度假酒店」卡（省内也能推，活动丰富可躺平）</div>
+<div class="card" style="background:linear-gradient(135deg,#16a34a,#86efac)">
+  <span class="tag-good">✅ 新目的地</span>
+  <h3>🦒 清远 · 长隆森林王国 + 长颈鹿城堡酒店</h3>
+  <div><span class="tag">度假酒店</span><span class="tag">亲子·适合</span><span class="tag">温泉</span><span class="tag">2-3天</span></div>
+  <div class="meta">🚗 番禺自驾 1h20min（65km） · 评分4.9 · 推窗见鹿+提前半小时入园</div>
+  <div class="why">酒店即目的地：蒸汽小火车、森林温泉乐园（树荫戏水+汤池）、动物大越野自驾观兽、小虫大世界儿童乐园。天然林间清凉，老人泡汤、小孩看动物，一天或两三天都适配。</div>
+</div>
+
+<div class="card" style="background:linear-gradient(135deg,#0f766e,#5eead4)">
+  <span class="tag-good">🔁 酒店复访</span>
+  <h3>♨️ 云浮 · 新兴禅泉酒店</h3>
+  <div><span class="tag">酒店复访</span><span class="tag">温泉</span><span class="tag">躺平</span><span class="tag">1-2天</span></div>
+  <div class="meta">🚗 番禺自驾 ≈2h · 你点评：酒店高级、早餐好，躺平一天泡温泉很爽</div>
+  <div class="why">已去过但属于「度假酒店」类——这类可按季节（11-3月温泉季）作为"酒店复访"推，不强行当新景点。</div>
+</div>
+
+<div class="sec">② 运动类可复推（去过也能推，天气对了就去玩）</div>
+<div class="card" style="background:linear-gradient(135deg,#1d4ed8,#60a5fa)">
+  <span class="tag-badge">🏄 运动·可复玩</span>
+  <h3>🛶 从化 · 海虹桥 桨板</h3>
+  <div><span class="tag">运动类</span><span class="tag">去过·豁免</span><span class="tag">4-10月</span></div>
+  <div class="meta">🚗 番禺自驾 ≈1.5h · 你点名"天气时间合理可再推"</div>
+  <div class="why">地点虽在已去过库（exclude），但因是运动类且当前 8 月落在 4-10 月窗口、无雷雨 → 豁免放行，标【运动·可复玩】，不当新目的地硬推。</div>
+</div>
+
+<div class="sec">③ 酒店价优触发（该假期特别便宜就推）</div>
+<div class="card" style="background:linear-gradient(135deg,#b45309,#fcd34d)">
+  <span class="tag-good">💰 价优·比平日低35%</span>
+  <h3>🎢 珠海长隆飞船乐园</h3>
+  <div><span class="tag">价优</span><span class="tag">乐园</span><span class="tag">1-2天</span></div>
+  <div class="meta">🚗 番禺自驾 2h · 平日¥XXX → 中秋促¥XXX（待核）</div>
+  <div class="why">你原话"价格特别划算的酒店可以再推荐"。命中 trigger:价优 且价格确实低于平日 → 推并标便宜理由；否则不推。</div>
+</div>
+
+<div class="sec">④ 避雷过滤（多人说避雷 → 拦截）</div>
+<div class="blocked"><span class="x">🚫</span><div><b>某海岛度假村</b> · 已被拦截 —— 公开口碑避雷：小红书/马蜂窝近30天"坑/雷/别去"集中（评分 3.6，差评率偏高）。与你的个人避雷（海鸥岛/七星岩等）互补，大众都说雷的不推。</div></div>
+<div class="note">拦截来源：data/avoid.json（雪花维护的公开避雷聚合）或每次搜罗时实时检索差评关键词。</div>
+
+<div class="sec">⑤ 「下一个假期」候选池（已清理为没去过的）</div>
+<div class="row">
+  <div class="card" style="background:linear-gradient(135deg,#0ea5e9,#7dd3fc)"><h3>🏝️ 湛江 · 雷州半岛+硇洲岛</h3><div><span class="tag">3-4天</span><span class="tag">粤西</span><span class="tag">亲子</span></div><div class="meta">🚗 自驾4.5-5h · 火山岛+28km白沙滩</div></div>
+  <div class="card" style="background:linear-gradient(135deg,#b45309,#fcd34d)"><h3>🏯 福建 · 泉州古城+海岸</h3><div><span class="tag">3-4天</span><span class="tag">高铁</span><span class="tag">世遗</span></div><div class="meta">🚄 高铁≈4h · 开元寺/西街/木偶/簪花</div></div>
+</div>
+<div class="note">已移出：潮州 / 赣州 / 郴州 / 桂林阳朔 / 武夷山（均在已去过库）。</div>
+
+</body>
+</html>

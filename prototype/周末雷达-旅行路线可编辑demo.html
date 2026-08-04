@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末雷达 · 旅行路线（可编辑 Demo）</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         background:#f5f7fa; color:#1f2937; padding:20px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+  .title h1 { font-size:20px; margin:0 0 4px; }
+  .title .meta { font-size:13px; color:#6b7280; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; }
+  button { font-family:inherit; cursor:pointer; border:none; border-radius:8px; padding:8px 14px; font-size:13px; }
+  .b-edit { background:#2563eb; color:#fff; }
+  .b-edit.on { background:#f59e0b; }
+  .b-export { background:#059669; color:#fff; }
+  .b-reset { background:#e5e7eb; color:#374151; }
+  .banner { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; font-size:12.5px;
+            padding:8px 12px; border-radius:8px; margin-bottom:14px; }
+  .card { background:#fff; border-radius:14px; box-shadow:0 1px 4px rgba(0,0,0,.06);
+          margin-bottom:16px; overflow:hidden; }
+  .card-head { display:flex; align-items:center; justify-content:space-between;
+               padding:14px 16px; background:linear-gradient(90deg,#fff7ed,#fff); border-bottom:1px solid #f1f5f9; }
+  .card-head .day { font-weight:700; font-size:15px; }
+  .card-head .place { color:#6b7280; font-size:12.5px; margin-left:8px; }
+  .mode-tag { font-size:11px; background:#eef2ff; color:#4338ca; padding:3px 8px; border-radius:6px; }
+  .card-body { padding:14px 16px; }
+  .sec { margin-bottom:12px; }
+  .sec:last-child { margin-bottom:0; }
+  .sec-title { font-size:12px; font-weight:700; color:#9ca3af; letter-spacing:.5px; margin-bottom:6px;
+               display:flex; align-items:center; gap:6px; }
+  .sec-title .add { margin-left:auto; font-size:11px; background:#ecfdf5; color:#059669; padding:2px 8px; border-radius:6px; }
+  .tl { display:flex; gap:10px; margin-bottom:8px; align-items:flex-start; }
+  .tl .time { flex:0 0 64px; color:#2563eb; font-weight:600; font-size:13px; padding-top:6px; }
+  .tl .txt { flex:1; font-size:13.5px; line-height:1.5; padding-top:5px; }
+  .tl .del { flex:0 0 auto; color:#cbd5e1; font-size:16px; cursor:pointer; padding:4px 2px; }
+  .tl .del:hover { color:#ef4444; }
+  .note { display:flex; gap:8px; font-size:13px; line-height:1.5; margin-bottom:6px; color:#374151; }
+  .note .dot { color:#f59e0b; flex:0 0 auto; }
+  .kv { font-size:13.5px; line-height:1.6; }
+  .kv .k { color:#9ca3af; }
+  .hotel-hi { color:#dc2626; font-weight:700; }
+  /* 编辑态 */
+  .edit .inp { width:100%; font-family:inherit; font-size:13.5px; border:1px solid #d1d5db;
+               border-radius:6px; padding:5px 8px; background:#fffef5; }
+  .edit .inp.t { width:64px; flex:0 0 64px; text-align:center; }
+  .edit .txt-inp { width:100%; font-family:inherit; font-size:13.5px; border:1px solid #d1d5db;
+                   border-radius:6px; padding:5px 8px; background:#fffef5; resize:vertical; }
+  .edit .tl { align-items:stretch; }
+  .edit .txt { padding-top:0; }
+  .export-box { display:none; margin-top:14px; }
+  .export-box textarea { width:100%; height:160px; font-family:monospace; font-size:12px;
+                         border:1px solid #d1d5db; border-radius:8px; padding:10px; }
+  .tip { font-size:12px; color:#6b7280; margin:6px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">
+      <h1 id="rt-name">成都-卧龙-四姑娘山-新都桥-康定-三星堆</h1>
+      <div class="meta"><span id="rt-range"></span> · 状态：规划中 · 档位：5-7天 · 共 8 天</div>
+    </div>
+    <div class="btns">
+      <button class="b-edit" id="btnEdit">✏️ 编辑模式</button>
+      <button class="b-reset" id="btnReset" style="display:none">↺ 还原原计划</button>
+      <button class="b-export" id="btnExport" style="display:none">📤 导出改动</button>
+    </div>
+  </div>
+
+  <div class="banner" id="banner">
+    💡 这是 Demo：用你成都 8 天真实数据。点「✏️ 编辑模式」即可逐天修改时间安排 / 路线 / 住宿 / 注意事项；改完自动存本地，还能一键导出发给雪花落库、或还原原计划。
+  </div>
+
+  <div id="cards"></div>
+
+  <div class="export-box" id="exportBox">
+    <div class="tip">复制下面 JSON，发给雪花即可同步进正式数据（无需你手动改文件）：</div>
+    <textarea id="exportJSON" readonly></textarea>
+  </div>
+</div>
+
+<script>
+// ===== 原始数据（成都 8 天真实计划；时间轴/注意事项为按原表提炼的示意，确认开发后按你实际时间整理）=====
+const ORIGINAL = {
+  name: "成都-卧龙-四姑娘山-新都桥-康定-三星堆",
+  range: "2026-09-30 ~ 2026-10-07",
+  days: [
+    { date:"2026/9/30", place:"成都", mode:"高铁",
+      timeline:[ {t:"下午",x:"请假从广州出发，高铁赴成都"}, {t:"22:00",x:"抵成都东站，入住酒店；高铁上完成物资采购直送酒店"} ],
+      route:"广州→成都（高铁）", hotel:"Zsmart智尚酒店(成都东站)",
+      notes:["高铁票提前买，国庆票紧","东站附近酒店方便次日拿车"] },
+    { date:"2026/10/1", place:"卧龙", mode:"行车",
+      timeline:[ {t:"08:00",x:"酒店拿车+早餐+装车"}, {t:"10:00",x:"出发→卧龙（约220km/3h）"}, {t:"13:00",x:"卧龙熊猫基地，避开上午人流"}, {t:"17:00",x:"返回酒店休息"} ],
+      route:"成都→卧龙 220km", hotel:"卧龙文玥民宿(1900)",
+      notes:["国庆1号早走避堵","卧龙海拔1900，熊猫近距离看"] },
+    { date:"2026/10/2", place:"四姑娘山", mode:"行车",
+      timeline:[ {t:"08:00",x:"出发去四姑娘山"}, {t:"11:00",x:"进双桥沟玩5h（观光车直达）"}, {t:"16:00",x:"猫鼻梁看日照金山"} ],
+      route:"到双桥沟约3h/81km，猫鼻梁14km半小时", hotel:"四姑娘山雪山情民宿(3100)",
+      notes:["双桥沟观光车，老人孩子轻松","海拔3100，注意高反"] },
+    { date:"2026/10/3", place:"甲居藏寨", mode:"行车",
+      timeline:[ {t:"09:30",x:"进长坪沟徒步1.5h掉头"}, {t:"下午",x:"去甲居藏寨"} ],
+      route:"甲居约3h", hotel:"伴山月望山民宿(甲居藏寨)",
+      notes:["长坪沟徒步量力，1.5h即返","甲居藏寨风光"] },
+    { date:"2026/10/4", place:"新都桥", mode:"行车",
+      timeline:[ {t:"09:00",x:"雅拉雪山观景台"}, {t:"",x:"墨石公园→姑弄村→塔公草原→木雅大寺→鱼子西"} ],
+      route:"甲居→新都桥 160km/3.5h", hotel:"岗噶布酒店(新都桥店 3500)",
+      notes:["新都桥海拔3500，高原注意！老人小孩慢走","一天点多，预留拍照时间"] },
+    { date:"2026/10/5", place:"康定", mode:"行车",
+      timeline:[ {t:"",x:"新都桥→居里寺垭口→甲根坝→红海子→康定"} ],
+      route:"新都桥→康定", hotel:"康定云颂酒店",
+      notes:["垭口海拔高，短停即走"] },
+    { date:"2026/10/6", place:"三星堆", mode:"行车",
+      timeline:[ {t:"",x:"康定→木格措→泸定桥(可选)→雅安→三星堆 221km"} ],
+      route:"康定→三星堆 221km", hotel:"广汉七朵酒店(三星堆店)",
+      notes:["泸定桥可选，赶路则跳过","晚上到三星堆方便次日玩"] },
+    { date:"2026/10/7", place:"回广州", mode:"高铁",
+      timeline:[ {t:"上午",x:"玩三星堆（请讲解3h）"}, {t:"下午",x:"高铁回广州"} ],
+      route:"三星堆→广州（高铁）", hotel:"—",
+      notes:["三星堆务必请讲解","高铁票提前买"] }
+  ]
+};
+
+const LS_KEY = "radar-route-edit-demo";
+let state = loadState();
+let editMode = false;
+
+function loadState(){
+  try { const s = JSON.parse(localStorage.getItem(LS_KEY)); if(s) return s; } catch(e){}
+  return JSON.parse(JSON.stringify(ORIGINAL));
+}
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+function hotelHTML(h){
+  // 海拔 >3000 标红
+  const m = h.match(/(\d{3,4})\s*\)?/);
+  if(h && /\d{3,4}/.test(h)){
+    const num = parseInt(h.match(/\d{3,4}/)[0]);
+    if(num >= 3000){
+      return '<span class="hotel-hi">'+h+' ⚠️高原</span>';
+    }
+  }
+  return h || "—";
+}
+
+function render(){
+  document.getElementById("rt-range").textContent = state.range;
+  document.getElementById("rt-name").textContent = state.name;
+  const c = document.getElementById("cards");
+  c.className = editMode ? "edit" : "";
+  c.innerHTML = state.days.map((d,i)=>{
+    const tl = d.timeline.map((it,j)=>{
+      if(editMode){
+        return `<div class="tl">
+          <input class="inp t" value="${esc(it.t)}" oninput="updTL(${i},${j},'t',this.value)">
+          <textarea class="txt-inp" rows="1" oninput="updTL(${i},${j},'x',this.value)">${esc(it.x)}</textarea>
+          <span class="del" onclick="delTL(${i},${j})">✕</span>
+        </div>`;
+      }
+      return `<div class="tl"><div class="time">${it.t||""}</div><div class="txt">${esc(it.x)}</div></div>`;
+    }).join("");
+    const notes = d.notes.map((n,j)=>{
+      if(editMode){
+        return `<div class="note"><span class="dot">⚠</span>
+          <textarea class="txt-inp" rows="1" oninput="updNote(${i},${j},this.value)">${esc(n)}</textarea>
+          <span class="del" onclick="delNote(${i},${j})">✕</span></div>`;
+      }
+      return `<div class="note"><span class="dot">⚠</span><span>${esc(n)}</span></div>`;
+    }).join("");
+    const addTL = editMode ? `<div class="sec-title">🕐 时间安排<span class="add" onclick="addTL(${i})">＋ 加一条</span></div>` : `<div class="sec-title">🕐 时间安排</div>`;
+    const addNote = editMode ? `<div class="sec-title">⚠️ 注意事项<span class="add" onclick="addNote(${i})">＋ 加一条</span></div>` : `<div class="sec-title">⚠️ 注意事项</div>`;
+    const routeVal = editMode
+      ? `<input class="inp" value="${esc(d.route)}" oninput="upd(${i},'route',this.value)">`
+      : `<span>${esc(d.route)||"—"}</span>`;
+    const hotelVal = editMode
+      ? `<input class="inp" value="${esc(d.hotel)}" oninput="upd(${i},'hotel',this.value)">`
+      : hotelHTML(d.hotel);
+    const placeVal = editMode
+      ? `<input class="inp" style="width:120px;display:inline-block" value="${esc(d.place)}" oninput="upd(${i},'place',this.value)">`
+      : `<span class="place">${esc(d.place)}</span>`;
+    return `<div class="card">
+      <div class="card-head">
+        <div><span class="day">第${i+1}天 · ${d.date}</span> ${placeVal}</div>
+        <span class="mode-tag">${esc(d.mode)}</span>
+      </div>
+      <div class="card-body">
+        <div class="sec">${addTL}${tl}</div>
+        <div class="sec"><div class="sec-title">🚗 路线</div><div class="kv">${routeVal}</div></div>
+        <div class="sec"><div class="sec-title">🏨 住宿</div><div class="kv">${hotelVal}</div></div>
+        <div class="sec">${addNote}${notes}</div>
+      </div>
+    </div>`;
+  }).join("");
+  // 自动撑高 textarea
+  document.querySelectorAll("textarea.txt-inp").forEach(t=>{ t.style.height="auto"; t.style.height=t.scrollHeight+"px"; });
+}
+
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function upd(i,f,v){ state.days[i][f]=v; saveState(); }
+function updTL(i,j,f,v){ state.days[i].timeline[j][f]=v; saveState(); }
+function updNote(i,j,v){ state.days[i].notes[j]=v; saveState(); }
+function delTL(i,j){ state.days[i].timeline.splice(j,1); saveState(); render(); }
+function delNote(i,j){ state.days[i].notes.splice(j,1); saveState(); render(); }
+function addTL(i){ state.days[i].timeline.push({t:"",x:""}); saveState(); render(); }
+function addNote(i){ state.days[i].notes.push(""); saveState(); render(); }
+
+document.getElementById("btnEdit").onclick = function(){
+  editMode = !editMode;
+  this.classList.toggle("on", editMode);
+  this.textContent = editMode ? "✅ 完成编辑" : "✏️ 编辑模式";
+  document.getElementById("btnReset").style.display = editMode ? "" : "none";
+  document.getElementById("btnExport").style.display = editMode ? "" : "none";
+  document.getElementById("exportBox").style.display = "none";
+  render();
+};
+document.getElementById("btnReset").onclick = function(){
+  if(!confirm("确定还原到原计划？你在本地的所有修改将清空。")) return;
+  state = JSON.parse(JSON.stringify(ORIGINAL));
+  localStorage.removeItem(LS_KEY);
+  render();
+};
+document.getElementById("btnExport").onclick = function(){
+  const box = document.getElementById("exportBox");
+  box.style.display = "block";
+  document.getElementById("exportJSON").value = JSON.stringify(state, null, 2);
+  const ta = document.getElementById("exportJSON");
+  ta.focus(); ta.select();
+  try { document.execCommand("copy"); } catch(e){}
+  alert("已复制改动 JSON，发给雪花即可同步落库（无需你手动改文件）。");
+};
+
+render();
+</script>
+</body>
+</html>

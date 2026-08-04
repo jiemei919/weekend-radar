@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅行路线 · 新格式 Demo</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         background:#f4f6f9; color:#1f2937; padding:16px; }
+  .wrap { max-width:480px; margin:0 auto; }
+  .head { background:linear-gradient(135deg,#2f7df6,#5b8def); color:#fff; border-radius:16px;
+          padding:18px 18px 16px; box-shadow:0 6px 18px rgba(47,125,246,.25); }
+  .head h1 { margin:0 0 6px; font-size:19px; line-height:1.35; }
+  .head .meta { font-size:13px; opacity:.95; display:flex; flex-wrap:wrap; gap:8px 14px; }
+  .badge { display:inline-block; background:rgba(255,255,255,.22); border-radius:20px;
+           padding:2px 10px; font-size:12px; }
+  .note { background:#fff7e6; border:1px solid #ffe1a8; color:#8a5a00; font-size:12.5px;
+          border-radius:10px; padding:9px 12px; margin:12px 0 16px; line-height:1.6; }
+  .day { background:#fff; border-radius:14px; padding:14px 14px 12px; margin-bottom:14px;
+         box-shadow:0 2px 10px rgba(17,24,39,.06); }
+  .daytop { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .dnum { width:46px; height:46px; border-radius:12px; background:#eef4ff; color:#2f7df6;
+          font-weight:700; font-size:18px; display:flex; flex-direction:column; align-items:center;
+          justify-content:center; line-height:1; flex:0 0 auto; }
+  .dnum small { font-size:10px; font-weight:500; color:#7c93b8; margin-top:2px; }
+  .dtitle { font-size:15px; font-weight:600; }
+  .dtag { font-size:11.5px; color:#6b7280; margin-top:3px; }
+  .ttl { font-size:12px; color:#9aa3af; margin:12px 0 6px; font-weight:600; letter-spacing:.5px; }
+  .tl { border-left:2px solid #e3e9f3; margin-left:6px; padding-left:14px; }
+  .tl li { list-style:none; position:relative; padding:0 0 11px; font-size:13.5px; line-height:1.5; }
+  .tl li::before { content:""; position:absolute; left:-20px; top:5px; width:9px; height:9px;
+                   background:#2f7df6; border:2px solid #fff; border-radius:50%; box-shadow:0 0 0 1px #cdddff; }
+  .tl b { color:#2f7df6; font-weight:600; }
+  .row { display:flex; gap:8px; align-items:flex-start; font-size:13.5px; margin:7px 0;
+         background:#f7f9fc; border-radius:9px; padding:8px 10px; }
+  .row .ic { flex:0 0 auto; font-size:15px; }
+  .row .lb { color:#9aa3af; flex:0 0 56px; font-size:12px; padding-top:1px; }
+  .row .vx { flex:1; line-height:1.5; }
+  .alt { color:#b45309; font-weight:600; }
+  .tip { background:#fff4f0; border:1px solid #ffd2c2; border-radius:9px; padding:9px 11px;
+         font-size:13px; line-height:1.55; color:#9a3412; margin-top:8px; }
+  .tip .lab { font-weight:700; display:block; margin-bottom:3px; }
+  .foot { text-align:center; color:#9aa3af; font-size:12px; margin:18px 0 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <h1>成都-卧龙-四姑娘山-新都桥-康定-三星堆</h1>
+    <div class="meta">
+      <span class="badge">● 规划中</span>
+      <span class="badge">📅 2026-09-30 ~ 10-07</span>
+      <span class="badge">8 天</span>
+      <span class="badge">5-7天档 · 跨省</span>
+    </div>
+  </div>
+
+  <div class="note">
+    ⚠️ 这是「新格式」的样式 Demo。卡片里的<strong>时间轴</strong>和<strong>注意事项</strong>是雪花按你飞书原表提炼的示例，
+    确认开发后我会按真实情况结构化整理、并支持你在工具里自己改。原有信息（计划/住宿/路线）都保留。
+  </div>
+
+  <!-- Day 1 -->
+  <div class="day">
+    <div class="daytop">
+      <div class="dnum">D1<small>9/30</small></div>
+      <div><div class="dtitle">出发 → 成都</div><div class="dtag">周三 · 高铁</div></div>
+    </div>
+    <div class="ttl">⏱ 时间轴</div>
+    <ul class="tl">
+      <li><b>下午</b> 广州南→成都东 高铁（请假半天）</li>
+      <li><b>22:00</b> 抵达成都东站</li>
+      <li><b>车上</b> 物资采购直送酒店，到店即收</li>
+    </ul>
+    <div class="row"><span class="ic">🚄</span><span class="lb">路线</span><span class="vx">广州 → 成都（高铁，约 7-8h）</span></div>
+    <div class="row"><span class="ic">🏨</span><span class="lb">住宿</span><span class="vx">Zsmart智尚酒店(成都东站) <span class="alt">海拔≈500m</span></span></div>
+    <div class="tip"><span class="lab">⚠️ 路上注意</span>东站附近取车点次日一早拿车；高铁上把老人小孩座位安排好；零食/药提前买好直送酒店省得拎。</div>
+  </div>
+
+  <!-- Day 2 -->
+  <div class="day">
+    <div class="daytop">
+      <div class="dnum">D2<small>10/1</small></div>
+      <div><div class="dtitle">成都 → 卧龙（熊猫）</div><div class="dtag">周四 · 行车</div></div>
+    </div>
+    <div class="ttl">⏱ 时间轴</div>
+    <ul class="tl">
+      <li><b>08:00</b> 拿车 + 早餐，装车出发</li>
+      <li><b>10:00</b> 出发 → 卧龙（220km，约 3h）</li>
+      <li><b>13:00</b> 到卧龙，玩熊猫基地（铄铄看熊猫重点）</li>
+      <li><b>傍晚</b> 回民宿休息</li>
+    </ul>
+    <div class="row"><span class="ic">🚗</span><span class="lb">路线</span><span class="vx">成都 → 卧龙 220km，10:00 出发约 13:00 到</span></div>
+    <div class="row"><span class="ic">🏨</span><span class="lb">住宿</span><span class="vx">卧龙文玥民宿 <span class="alt">海拔 1900m</span></span></div>
+    <div class="tip"><span class="lab">⚠️ 路上注意</span>国庆 1 号出城易堵，早走避高峰；卧龙海拔 1900 比成都高，老人慢一点；熊猫基地上午人少建议早进。</div>
+  </div>
+
+  <!-- Day 3 -->
+  <div class="day">
+    <div class="daytop">
+      <div class="dnum">D3<small>10/2</small></div>
+      <div><div class="dtitle">卧龙 → 四姑娘山</div><div class="dtag">周五 · 行车</div></div>
+    </div>
+    <div class="ttl">⏱ 时间轴</div>
+    <ul class="tl">
+      <li><b>08:00</b> 出发 → 四姑娘山（81km，约 3h）</li>
+      <li><b>11:00</b> 进双桥沟（观光车，玩 5h）</li>
+      <li><b>16:00</b> 猫鼻梁看日照金山</li>
+    </ul>
+    <div class="row"><span class="ic">🚗</span><span class="lb">路线</span><span class="vx">卧龙 → 双桥沟 81km/3h；猫鼻梁 14km/半小时</span></div>
+    <div class="row"><span class="ic">🏨</span><span class="lb">住宿</span><span class="vx">四姑娘山雪山情民宿 <span class="alt">海拔 3100m</span></span></div>
+    <div class="tip"><span class="lab">⚠️ 高原注意</span>海拔 3100，老人小孩放慢、别跑跳；双桥沟全程观光车直达、不用徒步，符合"轻松看景"原则；猫鼻梁看金山看天气，阴天就跳过。</div>
+  </div>
+
+  <!-- Day 4 -->
+  <div class="day">
+    <div class="daytop">
+      <div class="dnum">D4<small>10/3</small></div>
+      <div><div class="dtitle">长坪沟 → 甲居藏寨</div><div class="dtag">周六 · 行车</div></div>
+    </div>
+    <div class="ttl">⏱ 时间轴</div>
+    <ul class="tl">
+      <li><b>09:30</b> 进长坪沟徒步（走 1.5h 掉头，不深走）</li>
+      <li><b>下午</b> 去甲居藏寨</li>
+    </ul>
+    <div class="row"><span class="ic">🚗</span><span class="lb">路线</span><span class="vx">长坪沟 → 甲居藏寨（约 3h）</span></div>
+    <div class="row"><span class="ic">🏨</span><span class="lb">住宿</span><span class="vx">伴山月望山民宿(甲居藏寨)</span></div>
+    <div class="tip"><span class="lab">⚠️ 路上注意</span>长坪沟徒步控制强度（有老人小孩，走 1.5h 就掉头）；甲居山路弯多，司机注意；藏寨民宿条件一般，提前确认热水。</div>
+  </div>
+
+  <!-- Day 5 -->
+  <div class="day">
+    <div class="daytop">
+      <div class="dnum">D5<small>10/4</small></div>
+      <div><div class="dtitle">雅拉/墨石/塔公 → 新都桥</div><div class="dtag">周日 · 行车</div></div>
+    </div>
+    <div class="ttl">⏱ 时间轴</div>
+    <ul class="tl">
+      <li><b>09:00</b> 出发，串雅拉雪山观景台→墨石公园→姑弄村→塔公草原→木雅大寺→鱼子西</li>
+      <li><b>傍晚</b> 到新都桥</li>
+    </ul>
+    <div class="row"><span class="ic">🚗</span><span class="lb">路线</span><span class="vx">甲居 → 新都桥 160km/3.5h</span></div>
+    <div class="row"><span class="ic">🏨</span><span class="lb">住宿</span><span class="vx">岗噶布酒店(新都桥店) <span class="alt">海拔 3500m</span></span></div>
+    <div class="tip"><span class="lab">⚠️ 高原注意</span>今晚海拔最高（3500）！到后少跑跳、多喝水防高反；景点分散开车时间长，老人车上多休息；鱼子西看日落人多，早去占位。</div>
+  </div>
+
+  <!-- Day 6 -->
+  <div class="day">
+    <div class="daytop">
+      <div class="dnum">D6<small>10/5</small></div>
+      <div><div class="dtitle">垭口/红海子 → 康定</div><div class="dtag">周一 · 行车</div></div>
+    </div>
+    <div class="ttl">⏱ 时间轴</div>
+    <ul class="tl">
+      <li><b>上午</b> 居里寺垭口 → 甲根坝 → 红海子（观景，海拔高）</li>
+      <li><b>下午</b> 到康定</li>
+    </ul>
+    <div class="row"><span class="ic">🚗</span><span class="lb">路线</span><span class="vx">新都桥 → 康定（垭口/红海子途经）</span></div>
+    <div class="row"><span class="ic">🏨</span><span class="lb">住宿</span><span class="vx">康定云颂酒店 <span class="alt">海拔≈2560m</span></span></div>
+    <div class="tip"><span class="lab">⚠️ 高原注意</span>垭口/红海子可能 4000+，老人小孩不下车久留、车上观景即可；康定 2560 相对低，今晚好好休息回血。</div>
+  </div>
+
+  <!-- Day 7 -->
+  <div class="day">
+    <div class="daytop">
+      <div class="dnum">D7<small>10/6</small></div>
+      <div><div class="dtitle">康定 → 三星堆</div><div class="dtag">周二 · 行车</div></div>
+    </div>
+    <div class="ttl">⏱ 时间轴</div>
+    <ul class="tl">
+      <li><b>上午</b> 木格措 / 泸定桥(可选)</li>
+      <li><b>下午</b> 雅安 → 三星堆（221km）</li>
+      <li><b>晚</b> 住三星堆附近</li>
+    </ul>
+    <div class="row"><span class="ic">🚗</span><span class="lb">路线</span><span class="vx">康定 → 三星堆 221km</span></div>
+    <div class="row"><span class="ic">🏨</span><span class="lb">住宿</span><span class="vx">广汉七朵酒店(三星堆店)</span></div>
+    <div class="tip"><span class="lab">⚠️ 路上注意</span>最后一天车程长，分两段休息；泸定桥可跳过省时间；三星堆留到第二天上午逛不赶。</div>
+  </div>
+
+  <!-- Day 8 -->
+  <div class="day">
+    <div class="daytop">
+      <div class="dnum">D8<small>10/7</small></div>
+      <div><div class="dtitle">三星堆 → 回广州</div><div class="dtag">周三 · 高铁</div></div>
+    </div>
+    <div class="ttl">⏱ 时间轴</div>
+    <ul class="tl">
+      <li><b>上午</b> 玩三星堆（请讲解，重点文物）</li>
+      <li><b>下午</b> 成都东 → 广州南 高铁</li>
+    </ul>
+    <div class="row"><span class="ic">🚄</span><span class="lb">路线</span><span class="vx">成都 → 广州（高铁）</span></div>
+    <div class="row"><span class="ic">🏨</span><span class="lb">住宿</span><span class="vx">—（回家）</span></div>
+    <div class="tip"><span class="lab">⚠️ 路上注意</span>三星堆请讲解更值；白天行李可寄存酒店/车站；回程高铁票提前买（国庆末班车紧）。</div>
+  </div>
+
+  <div class="foot">— 共 8 天 · 新格式 Demo · 确认后接入工具 —</div>
+</div>
+</body>
+</html>

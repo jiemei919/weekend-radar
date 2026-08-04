@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末雷达 · 原型 Demo</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1f2937; --sub:#6b7280; --line:#e8eaee;
+    --brand:#0f7b5f; --brand-soft:#e6f4ef; --amber:#b45309; --amber-soft:#fdf3e3;
+    --rose:#be185d; --rose-soft:#fbe9f1; --blue:#1d4ed8; --blue-soft:#e8eefc;
+    --violet:#6d28d9; --violet-soft:#f1ebfc;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+  body{background:var(--bg);color:var(--ink);min-height:100vh;}
+  /* 顶栏 */
+  .topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .topbar-in{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 24px;}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;}
+  .logo .dot{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#0f7b5f,#3bb08f);display:flex;align-items:center;justify-content:center;color:#fff;font-size:17px;}
+  .logo small{font-size:12px;color:var(--sub);font-weight:400;}
+  nav{display:flex;gap:4px;}
+  nav button{border:none;background:none;padding:8px 14px;border-radius:9px;font-size:14px;color:var(--sub);cursor:pointer;transition:.15s;}
+  nav button:hover{background:#f0f1f4;color:var(--ink);}
+  nav button.on{background:var(--brand-soft);color:var(--brand);font-weight:600;}
+  nav button .badge{display:inline-block;min-width:17px;padding:0 4px;margin-left:4px;border-radius:9px;background:var(--brand);color:#fff;font-size:11px;line-height:17px;text-align:center;}
+  .wrap{max-width:1080px;margin:0 auto;padding:22px 24px 60px;}
+  /* 周信息条 */
+  .weekbar{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(120deg,#0f7b5f 0%,#2c9d7c 60%,#57b795 100%);color:#fff;border-radius:16px;padding:18px 22px;margin-bottom:18px;}
+  .weekbar h2{font-size:19px;margin-bottom:5px;}
+  .weekbar p{font-size:12.5px;opacity:.92;}
+  .weekbar .push{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;font-size:12.5px;padding:8px 14px;border-radius:9px;text-align:center;line-height:1.5;}
+  /* 卡片 */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:860px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden;transition:.2s;display:flex;flex-direction:column;}
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(31,41,55,.08);}
+  .card.dimmed{opacity:.45;filter:grayscale(.7);}
+  .cover{height:120px;position:relative;display:flex;align-items:flex-end;padding:12px 16px;color:#fff;}
+  .cover .emoji{position:absolute;right:14px;top:10px;font-size:34px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));}
+  .cover .rank{position:absolute;left:14px;top:12px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4);padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600;}
+  .cover h3{font-size:18px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.3);}
+  .cbody{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;flex:1;}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;}
+  .tag{font-size:12px;padding:3px 9px;border-radius:20px;font-weight:500;}
+  .t-nature{background:var(--brand-soft);color:var(--brand);}
+  .t-quiet{background:var(--blue-soft);color:var(--blue);}
+  .t-mall{background:var(--amber-soft);color:var(--amber);}
+  .t-art{background:var(--violet-soft);color:var(--violet);}
+  .t-rich{background:var(--rose-soft);color:var(--rose);}
+  .t-kid{background:#e7f7ee;color:#15803d;border:1px dashed #86efac;}
+  .mode{display:flex;gap:8px;margin-top:10px;}
+  .mode span{font-size:12px;padding:5px 12px;border-radius:20px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);cursor:pointer;}
+  .mode span.on{background:#fff;color:var(--brand);font-weight:700;}
+  .card.bonus{border:2px dashed #86efac;position:relative;}
+  .card.bonus::before{content:"🎡 铄铄专属彩蛋位 · 不占主榜名额";position:absolute;z-index:2;top:-1px;left:-1px;background:#15803d;color:#fff;font-size:11px;padding:3px 10px;border-radius:14px 0 10px 0;}
+  .meta{display:flex;gap:14px;font-size:12.5px;color:var(--sub);flex-wrap:wrap;}
+  .meta b{color:var(--ink);font-weight:600;}
+  .src{font-size:12px;color:var(--sub);background:#f4f5f7;border-radius:8px;padding:6px 10px;display:flex;align-items:center;gap:6px;}
+  .src .hot{color:#e0483e;font-weight:600;}
+  .match{display:flex;align-items:center;gap:8px;font-size:12.5px;}
+  .bar{flex:1;height:6px;border-radius:4px;background:#eef0f3;overflow:hidden;}
+  .bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#0f7b5f,#3bb08f);}
+  .match b{color:var(--brand);font-size:14px;}
+  .why{font-size:13px;line-height:1.6;color:#374151;}
+  .warn{font-size:12px;color:var(--amber);background:var(--amber-soft);border-radius:8px;padding:5px 10px;}
+  .acts{display:flex;gap:8px;margin-top:auto;padding-top:4px;}
+  .acts button{flex:1;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 0;font-size:13px;cursor:pointer;transition:.15s;color:#374151;}
+  .acts button:hover{border-color:var(--brand);color:var(--brand);}
+  .acts button.did{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
+  /* 已过滤 */
+  .filtered{margin-top:20px;background:#fff;border:1px dashed #d5d8de;border-radius:14px;padding:14px 18px;font-size:13px;color:var(--sub);line-height:1.9;}
+  .filtered b{color:var(--ink);}
+  .filtered .fx{color:#9ca3af;text-decoration:line-through;margin-right:2px;}
+  /* 通用区块 */
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:16px;}
+  .panel h3{font-size:16px;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .empty{color:var(--sub);font-size:13.5px;text-align:center;padding:30px 0;}
+  /* 口味权重 */
+  .wrow{display:flex;align-items:center;gap:12px;margin-bottom:13px;font-size:13.5px;}
+  .wrow .nm{width:110px;color:#374151;}
+  .wrow .wbar{flex:1;height:10px;background:#eef0f3;border-radius:6px;overflow:hidden;}
+  .wrow .wbar i{display:block;height:100%;border-radius:6px;transition:width .5s;}
+  .wrow .val{width:44px;text-align:right;font-weight:600;color:var(--ink);}
+  .logline{font-size:13px;color:#4b5563;padding:9px 0;border-bottom:1px solid #f1f2f5;line-height:1.6;display:flex;gap:8px;}
+  .logline:last-child{border:none;}
+  .logline .tm{color:#9ca3af;white-space:nowrap;font-size:12px;padding-top:2px;}
+  /* 列表条目 */
+  .item{display:flex;justify-content:space-between;align-items:center;padding:12px 4px;border-bottom:1px solid #f1f2f5;font-size:14px;}
+  .item:last-child{border:none;}
+  .item .sub{font-size:12.5px;color:var(--sub);margin-top:3px;}
+  .stars{color:#f59e0b;letter-spacing:1px;}
+  /* 设置 */
+  .set-row{display:flex;justify-content:space-between;align-items:center;padding:13px 4px;border-bottom:1px solid #f1f2f5;font-size:14px;}
+  .set-row:last-child{border:none;}
+  .set-row .desc{font-size:12.5px;color:var(--sub);margin-top:3px;}
+  .pill{background:#f0f1f4;border-radius:8px;padding:6px 12px;font-size:13px;color:#374151;}
+  .switch{width:42px;height:24px;border-radius:12px;background:var(--brand);position:relative;cursor:pointer;}
+  .switch::after{content:"";position:absolute;right:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;}
+  /* 手机推送预览 */
+  .phone{width:300px;margin:0 auto;border:10px solid #1f2937;border-radius:30px;background:#f2f3f5;overflow:hidden;}
+  .phone .ph-top{background:#3370ff;color:#fff;padding:12px 14px;font-size:13px;font-weight:600;}
+  .ph-card{margin:12px;background:#fff;border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.7;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .ph-card b{font-size:13.5px;}
+  .ph-item{padding:7px 0;border-bottom:1px solid #f1f2f5;}
+  .ph-item:last-child{border:none;}
+  /* 弹层 */
+  .mask{position:fixed;inset:0;background:rgba(17,24,39,.45);display:none;align-items:center;justify-content:center;z-index:100;}
+  .mask.show{display:flex;}
+  .modal{width:400px;max-width:92vw;background:#fff;border-radius:18px;padding:24px;}
+  .modal h4{font-size:16px;margin-bottom:6px;}
+  .modal .hint{font-size:12.5px;color:var(--sub);margin-bottom:14px;}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+  .chip{border:1px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13px;cursor:pointer;transition:.15s;}
+  .chip.sel{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
+  .bigstars{font-size:30px;letter-spacing:6px;cursor:pointer;margin-bottom:14px;user-select:none;}
+  .bigstars span{color:#d1d5db;transition:.1s;}
+  .bigstars span.lit{color:#f59e0b;}
+  .modal textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;resize:none;height:64px;margin-bottom:16px;}
+  .mbtns{display:flex;gap:10px;justify-content:flex-end;}
+  .mbtns button{border-radius:9px;padding:9px 20px;font-size:13.5px;cursor:pointer;border:1px solid var(--line);background:#fff;}
+  .mbtns .ok{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+  /* toast */
+  #toast{position:fixed;bottom:34px;left:50%;transform:translateX(-50%) translateY(20px);background:#1f2937;color:#fff;padding:11px 22px;border-radius:12px;font-size:13.5px;opacity:0;transition:.3s;z-index:200;pointer-events:none;max-width:80vw;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .demo-note{text-align:center;font-size:12px;color:#9ca3af;margin-top:26px;}
+  .page{display:none;}
+  .page.on{display:block;}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="topbar-in">
+  <div class="logo"><div class="dot">❄️</div><div>周末雷达<br><small>雪花帮你选好了，直接出发</small></div></div>
+  <nav id="nav">
+    <button class="on" data-p="hot">🔥 本周最热</button>
+    <button data-p="want">⭐ 想去清单<span class="badge" id="wantN" style="display:none">0</span></button>
+    <button data-p="been">✅ 去过·点评</button>
+    <button data-p="taste">🧬 我的口味</button>
+    <button data-p="set">⚙️ 设置</button>
+  </nav>
+</div></div>
+
+<div class="wrap">
+
+  <!-- 本周最热 -->
+  <div class="page on" id="p-hot">
+    <div class="weekbar">
+      <div>
+        <h2>第 31 周 · 本周最热周边榜</h2>
+        <p>番禺出发 · 7月30日（周四）21:00 自动搜罗更新 · 来源：小红书 / 携程 / 马蜂窝 / 去哪儿 / 抖音 · 车程按你的实际驾驶习惯校准</p>
+        <div class="mode"><span class="on">周末 2 天 · 珠三角圈（单程≤2.5h）</span><span onclick="toast('原型演示：切到 3 天档后，潮州/汕头/赣州等 5~6h 圈目的地将进入榜单')">假期 3 天+ · 潮汕赣州圈（≤5.5h）</span></div>
+      </div>
+      <div class="push">📱 周五 17:30<br>已同步推送到手机飞书</div>
+    </div>
+    <div class="grid" id="cards"></div>
+    <div class="filtered">
+      <b>本周已替你过滤 4 个：</b><br>
+      <span class="fx">白云山星空营地</span>（评论区"人从众"预警，人少指数 3/20）&nbsp;·&nbsp;
+      <span class="fx">阳江海陵岛</span>（自驾 3.5h，超周末 2 天档上限，已存入 3 天档候选）&nbsp;·&nbsp;
+      <span class="fx">佛山南风古灶</span>（6月已推荐过）&nbsp;·&nbsp;
+      <span class="fx">某网红瀑布</span>（仅抖音单平台爆火，交叉验证未通过 ⚠️）
+    </div>
+  </div>
+
+  <!-- 想去清单 -->
+  <div class="page" id="p-want">
+    <div class="panel"><h3>⭐ 想去清单</h3><div id="wantList"><div class="empty">还没有收藏。回「本周最热」点 ⭐想去 试试～</div></div></div>
+  </div>
+
+  <!-- 去过点评 -->
+  <div class="page" id="p-been">
+    <div class="panel"><h3>✅ 去过·点评记录</h3>
+      <div id="beenList">
+        <div class="item"><div><div>🏝️ 惠州·双月湾 <span class="stars">★★★★★</span></div><div class="sub">7月12日 · 标签：比预期好、值得再去 · "淡季去的，沙滩几乎包场"</div></div><span style="font-size:12px;color:#0f7b5f;">已学习 ↑海边+人少</span></div>
+        <div class="item"><div><div>🛍️ 某网红文创园 <span class="stars">★★</span></div><div class="sub">6月28日 · 标签：名不副实、人比想象多 · "全是拍照的，店没几家"</div></div><span style="font-size:12px;color:#be185d;">来源平台可信度 −1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 我的口味 -->
+  <div class="page" id="p-taste">
+    <div class="panel"><h3>🧬 口味权重 <span style="font-size:12px;color:#9ca3af;font-weight:400">（随反馈自动调整，范围 0~1.2）</span></h3>
+      <div id="weights"></div>
+    </div>
+    <div class="panel"><h3>📖 雪花的学习记录</h3><div id="learnLog">
+      <div class="logline"><span class="tm">07-13</span><span>你给「双月湾」打了 5 星 → <b style="color:#0f7b5f">海边、人少 权重 +0.15</b></span></div>
+      <div class="logline"><span class="tm">06-29</span><span>你给「某文创园」打了 2 星且选"名不副实" → 来源平台可信度 −1，该平台内容今后需两个平台交叉验证</span></div>
+      <div class="logline"><span class="tm">06-21</span><span>你对「XX古镇」点了没兴趣（原因：这类不感兴趣）→ 古镇类 权重 −0.1</span></div>
+    </div></div>
+  </div>
+
+  <!-- 设置 -->
+  <div class="page" id="p-set">
+    <div class="panel"><h3>⚙️ 推荐设置</h3>
+      <div class="set-row"><div>出发地<div class="desc">用于计算车程；已按你的实际驾驶习惯校准（珠海2h/深圳2.5h/汕头5h）</div></div><span class="pill">广州·番禺区 ▾</span></div>
+      <div class="set-row"><div>可达圈默认档<div class="desc">周末2天≤2.5h（珠三角圈）；假期3天+≤5.5h（潮汕/赣州圈），首页可临时切换</div></div><span class="pill">周末 2 天 ▾</span></div>
+      <div class="set-row"><div>交通方式<div class="desc">自驾优先；仅极远（约上千公里）或自驾来不及时才给高铁方案</div></div><span class="pill">自驾优先 ▾</span></div>
+      <div class="set-row"><div>亲子模式（铄铄随行）<div class="desc">卡片标注亲子适配等级 + 每期 1 个铄铄彩蛋位；不影响口味排序</div></div><div class="switch"></div></div>
+      <div class="set-row"><div>手机推送<div class="desc">每周五 17:30 推送 Top5 到飞书</div></div><div class="switch"></div></div>
+    </div>
+    <div class="panel"><h3>📱 手机推送效果预览</h3>
+      <div class="phone">
+        <div class="ph-top">周末雷达 ❄️</div>
+        <div class="ph-card">
+          <b>本周末去哪玩？Top5 已出炉 🔥</b>
+          <div class="ph-item">1️⃣ 惠州·盐洲岛 | 自然·人少 | 自驾2.5h<br>原生态海岛，滩涂日落+白鹭，没有旅行团</div>
+          <div class="ph-item">2️⃣ 顺德·和美术馆 | 艺术 | 自驾50min<br>安藤忠雄清水混凝土，看完展去吃双皮奶</div>
+          <div class="ph-item">3️⃣ 深圳·深业上城 | chill商场·富人区 | 高铁48min</div>
+          <div class="ph-item" style="color:#3370ff;">查看完整榜单 →</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-note">⚠️ 原型 Demo · 数据为示意样例 · 所有按钮可点击体验反馈闭环</div>
+</div>
+
+<!-- 没兴趣弹层 -->
+<div class="mask" id="mDislike"><div class="modal">
+  <h4>为什么不感兴趣？</h4>
+  <div class="hint">告诉雪花原因，下次推得更准（必选一项）</div>
+  <div class="chips" id="dChips">
+    <span class="chip">太远了</span><span class="chip">感觉人会很多</span><span class="chip">这类地方不感兴趣</span><span class="chip">已经去过了</span><span class="chip">最近没时间</span>
+  </div>
+  <div class="mbtns"><button onclick="closeMask('mDislike')">取消</button><button class="ok" onclick="submitDislike()">提交</button></div>
+</div></div>
+
+<!-- 去过评分弹层 -->
+<div class="mask" id="mBeen"><div class="modal">
+  <h4 id="beenTitle">去过了？给个评分吧</h4>
+  <div class="hint">你的评分是雪花学习最重要的依据</div>
+  <div class="bigstars" id="bigstars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+  <div class="chips" id="bChips">
+    <span class="chip">比预期好</span><span class="chip">值得再去</span><span class="chip">人比想象多</span><span class="chip">名不副实</span><span class="chip">一般般</span>
+  </div>
+  <textarea placeholder="一句话感受（选填）：比如'下午四点后光线绝美'"></textarea>
+  <div class="mbtns"><button onclick="closeMask('mBeen')">取消</button><button class="ok" onclick="submitBeen()">提交，让雪花学习</button></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+const DATA=[
+ {id:1,name:"惠州 · 盐洲岛",emoji:"🏝️",grad:"linear-gradient(135deg,#0e7490,#22d3ee)",tags:[["自然风光","t-nature"],["人少","t-quiet"],["亲子·适合","t-kid"]],drive:"番禺自驾 2.5h",src:"小红书 · 近7天",hot:"2.4w 赞",match:93,why:"广东少有的原生态海岛，滩涂日落 + 成群白鹭，几乎没有旅行团。铄铄可以赶海抓小螃蟹。",warn:"岛上餐饮少，建议自带干粮和水"},
+ {id:2,name:"顺德 · 和美术馆",emoji:"🎨",grad:"linear-gradient(135deg,#6d28d9,#a78bfa)",tags:[["艺术","t-art"],["人少","t-quiet"],["富人区","t-rich"],["亲子·适合","t-kid"]],drive:"番禺自驾 40min",src:"小红书 · 近7天",hot:"1.8w 收藏",match:92,why:"安藤忠雄设计的清水混凝土美术馆，看完展步行去华盖路吃双皮奶。",warn:"周末场需提前一天在公众号预约"},
+ {id:3,name:"深圳 · 深业上城 + 海上世界",emoji:"🛍️",grad:"linear-gradient(135deg,#b45309,#fbbf24)",tags:[["chill商场","t-mall"],["艺术","t-art"],["富人区","t-rich"],["亲子·适合","t-kid"]],drive:"番禺自驾 2h",src:"抖音 · 近14天",hot:"5.6w 点赞",match:89,why:"小镇式屋顶商业街 + 蛇口海上世界文化艺术中心双联动，一天逛透。",warn:"周六下午人流上升，建议上午先到"},
+ {id:4,name:"清远 · 英德洞天仙境",emoji:"⛰️",grad:"linear-gradient(135deg,#166534,#4ade80)",tags:[["自然风光","t-nature"],["亲子·一般","t-kid"]],drive:"番禺自驾 1.8h",src:"马蜂窝 · 周边热度榜",hot:"#2",match:86,why:"喀斯特溶洞里坐竹筏，穿洞一瞬间的光影被称为'广东小桂林'。",warn:"竹筏需家长全程看护；雨后可能停开"},
+ {id:5,name:"东莞 · 松山湖绿道",emoji:"🚲",grad:"linear-gradient(135deg,#0f766e,#5eead4)",tags:[["自然风光","t-nature"],["人少","t-quiet"],["亲子·适合","t-kid"]],drive:"番禺自驾 1.2h",src:"携程 · 周边游榜",hot:"#4",match:84,why:"环湖 40km 绿道骑行，有亲子双人车可租，沿途下午茶选择多。",warn:"正午暴晒，建议 8 点前或 16 点后骑"},
+ {id:6,name:"珠海 · 唐家湾古镇 + 北山",emoji:"☕",grad:"linear-gradient(135deg,#be185d,#f9a8d4)",tags:[["艺术","t-art"],["人少","t-quiet"],["亲子·一般","t-kid"]],drive:"番禺自驾 1.5h",src:"去哪儿 · 近14天",hot:"热度 +180%",match:80,why:"老洋房改的独立咖啡馆和小展览聚集，散步式逛法很 chill。",warn:"部分小店周一二不开门"},
+ {id:7,bonus:true,name:"广州 · 融创乐园水世界",emoji:"🎡",grad:"linear-gradient(135deg,#15803d,#86efac)",tags:[["铄铄专属","t-kid"],["游乐场","t-kid"]],drive:"番禺自驾 40min",src:"抖音 · 近7天",hot:"3.1w 点赞",match:0,why:"暑期夜场开放中，人比日场少一半。铄铄向彩蛋位：不参与口味打分，每周一个。",warn:"夜场 16:00 后入园更划算"}
+];
+const wantSet=new Set(); let cur=null;
+const W=[["自然风光",0.9,"#0f7b5f"],["人少·小众",0.9,"#1d4ed8"],["chill 商场",0.7,"#b45309"],["艺术空间",0.7,"#6d28d9"],["富人区",0.6,"#be185d"]];
+
+function render(){
+  document.getElementById('cards').innerHTML=DATA.map((d,i)=>`
+  <div class="card${d.bonus?' bonus':''}" id="card${d.id}">
+    <div class="cover" style="background:${d.grad}"><span class="rank">${d.bonus?'🎁 彩蛋':'No.'+(i+1)}</span><span class="emoji">${d.emoji}</span><h3>${d.name}</h3></div>
+    <div class="cbody">
+      <div class="tags">${d.tags.map(t=>`<span class="tag ${t[1]}">${t[0]}</span>`).join('')}</div>
+      <div class="meta"><span>🚗 <b>${d.drive}</b></span><span class="src">📡 ${d.src} <span class="hot">🔥 ${d.hot}</span></span></div>
+      ${d.bonus?'':`<div class="match"><span>匹配度</span><div class="bar"><i style="width:${d.match}%"></i></div><b>${d.match}%</b></div>`}
+      <div class="why">${d.why}</div>
+      <div class="warn">⚠️ ${d.warn}</div>
+      <div class="acts">
+        <button onclick="want(${d.id})" id="w${d.id}">⭐ 想去</button>
+        <button onclick="dislike(${d.id})">👎 没兴趣</button>
+        <button onclick="been(${d.id})">✅ 去过了</button>
+      </div>
+    </div>
+  </div>`).join('');
+  document.getElementById('weights').innerHTML=W.map(w=>`
+    <div class="wrow"><span class="nm">${w[0]}</span><div class="wbar"><i style="width:${w[1]/1.2*100}%;background:${w[2]}"></i></div><span class="val">${w[1].toFixed(2)}</span></div>`).join('');
+}
+render();
+
+/* 导航 */
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+b.dataset.p).classList.add('on');
+});
+
+function toast(t){const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2600);}
+function closeMask(id){document.getElementById(id).classList.remove('show');}
+function get(id){return DATA.find(d=>d.id===id);}
+
+/* 想去 */
+function want(id){
+  const b=document.getElementById('w'+id);
+  if(wantSet.has(id)){wantSet.delete(id);b.classList.remove('did');b.textContent='⭐ 想去';}
+  else{wantSet.add(id);b.classList.add('did');b.textContent='⭐ 已收藏';toast('已加入想去清单，相关口味权重 +0.05');}
+  const n=document.getElementById('wantN');n.textContent=wantSet.size;n.style.display=wantSet.size?'inline-block':'none';
+  document.getElementById('wantList').innerHTML=wantSet.size?[...wantSet].map(i=>{const d=get(i);
+    return `<div class="item"><div><div>${d.emoji} ${d.name}</div><div class="sub">${d.drive} · 匹配度 ${d.match}%</div></div><span style="font-size:12px;color:#6b7280;">${d.tags.map(t=>t[0]).join(' · ')}</span></div>`;}).join('')
+    :'<div class="empty">还没有收藏。回「本周最热」点 ⭐想去 试试～</div>';
+}
+
+/* 没兴趣 */
+function dislike(id){cur=id;document.querySelectorAll('#dChips .chip').forEach(c=>c.classList.remove('sel'));document.getElementById('mDislike').classList.add('show');}
+document.querySelectorAll('#dChips .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#dChips .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');});
+function submitDislike(){
+  const sel=document.querySelector('#dChips .chip.sel');if(!sel){toast('请选一个原因～');return;}
+  closeMask('mDislike');document.getElementById('card'+cur).classList.add('dimmed');
+  const d=get(cur);
+  addLog(`你对「${d.name}」点了没兴趣（${sel.textContent}）→ 相关权重 −0.1`);
+  if(sel.textContent==='这类地方不感兴趣'&&d.tags[0]){bumpWeight(d.tags[0][0],-0.1);}
+  toast('已记录 ✍️ 雪花学到了，下次少推这类');
+}
+
+/* 去过 */
+let stars=0;
+function been(id){cur=id;stars=0;paintStars();document.querySelectorAll('#bChips .chip').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('beenTitle').textContent='去过「'+get(id).name+'」？给个评分吧';
+  document.getElementById('mBeen').classList.add('show');}
+document.querySelectorAll('#bigstars span').forEach((s,i)=>s.onclick=()=>{stars=i+1;paintStars();});
+function paintStars(){document.querySelectorAll('#bigstars span').forEach((s,i)=>s.classList.toggle('lit',i<stars));}
+document.querySelectorAll('#bChips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('sel'));
+function submitBeen(){
+  if(!stars){toast('先点亮星星～');return;}
+  closeMask('mBeen');const d=get(cur);
+  const tags=[...document.querySelectorAll('#bChips .chip.sel')].map(c=>c.textContent);
+  const delta=stars>=5?0.15:stars>=4?0.08:stars<=2?-0.2:0;
+  if(delta&&d.tags[0])bumpWeight(d.tags[0][0],delta);
+  document.getElementById('beenList').insertAdjacentHTML('afterbegin',
+    `<div class="item"><div><div>${d.emoji} ${d.name} <span class="stars">${'★'.repeat(stars)}${'☆'.repeat(5-stars)}</span></div><div class="sub">刚刚 · ${tags.join('、')||'无标签'}</div></div><span style="font-size:12px;color:${stars<=2?'#be185d':'#0f7b5f'};">${stars<=2?'来源平台可信度 −1':'已学习 ↑'+d.tags[0][0]}</span></div>`);
+  addLog(`你给「${d.name}」打了 ${stars} 星${tags.length?'（'+tags.join('、')+'）':''} → ${stars<=2?'权重 −0.2，来源平台可信度 −1':stars>=4?'相关权重 +'+delta.toFixed(2):'保持观察'}`);
+  toast(stars<=2?'已记录 📉 该来源平台可信度下调，同类内容将交叉验证':'已记录 📈 口味模型已更新，会推更多这类地方');
+}
+
+function bumpWeight(tagName,delta){
+  const map={"自然风光":"自然风光","人少":"人少·小众","chill商场":"chill 商场","艺术":"艺术空间","富人区":"富人区"};
+  const w=W.find(x=>x[0]===(map[tagName]||tagName));
+  if(w){w[1]=Math.min(1.2,Math.max(0,w[1]+delta));
+    document.getElementById('weights').innerHTML=W.map(x=>`<div class="wrow"><span class="nm">${x[0]}</span><div class="wbar"><i style="width:${x[1]/1.2*100}%;background:${x[2]}"></i></div><span class="val">${x[1].toFixed(2)}</span></div>`).join('');}
+}
+function addLog(text){
+  const now=new Date();const tm=(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0');
+  document.getElementById('learnLog').insertAdjacentHTML('afterbegin',`<div class="logline"><span class="tm">${tm}</span><span>${text}</span></div>`);
+}
+</script>
+</body>
+</html>

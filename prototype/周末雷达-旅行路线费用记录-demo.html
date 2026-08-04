@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末雷达 · 旅行路线费用记录 Demo</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+         background:#f5f7fa; color:#1f2937; padding:20px; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+  .title h1 { font-size:20px; margin:0 0 4px; }
+  .title .meta { font-size:13px; color:#6b7280; }
+  .costbar { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:13px; color:#166534; display:flex; gap:16px; flex-wrap:wrap; align-items:center; }
+  .costbar b { color:#14532d; }
+  .costbar .pill { background:#fff; border:1px solid #bbf7d0; border-radius:999px; padding:2px 10px; font-weight:600; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; }
+  button { font-family:inherit; cursor:pointer; border:none; border-radius:8px; padding:8px 14px; font-size:13px; }
+  .b-edit { background:#2563eb; color:#fff; }
+  .b-edit.on { background:#f59e0b; }
+  .b-export { background:#059669; color:#fff; }
+  .b-reset { background:#e5e7eb; color:#374151; }
+  .banner { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; font-size:12.5px;
+            padding:8px 12px; border-radius:8px; margin-bottom:14px; }
+  .card { background:#fff; border-radius:14px; box-shadow:0 1px 4px rgba(0,0,0,.06);
+          margin-bottom:16px; overflow:hidden; }
+  .card-head { display:flex; align-items:center; justify-content:space-between;
+               padding:14px 16px; background:linear-gradient(90deg,#fff7ed,#fff); border-bottom:1px solid #f1f5f9; }
+  .card-head .day { font-weight:700; font-size:15px; }
+  .card-head .place { color:#6b7280; font-size:12.5px; margin-left:8px; }
+  .mode-tag { font-size:11px; background:#eef2ff; color:#4338ca; padding:3px 8px; border-radius:6px; }
+  .card-body { padding:14px 16px; }
+  .sec { margin-bottom:12px; }
+  .sec:last-child { margin-bottom:0; }
+  .sec-title { font-size:12px; font-weight:700; color:#9ca3af; letter-spacing:.5px; margin-bottom:6px;
+               display:flex; align-items:center; gap:6px; }
+  .sec-title .add { margin-left:auto; font-size:11px; background:#ecfdf5; color:#059669; padding:2px 8px; border-radius:6px; cursor:pointer; }
+  .tl { display:flex; gap:10px; margin-bottom:8px; align-items:flex-start; }
+  .tl .time { flex:0 0 64px; color:#2563eb; font-weight:600; font-size:13px; padding-top:6px; }
+  .tl .txt { flex:1; font-size:13.5px; line-height:1.5; padding-top:5px; }
+  .note { display:flex; gap:8px; font-size:13px; line-height:1.5; margin-bottom:6px; color:#374151; }
+  .note .dot { color:#f59e0b; flex:0 0 auto; }
+  .kv { font-size:13.5px; line-height:1.6; }
+  .kv .k { color:#9ca3af; }
+  .hotel-hi { color:#dc2626; font-weight:700; }
+
+  /* 费用区块 */
+  .costbox { background:#fafafa; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; margin-top:8px; }
+  .costline { display:flex; gap:10px; align-items:center; font-size:13px; margin-bottom:6px; flex-wrap:wrap; }
+  .costline .cat { color:#6b7280; flex:0 0 70px; }
+  .costline .name { flex:1; min-width:120px; color:#374151; }
+  .costline .amt { font-weight:600; min-width:70px; text-align:right; }
+  .costline .est { color:#9ca3af; font-style:italic; }
+  .costline .note { color:#9ca3af; font-size:12px; flex:0 0 100%; margin:0; }
+  .costsummary { border-top:1px dashed #e5e7eb; padding-top:8px; margin-top:6px; display:flex; gap:14px; flex-wrap:wrap; font-size:13px; color:#374151; }
+  .costsummary .tot { font-weight:700; color:#0f7b5f; }
+
+  /* 编辑态费用表格 */
+  .ecostrow { display:flex; gap:8px; align-items:flex-start; margin-bottom:8px; flex-wrap:wrap; }
+  .ecostrow select, .ecostrow input { font-family:inherit; font-size:13px; border:1px solid #d1d5db; border-radius:6px; padding:5px 8px; background:#fffef5; }
+  .ecostrow select.cat { width:110px; }
+  .ecostrow input.name { flex:1; min-width:120px; }
+  .ecostrow input.amt { width:90px; }
+  .ecostrow select.typ { width:90px; }
+  .ecostrow input.note { flex:1; min-width:160px; }
+  .ecostrow .del { color:#cbd5e1; font-size:16px; cursor:pointer; padding:4px 2px; }
+  .ecostrow .del:hover { color:#ef4444; }
+  .costfoot { display:flex; gap:14px; align-items:center; margin-top:8px; font-size:13px; color:#374151; }
+  .costfoot .tot { font-weight:700; color:#0f7b5f; }
+
+  .edit .inp { width:100%; font-family:inherit; font-size:13.5px; border:1px solid #d1d5db;
+               border-radius:6px; padding:5px 8px; background:#fffef5; }
+  .edit .inp.t { width:64px; flex:0 0 64px; text-align:center; }
+  .edit .txt-inp { width:100%; font-family:inherit; font-size:13.5px; border:1px solid #d1d5db;
+                   border-radius:6px; padding:5px 8px; background:#fffef5; resize:vertical; }
+  .edit .tl { align-items:stretch; }
+  .edit .txt { padding-top:0; }
+  .export-box { display:none; margin-top:14px; }
+  .export-box textarea { width:100%; height:160px; font-family:monospace; font-size:12px;
+                         border:1px solid #d1d5db; border-radius:8px; padding:10px; }
+  .tip { font-size:12px; color:#6b7280; margin:6px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="title">
+      <h1 id="rt-name">成都-卧龙-四姑娘山-新都桥-康定-三星堆</h1>
+      <div class="meta"><span id="rt-range"></span> · 状态：规划中 · 档位：5-7天 · 共 8 天</div>
+    </div>
+    <div class="btns">
+      <button class="b-edit" id="btnEdit">✏️ 编辑模式</button>
+      <button class="b-reset" id="btnReset" style="display:none">↺ 还原原计划</button>
+      <button class="b-export" id="btnExport" style="display:none">📤 导出改动</button>
+    </div>
+  </div>
+
+  <!-- 路线总花费 -->
+  <div class="costbar" id="tripCostBar">
+    <span>💰 整趟预计花费</span>
+    <span class="pill">已确定 <b id="tripFixed">—</b></span>
+    <span class="pill">预估 <b id="tripEst">—</b></span>
+    <span class="pill">合计 <b id="tripTotal">—</b></span>
+  </div>
+
+  <div class="banner" id="banner">
+    💡 这是 Demo：在原有每日行程卡基础上新增「当日费用」区块。固定金额（高铁/住宿/门票/租车）和预估金额（油费/吃饭）会分别汇总；编辑模式可逐天增删改，改完自动存本地。
+  </div>
+
+  <div id="cards"></div>
+
+  <div class="export-box" id="exportBox">
+    <div class="tip">复制下面 JSON，发给雪花即可同步进正式数据（无需你手动改文件）：</div>
+    <textarea id="exportJSON" readonly></textarea>
+  </div>
+</div>
+
+<script>
+const CATS = {
+  train:"高铁/机票", hotel:"住宿", ticket:"景区门票",
+  rental:"租车费", gas:"油费", meal:"吃饭", toll:"停车/过路", other:"其他"
+};
+const ORIGINAL = {
+  name: "成都-卧龙-四姑娘山-新都桥-康定-三星堆",
+  range: "2026-09-30 ~ 2026-10-07",
+  days: [
+    { date:"2026/9/30", place:"成都", mode:"高铁",
+      timeline:[ {t:"下午",x:"请假从广州出发，高铁赴成都"}, {t:"22:00",x:"抵成都东站，入住酒店；高铁上完成物资采购直送酒店"} ],
+      route:"广州→成都（高铁）", hotel:"Zsmart智尚酒店(成都东站)",
+      notes:["高铁票提前买，国庆票紧","东站附近酒店方便次日拿车"],
+      costs:{ items:[
+        {category:"train",name:"广州→成都 高铁（4人）",amount:2600,type:"fixed",note:"二等座约650/人"},
+        {category:"hotel",name:"成都东站酒店",amount:400,type:"fixed",note:"双床房"},
+        {category:"meal",name:"晚餐+次日早餐",amount:150,type:"estimate",note:"东站附近"}
+      ]} },
+    { date:"2026/10/1", place:"卧龙", mode:"行车",
+      timeline:[ {t:"08:00",x:"酒店拿车+早餐+装车"}, {t:"10:00",x:"出发→卧龙（约220km/3h）"}, {t:"13:00",x:"卧龙熊猫基地，避开上午人流"}, {t:"17:00",x:"返回酒店休息"} ],
+      route:"成都→卧龙 220km", hotel:"卧龙文玥民宿(1900)",
+      notes:["国庆1号早走避堵","卧龙海拔1900，熊猫近距离看"],
+      costs:{ items:[
+        {category:"rental",name:"租车日均",amount:400,type:"fixed",note:"SUV 7天均摊"},
+        {category:"gas",name:"油费",amount:200,type:"estimate",note:"成都→卧龙段"},
+        {category:"ticket",name:"卧龙熊猫基地门票",amount:360,type:"fixed",note:"4人，老人/小孩优惠待核"},
+        {category:"hotel",name:"卧龙文玥民宿",amount:450,type:"fixed",note:"双床房"},
+        {category:"meal",name:"三餐",amount:200,type:"estimate",note:"民宿附近"}
+      ]} },
+    { date:"2026/10/2", place:"四姑娘山", mode:"行车",
+      timeline:[ {t:"08:00",x:"出发去四姑娘山"}, {t:"11:00",x:"进双桥沟玩5h（观光车直达）"}, {t:"16:00",x:"猫鼻梁看日照金山"} ],
+      route:"到双桥沟约3h/81km，猫鼻梁14km半小时", hotel:"四姑娘山雪山情民宿(3100)",
+      notes:["双桥沟观光车，老人孩子轻松","海拔3100，注意高反"],
+      costs:{ items:[
+        {category:"gas",name:"油费",amount:180,type:"estimate",note:"卧龙→四姑娘山"},
+        {category:"ticket",name:"双桥沟门票+观光车",amount:600,type:"fixed",note:"4人，旺季价"},
+        {category:"hotel",name:"雪山情民宿",amount:500,type:"fixed",note:"双床房"},
+        {category:"meal",name:"三餐",amount:220,type:"estimate",note:""}
+      ]} },
+    { date:"2026/10/3", place:"甲居藏寨", mode:"行车",
+      timeline:[ {t:"09:30",x:"进长坪沟徒步1.5h掉头"}, {t:"下午",x:"去甲居藏寨"} ],
+      route:"甲居约3h", hotel:"伴山月望山民宿(甲居藏寨)",
+      notes:["长坪沟徒步量力，1.5h即返","甲居藏寨风光"],
+      costs:{ items:[
+        {category:"ticket",name:"长坪沟门票",amount:300,type:"fixed",note:"4人"},
+        {category:"gas",name:"油费",amount:220,type:"estimate",note:"四姑娘山→甲居"},
+        {category:"hotel",name:"伴山月望山民宿",amount:450,type:"fixed",note:""},
+        {category:"meal",name:"三餐",amount:200,type:"estimate",note:""}
+      ]} },
+    { date:"2026/10/4", place:"新都桥", mode:"行车",
+      timeline:[ {t:"09:00",x:"雅拉雪山观景台"}, {t:"",x:"墨石公园→姑弄村→塔公草原→木雅大寺→鱼子西"} ],
+      route:"甲居→新都桥 160km/3.5h", hotel:"岗噶布酒店(新都桥店 3500)",
+      notes:["新都桥海拔3500，高原注意！老人小孩慢走","一天点多，预留拍照时间"],
+      costs:{ items:[
+        {category:"ticket",name:"墨石公园门票",amount:240,type:"fixed",note:"4人"},
+        {category:"gas",name:"油费",amount:260,type:"estimate",note:"甲居→新都桥"},
+        {category:"hotel",name:"岗噶布酒店",amount:550,type:"fixed",note:"新都桥"},
+        {category:"meal",name:"三餐",amount:220,type:"estimate",note:""}
+      ]} },
+    { date:"2026/10/5", place:"康定", mode:"行车",
+      timeline:[ {t:"",x:"新都桥→居里寺垭口→甲根坝→红海子→康定"} ],
+      route:"新都桥→康定", hotel:"康定云颂酒店",
+      notes:["垭口海拔高，短停即走"],
+      costs:{ items:[
+        {category:"gas",name:"油费",amount:200,type:"estimate",note:"新都桥→康定"},
+        {category:"hotel",name:"康定云颂酒店",amount:450,type:"fixed",note:""},
+        {category:"meal",name:"三餐",amount:200,type:"estimate",note:""}
+      ]} },
+    { date:"2026/10/6", place:"三星堆", mode:"行车",
+      timeline:[ {t:"",x:"康定→木格措→泸定桥(可选)→雅安→三星堆 221km"} ],
+      route:"康定→三星堆 221km", hotel:"广汉七朵酒店(三星堆店)",
+      notes:["泸定桥可选，赶路则跳过","晚上到三星堆方便次日玩"],
+      costs:{ items:[
+        {category:"ticket",name:"木格措门票",amount:560,type:"fixed",note:"4人"},
+        {category:"gas",name:"油费",amount:300,type:"estimate",note:"康定→三星堆"},
+        {category:"hotel",name:"广汉七朵酒店",amount:400,type:"fixed",note:""},
+        {category:"meal",name:"三餐",amount:200,type:"estimate",note:""}
+      ]} },
+    { date:"2026/10/7", place:"回广州", mode:"高铁",
+      timeline:[ {t:"上午",x:"玩三星堆（请讲解3h）"}, {t:"下午",x:"高铁回广州"} ],
+      route:"三星堆→广州（高铁）", hotel:"—",
+      notes:["三星堆务必请讲解","高铁票提前买"],
+      costs:{ items:[
+        {category:"ticket",name:"三星堆门票+讲解",amount:400,type:"fixed",note:"4人"},
+        {category:"train",name:"成都→广州 高铁（4人）",amount:2600,type:"fixed",note:"二等座约650/人"},
+        {category:"meal",name:"晚餐",amount:120,type:"estimate",note:""}
+      ]} }
+  ]
+};
+
+const LS_KEY = "radar-route-cost-demo";
+let state = loadState();
+let editMode = false;
+
+function loadState(){
+  try { const s = JSON.parse(localStorage.getItem(LS_KEY)); if(s) return s; } catch(e){}
+  return JSON.parse(JSON.stringify(ORIGINAL));
+}
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+function calcDay(costs){
+  const items = (costs && costs.items) || [];
+  const fixed = items.filter(x=>x.type==="fixed").reduce((a,b)=>a+(+b.amount||0),0);
+  const est = items.filter(x=>x.type==="estimate").reduce((a,b)=>a+(+b.amount||0),0);
+  return { fixed, est, total: fixed+est };
+}
+function calcTrip(){
+  return state.days.reduce((acc,d)=>{
+    const c = calcDay(d.costs);
+    acc.fixed += c.fixed; acc.est += c.est; acc.total += c.total;
+    return acc;
+  },{fixed:0,est:0,total:0});
+}
+
+function renderTripCost(){
+  const t = calcTrip();
+  document.getElementById("tripFixed").textContent = "¥"+t.fixed.toLocaleString();
+  document.getElementById("tripEst").textContent = "¥"+t.est.toLocaleString();
+  document.getElementById("tripTotal").textContent = "¥"+t.total.toLocaleString();
+}
+
+function hotelHTML(h){
+  const m = h && h.match(/\d{3,4}/);
+  if(m && parseInt(m[0])>=3000) return '<span class="hotel-hi">'+h+' ⚠️高原</span>';
+  return h || "—";
+}
+
+function render(){
+  document.getElementById("rt-range").textContent = state.range;
+  document.getElementById("rt-name").textContent = state.name;
+  const c = document.getElementById("cards");
+  c.className = editMode ? "edit" : "";
+  renderTripCost();
+
+  c.innerHTML = state.days.map((d,i)=>{
+    const tl = d.timeline.map((it,j)=>{
+      if(editMode){
+        return `<div class="tl">
+          <input class="inp t" value="${esc(it.t)}" oninput="updTL(${i},${j},'t',this.value)">
+          <textarea class="txt-inp" rows="1" oninput="updTL(${i},${j},'x',this.value)">${esc(it.x)}</textarea>
+        </div>`;
+      }
+      return `<div class="tl"><div class="time">${it.t||""}</div><div class="txt">${esc(it.x)}</div></div>`;
+    }).join("");
+    const notes = d.notes.map((n,j)=>{
+      if(editMode){
+        return `<div class="note"><span class="dot">⚠</span>
+          <textarea class="txt-inp" rows="1" oninput="updNote(${i},${j},this.value)">${esc(n)}</textarea></div>`;
+      }
+      return `<div class="note"><span class="dot">⚠</span><span>${esc(n)}</span></div>`;
+    }).join("");
+
+    const cst = calcDay(d.costs);
+    const costView = editMode ? costEditHTML(i,d) : costViewHTML(d,cst);
+
+    const routeVal = editMode
+      ? `<input class="inp" value="${esc(d.route)}" oninput="upd(${i},'route',this.value)">`
+      : `<span>${esc(d.route)||"—"}</span>`;
+    const hotelVal = editMode
+      ? `<input class="inp" value="${esc(d.hotel)}" oninput="upd(${i},'hotel',this.value)">`
+      : hotelHTML(d.hotel);
+    const placeVal = editMode
+      ? `<input class="inp" style="width:120px;display:inline-block" value="${esc(d.place)}" oninput="upd(${i},'place',this.value)">`
+      : `<span class="place">${esc(d.place)}</span>`;
+
+    return `<div class="card">
+      <div class="card-head">
+        <div><span class="day">第${i+1}天 · ${d.date}</span> ${placeVal}</div>
+        <span class="mode-tag">${esc(d.mode)}</span>
+      </div>
+      <div class="card-body">
+        <div class="sec"><div class="sec-title">🕐 时间安排</div>${tl}</div>
+        <div class="sec"><div class="sec-title">🚗 路线</div><div class="kv">${routeVal}</div></div>
+        <div class="sec"><div class="sec-title">🏨 住宿</div><div class="kv">${hotelVal}</div></div>
+        <div class="sec"><div class="sec-title">⚠️ 注意事项</div>${notes}</div>
+        <div class="sec">${costView}</div>
+      </div>
+    </div>`;
+  }).join("");
+
+  document.querySelectorAll("textarea.txt-inp").forEach(t=>{ t.style.height="auto"; t.style.height=t.scrollHeight+"px"; });
+}
+
+function costViewHTML(d,cst){
+  const items = (d.costs && d.costs.items) || [];
+  if(!items.length) return '<div class="sec-title">💰 当日费用</div><div class="tip">暂无费用记录</div>';
+  const lines = items.map(it=>{
+    const est = it.type==="estimate";
+    return `<div class="costline">
+      <span class="cat">${CATS[it.category]||it.category}</span>
+      <span class="name">${esc(it.name)}</span>
+      <span class="amt ${est?'est':''}">${est?'≈':''}¥${(+it.amount||0).toLocaleString()}</span>
+      ${it.note?'<span class="note">'+esc(it.note)+'</span>':''}
+    </div>`;
+  }).join("");
+  return `<div class="sec-title">💰 当日费用</div>
+    <div class="costbox">${lines}
+      <div class="costsummary">
+        <span>固定 <b>¥${cst.fixed.toLocaleString()}</b></span>
+        <span>预估 <b>¥${cst.est.toLocaleString()}</b></span>
+        <span class="tot">合计 ¥${cst.total.toLocaleString()}</span>
+      </div>
+    </div>`;
+}
+
+function costEditHTML(i,d){
+  const items = (d.costs && d.costs.items) || [];
+  const rows = items.map((it,j)=>{
+    const catOpts = Object.entries(CATS).map(([k,v])=>`<option value="${k}" ${it.category===k?'selected':''}>${v}</option>`).join("");
+    return `<div class="ecostrow">
+      <select class="cat" onchange="updCost(${i},${j},'category',this.value)">${catOpts}</select>
+      <input class="name" placeholder="项目名" value="${esc(it.name)}" oninput="updCost(${i},${j},'name',this.value)">
+      <input class="amt" type="number" placeholder="金额" value="${it.amount}" oninput="updCost(${i},${j},'amount',this.value)">
+      <select class="typ" onchange="updCost(${i},${j},'type',this.value)">
+        <option value="fixed" ${it.type==='fixed'?'selected':''}>固定</option>
+        <option value="estimate" ${it.type==='estimate'?'selected':''}>预估</option>
+      </select>
+      <input class="note" placeholder="备注" value="${esc(it.note||'')}" oninput="updCost(${i},${j},'note',this.value)">
+      <span class="del" onclick="delCost(${i},${j})">✕</span>
+    </div>`;
+  }).join("");
+  const cst = calcDay(d.costs);
+  return `<div class="sec-title">💰 当日费用<span class="add" onclick="addCost(${i})">＋ 添加一项</span></div>
+    <div class="costbox">${rows}
+      <div class="costfoot">
+        <span>固定 <b>¥${cst.fixed.toLocaleString()}</b></span>
+        <span>预估 <b>¥${cst.est.toLocaleString()}</b></span>
+        <span class="tot">合计 ¥${cst.total.toLocaleString()}</span>
+      </div>
+    </div>`;
+}
+
+function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function upd(i,f,v){ state.days[i][f]=v; saveState(); }
+function updTL(i,j,f,v){ state.days[i].timeline[j][f]=v; saveState(); }
+function updNote(i,j,v){ state.days[i].notes[j]=v; saveState(); }
+
+function ensureCosts(i){
+  if(!state.days[i].costs) state.days[i].costs={items:[]};
+  if(!state.days[i].costs.items) state.days[i].costs.items=[];
+}
+function addCost(i){
+  ensureCosts(i);
+  state.days[i].costs.items.push({category:"meal",name:"",amount:"",type:"estimate",note:""});
+  saveState(); render();
+}
+function updCost(i,j,f,v){
+  ensureCosts(i);
+  state.days[i].costs.items[j][f]=v;
+  saveState(); renderTripCost();
+}
+function delCost(i,j){
+  ensureCosts(i);
+  state.days[i].costs.items.splice(j,1);
+  saveState(); render();
+}
+
+document.getElementById("btnEdit").onclick = function(){
+  editMode = !editMode;
+  this.classList.toggle("on", editMode);
+  this.textContent = editMode ? "✅ 完成编辑" : "✏️ 编辑模式";
+  document.getElementById("btnReset").style.display = editMode ? "" : "none";
+  document.getElementById("btnExport").style.display = editMode ? "" : "none";
+  document.getElementById("exportBox").style.display = "none";
+  render();
+};
+document.getElementById("btnReset").onclick = function(){
+  if(!confirm("确定还原到原计划？你在本地的所有修改将清空。")) return;
+  state = JSON.parse(JSON.stringify(ORIGINAL));
+  localStorage.removeItem(LS_KEY);
+  render();
+};
+document.getElementById("btnExport").onclick = function(){
+  const box = document.getElementById("exportBox");
+  box.style.display = "block";
+  document.getElementById("exportJSON").value = JSON.stringify(state, null, 2);
+  const ta = document.getElementById("exportJSON");
+  ta.focus(); ta.select();
+  try { document.execCommand("copy"); } catch(e){}
+  alert("已复制改动 JSON，发给雪花即可同步落库（无需你手动改文件）。");
+};
+
+render();
+</script>
+</body>
+</html>

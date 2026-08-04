@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末雷达 · 行程自建 + 数据同步 demo</title>
+<style>
+  :root{ --brand:#2563eb; --amber:#f59e0b; --bg:#f7f8fa; --card:#fff; --line:#e8eaee; --sub:#6b7280; --ink:#1f2937; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;line-height:1.6;}
+  .wrap{max-width:860px;margin:0 auto;padding:28px 18px 60px;}
+  h1{font-size:24px;margin:0 0 4px;}
+  .lead{color:var(--sub);margin:0 0 24px;font-size:14px;}
+  .sec{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 20px 22px;margin-bottom:18px;}
+  .sec h2{font-size:17px;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .num{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--brand);color:#fff;font-size:13px;align-items:center;justify-content:center;flex:none;}
+  .muted{color:var(--sub);font-size:13px;}
+  .btn{display:inline-block;background:var(--brand);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;}
+  .btn.amber{background:var(--amber);}
+  .ghost{background:#eef2ff;color:var(--brand);}
+  form .row{display:flex;flex-wrap:wrap;gap:14px;margin:10px 0;}
+  form label{display:flex;flex-direction:column;font-size:13px;gap:5px;flex:1;min-width:150px;}
+  input,select{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;}
+  .day{background:#fbfcfe;border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0;}
+  .day-h{display:flex;gap:10px;align-items:center;font-weight:700;margin-bottom:8px;}
+  .dayno{background:var(--brand);color:#fff;border-radius:8px;padding:2px 9px;font-size:13px;}
+  .kv{font-size:13px;color:var(--sub);margin:3px 0;}
+  .empty{color:#9ca3af;font-size:13px;font-style:italic;}
+  .pill{display:inline-block;background:#eef2ff;color:var(--brand);border-radius:20px;padding:3px 11px;font-size:12px;margin:2px 4px 2px 0;}
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0;font-size:13px;}
+  .flow .step{background:#fff;border:1px solid var(--line);border-radius:9px;padding:7px 12px;}
+  .flow .arrow{color:var(--sub);}
+  .arch{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:16px;font-family:ui-monospace,Menlo,monospace;font-size:12.5px;line-height:1.8;overflow-x:auto;}
+  .arch .c{color:#7dd3fc;} .arch .g{color:#86efac;} .arch .y{color:#fde68a;}
+  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;font-size:13px;color:#92400e;margin-top:10px;}
+  .foot{color:var(--sub);font-size:12px;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>行程自建 + 数据同步 · demo</h1>
+  <p class="lead">内部实现细节你看不到；这里只展示"你以后怎么用"。</p>
+
+  <!-- 1 -->
+  <div class="sec">
+    <h2><span class="num">1</span> 在「🗺️ 旅行路线」点「＋ 新建行程」</h2>
+    <div class="flow">
+      <span class="step">🗺️ 旅行路线</span>
+      <span class="arrow">→</span>
+      <button class="btn">＋ 新建行程</button>
+    </div>
+    <p class="muted">按钮在路线库列表顶部（和现有卡片同一风格，本周最热不动）。</p>
+  </div>
+
+  <!-- 2 -->
+  <div class="sec">
+    <h2><span class="num">2</span> 填一张表单</h2>
+    <form onsubmit="return false">
+      <div class="row">
+        <label>行程名称
+          <input value="潮汕闲逛 · 美食+南澳岛" />
+        </label>
+        <label>状态
+          <select><option>规划中</option><option>已走过</option></select>
+        </label>
+      </div>
+      <div class="row">
+        <label>日期范围
+          <input value="2026-10-01 ~ 2026-10-03" />
+        </label>
+        <label>天数
+          <input value="3" />
+        </label>
+        <label>档位
+          <select><option>3-4天</option><option>1-2天</option><option>5-7天</option><option>8天+</option></select>
+        </label>
+      </div>
+    </form>
+    <p class="muted">名称、天数必填；天数决定生成几天空白卡。</p>
+  </div>
+
+  <!-- 3 -->
+  <div class="sec">
+    <h2><span class="num">3</span> 自动生成空白每日卡，你边走边改</h2>
+    <div class="day">
+      <div class="day-h"><span class="dayno">Day1</span> 2026/10/1 · 待定</div>
+      <div class="kv">🚗 路线：<span class="empty">（点编辑填写）</span></div>
+      <div class="kv">🏨 住宿：<span class="empty">（待定）</span></div>
+      <div class="kv">🕐 时间 / ⚠️ 注意 / 💰 费用：编辑模式逐条加</div>
+    </div>
+    <div class="day">
+      <div class="day-h"><span class="dayno">Day2</span> 2026/10/2 · 待定</div>
+      <div class="kv">🚗 路线：<span class="empty">（点编辑填写）</span></div>
+    </div>
+    <div class="day">
+      <div class="day-h"><span class="dayno">Day3</span> 2026/10/3 · 待定</div>
+      <div class="kv">🚗 路线：<span class="empty">（点编辑填写）</span></div>
+    </div>
+    <p class="muted">生成的卡和成都那套一模一样，可 ✏️编辑、改时间/路线/住宿/注意事项、记费用。</p>
+  </div>
+
+  <!-- 4 -->
+  <div class="sec">
+    <h2><span class="num">4</span> 数据存哪 · 无服务器方案</h2>
+    <div class="arch">
+<span class="c">你的改动</span> → 浏览器本地(localStorage) <span class="y">radar-routes-v1</span>
+<span class="g">↓ 点「保存并同步」</span>
+<span class="c">GitHub 仓库</span>(data/*.json) ──commit──▶ <span class="c">GitHub Pages</span>(托管, 永远在线)
+   ↑ 任意设备打开即拉最新            ↓ 版本历史=commits, 可回滚
+<span class="y">手机 / 电脑</span> 看同一份 · <span class="y">这部 Mac 关机也不影响</span>
+    </div>
+    <ul style="font-size:13px;color:var(--ink);margin:10px 0 0;padding-left:18px;">
+      <li>没有服务器、没有数据库，JSON 文件就是"数据库"。</li>
+      <li>每次保存 = 一次 Git 提交，改错了能找回历史。</li>
+      <li>手机和电脑打开同一个网址，数据互通。</li>
+    </ul>
+    <div class="note">⚠️ 这部分需要你有一个 <b>GitHub 账号</b>（你已有），给我仓库写权限或生成一个 token（仅写权限，可撤销）。<br>为什么不用本机/Obsidian：本机方案这部 Mac 一关就断；Obsidian 是笔记工具、不能托管网页 app。GitHub 同时托管 app + 存数据，关机也能从手机开。<br>Obsidian 可选：若你想在 Obsidian 里也"读"到行程，我可额外同步成笔记（主存储仍是 GitHub）。</div>
+  </div>
+
+  <!-- 5 -->
+  <div class="sec">
+    <h2><span class="num">5</span> 验收（做出来后你会看到）</h2>
+    <p style="font-size:14px;margin:6px 0;">
+      ✅ 点「＋新建行程」→ 填表 → 路线库出现新路线 + N 天空白卡<br>
+      ✅ 编辑填好内容，刷新后还在<br>
+      ✅（Git 配好后）点「保存并同步」→ 另一台设备打开能看到<br>
+      ✅ 成都等原有路线不会被误删
+    </p>
+    <p class="foot">本 demo 仅展示交互，不含内部打分/标签/同步代码。确认方向后我改 app/index.html 与 data/。</p>
+  </div>
+</div>
+</body>
+</html>
