@@ -175,6 +175,54 @@
   .rbtn.rst{background:#e5e7eb;color:#374151;}
   .rawdet{margin:12px 0;font-size:13px;}
   .rawdet summary{cursor:pointer;color:#6b7280;font-weight:600;}
+  /* 费用台账（按天一行） */
+  .modal.wide{width:min(960px,96vw);max-height:92vh;overflow:auto;padding:0;display:flex;flex-direction:column;}
+  .lg-h{padding:16px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:3;}
+  .lg-t{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .lg-t h4{font-size:16px;}
+  .lg-sum{font-size:13px;color:#92400e;background:var(--amber-soft);border:1px solid #f3d8a8;border-radius:9px;padding:7px 12px;}
+  .lg-sum b{font-size:14.5px;}
+  .lg-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;}
+  .lg-body{padding:0 20px 12px;overflow:auto;}
+  table.lg{width:100%;border-collapse:collapse;font-size:12.5px;min-width:720px;}
+  table.lg th{background:#f4f5f7;padding:9px 6px;text-align:center;font-weight:600;color:#374151;border:1px solid var(--line);position:sticky;top:0;}
+  table.lg td{border:1px solid var(--line);padding:3px 4px;text-align:center;vertical-align:top;}
+  table.lg input.num{width:100%;border:1px solid transparent;background:transparent;border-radius:6px;padding:7px 6px;font-size:12.5px;color:var(--ink);text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+  table.lg input.num:focus{outline:none;border-color:var(--brand);background:#fff;}
+  table.lg input.note{width:100%;border:1px solid transparent;background:transparent;border-radius:6px;padding:7px 6px;font-size:12px;color:var(--ink);}
+  table.lg input.note:focus{outline:none;border-color:var(--brand);background:#fff;}
+  table.lg tr:nth-child(even) td{background:#fcfcfd;}
+  table.lg tr.day-total td{background:#fffbeb;font-weight:700;color:#78350f;}
+  .ctog{border:1px solid var(--line);border-radius:7px;padding:3px 7px;font-size:11px;cursor:pointer;background:#e6f4ef;color:#0f7b5f;font-weight:600;margin-top:3px;}
+  .ctog.est{background:var(--amber-soft);color:var(--amber);}
+  .lg-foot{padding:11px 20px 16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--sub);display:flex;gap:14px;flex-wrap:wrap;background:#fafbfc;}
+  .lg-foot b{color:var(--ink);}
+  .lgempty{text-align:center;color:var(--sub);font-size:13px;padding:34px 0;}
+  .cat-hint{font-size:10px;color:var(--sub);display:block;margin-top:2px;font-weight:400;}
+  /* 花费账本 */
+  .bk-trip{border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:11px;}
+  .bk-trip .h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;}
+  .bk-trip .nm{font-size:14.5px;font-weight:700;}
+  .bk-trip .num{font-size:15px;font-weight:700;color:var(--brand);white-space:nowrap;}
+  .bk-sub{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.6;}
+  .bars{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+  .barrow{display:flex;align-items:center;gap:8px;font-size:12px;}
+  .barrow .lb{width:36px;color:var(--sub);flex-shrink:0;}
+  .barrow .bt{flex:1;height:9px;border-radius:5px;background:#f0f1f4;overflow:hidden;}
+  .barrow .bt i{display:block;height:100%;border-radius:5px;}
+  .barrow .vv{width:74px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums;}
+  .bk-total{background:linear-gradient(120deg,#0f7b5f,#2c9d7c);color:#fff;border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+  .bk-total .big{font-size:24px;font-weight:700;margin:3px 0;}
+  .bk-total .sm{font-size:12.5px;opacity:.92;line-height:1.7;}
+  .more{font-size:12px;color:var(--brand);cursor:pointer;margin-top:9px;display:inline-block;font-weight:600;}
+  .modal.book{width:660px;}
+  .route-card.hl{animation:hl 1.6s ease;}
+  @keyframes hl{0%{box-shadow:0 0 0 3px #86efac;}100%{box-shadow:0 0 0 0 rgba(0,0,0,0);}}
+  .acts button.plan{flex:1.4;background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+  .acts button.plan:hover{background:#0a624c;color:#fff;}
+  .acts button.inlib{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
+  .rfilter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+  .rfilter .chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
 </style>
 </head>
 <body>
@@ -251,7 +299,7 @@
       <button class="syncbtn" onclick="syncRoutes()">☁️ 保存并同步（写回 GitHub）</button>
       <button class="syncbtn" style="background:var(--brand);color:#fff;border-color:var(--brand);" onclick="openNewRoute()">＋ 新建行程</button>
       <button class="syncbtn" onclick="openSettings()">⚙️ GitHub 设置</button>
-      <button class="syncbtn" onclick="costSummary()">📊 花费汇总</button>
+      <button class="syncbtn" onclick="openBook()">📊 花费汇总</button>
     </div>
     <div id="routeList"></div>
   </div>
@@ -301,21 +349,56 @@
           <option value="done">✅ 已走过</option>
         </select>
       </label>
-      <label style="font-size:13px;color:var(--sub);flex:1;">天数
-        <input id="nrDays" type="number" min="1" max="30" value="3" class="rinp" style="margin-top:4px;">
-      </label>
     </div>
     <label style="font-size:13px;color:var(--sub);">日期范围<input id="nrRange" class="rinp" style="margin-top:4px;" placeholder="如：2026-10-01 ~ 2026-10-03"></label>
-    <label style="font-size:13px;color:var(--sub);">档位
-      <select id="nrTier" class="rinp" style="margin-top:4px;">
-        <option value="1-2天">1-2 天（珠三角）</option>
-        <option value="3-4天">3-4 天（广东+邻省）</option>
-        <option value="5-7天">5-7 天（跨省）</option>
-        <option value="8天+">8 天+（远途）</option>
-      </select>
-    </label>
+    <div style="display:flex;gap:10px;">
+      <label style="font-size:13px;color:var(--sub);flex:1;">天数
+        <input id="nrDays" type="number" min="1" max="30" value="3" class="rinp" style="margin-top:4px;" oninput="autoTierNew()">
+      </label>
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;"><span style="font-size:13px;color:var(--sub);">档位（按天数自动算）</span><span class="tag t-best" id="nrTierShow" style="align-self:flex-start;font-size:13px;padding:5px 12px;">3-4天</span></div>
+    </div>
   </div>
   <div class="mbtns"><button onclick="closeMask('mNewRoute')">取消</button><button class="ok" onclick="submitNewRoute()">生成空白行程</button></div>
+</div></div>
+
+<!-- 加进路线 -->
+<div class="mask" id="mPlan"><div class="modal">
+  <h4>🗺️ 加进路线规划</h4>
+  <div class="hint">生成一条路线，之后可以排每天行程、记费用。</div>
+  <div style="display:flex;flex-direction:column;gap:10px;">
+    <label style="font-size:13px;color:var(--sub);">目的地<input id="pName" class="rinp" style="margin-top:4px;"></label>
+    <label style="font-size:13px;color:var(--sub);">出行日期（空着 = 待定）<input id="pRange" class="rinp" style="margin-top:4px;" placeholder="如 2026-10-01 ~ 10-03"></label>
+    <div style="display:flex;gap:10px;">
+      <label style="font-size:13px;color:var(--sub);flex:1;">天数<input id="pDays" type="number" min="1" max="30" value="3" class="rinp" style="margin-top:4px;" oninput="autoTierPlan()"></label>
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;"><span style="font-size:13px;color:var(--sub);">档位</span><span class="tag t-best" id="pTierShow" style="align-self:flex-start;font-size:13px;padding:5px 12px;">3-4天</span></div>
+    </div>
+    <div style="display:flex;gap:14px;font-size:13px;align-items:center;">
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="pst" value="planned" checked> 🧭 规划中</label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="radio" name="pst" value="done"> ✅ 已走过</label>
+    </div>
+  </div>
+  <div class="mbtns"><button onclick="closeMask('mPlan')">取消</button><button class="ok" onclick="submitPlan()">✅ 生成路线</button></div>
+</div></div>
+
+<!-- 费用台账 -->
+<div class="mask" id="mLedger"><div class="modal wide">
+  <div class="lg-h">
+    <div class="lg-t"><h4 id="lgTitle">📒 费用台账</h4><div class="lg-sum" id="lgSum"></div></div>
+    <div class="lg-bar">
+      <button class="syncbtn" style="padding:6px 12px;" onclick="editPax()">👨‍👩‍👧 人数：<span id="lgPax"></span></button>
+      <button class="syncbtn" style="padding:6px 12px;margin-left:auto;" onclick="closeMask('mLedger')">✕ 关闭</button>
+    </div>
+  </div>
+  <div class="lg-body"><div id="lgTable"></div></div>
+  <div class="lg-foot" id="lgFoot"></div>
+</div></div>
+
+<!-- 花费账本 -->
+<div class="mask" id="mBook"><div class="modal book">
+  <h4>📊 花费账本</h4>
+  <div class="hint">点开是看的，不是复制的。要发给雪花再点下面的复制。</div>
+  <div id="bookBody"></div>
+  <div class="mbtns"><button onclick="copyBook()">📋 复制成文本</button><button class="ok" onclick="closeMask('mBook')">✕ 关闭</button></div>
 </div></div>
 
 <button class="fab" id="fab" onclick="copyFeedback()">📋 复制反馈同步给雪花（<span id="fbN">0</span> 条）</button>
@@ -543,6 +626,9 @@ function cardHTML(d, i, isBonus, withConfirm){
   const wishState = WISH.find(w=>w.name===d.name);
   const wishBtn = wishState ? `<button class="did" onclick="toast('已在心愿单：${d.name}')">⭐ 已收心愿</button>`
                             : `<button onclick="addWish(${d.id})">⭐ 收心愿</button>`;
+  const planBtn = routeExistsByName(d.name)
+    ? `<button class="inlib" onclick="jumpToRouteByName('${esc(d.name)}')">🗺️ 已在路线库</button>`
+    : `<button class="plan" onclick="askPlanFromCard(${d.id})">🗺️ 加进路线</button>`;
   return `<div class="card${isBonus?' bonus':''}" id="card${d.id}">
     <div class="cover" style="background:${d.grad}"><span class="rank">${isBonus?'🎁 彩蛋':'No.'+(i+1)}</span><span class="emoji">${d.emoji}</span><h3>${d.name}</h3></div>
     <div class="cbody">
@@ -555,7 +641,7 @@ function cardHTML(d, i, isBonus, withConfirm){
       ${d.warn?`<div class="warn">⚠️ ${d.warn}</div>`:''}
       ${postsHTML}
       <div class="acts">
-        ${confirm}${wishBtn}
+        ${planBtn}${confirm}${wishBtn}
         <button onclick="dislike(${d.id})">👎 没兴趣</button>
         <button onclick="been(${d.id})">✅ 去过了</button>
       </div>
@@ -822,6 +908,7 @@ function renderWish(){
       <div class="meta"><span>📅 添加 ${w.addedAt}</span></div>
       <div class="why">📝 ${w.note||'（无备注）'}</div>
       <div class="acts" style="flex-wrap:wrap;">
+        ${routeExistsByName(w.name)?`<button class="inlib" onclick="jumpToRouteByName('${esc(w.name)}')">🗺️ 已在路线库</button>`:`<button class="plan" onclick="askPlanFromWish(${w.id})">🗺️ 加进路线</button>`}
         <button onclick="cycleLevel(${w.id})">调想去程度</button>
         <button onclick="editNote(${w.id})">编辑备注</button>
         <button onclick="markDone(${w.id})">${w.status==='done'?'↩️ 改回想去':'标记已去过'}</button>
@@ -862,11 +949,45 @@ function routeCandidatesHTML(cands){
 }
 /* ---------- 编辑叠层（路线卡就地改，存本地不污染真值源） ---------- */
 function nowISO(){ return new Date().toISOString().slice(0,19); }
+/* ---------- 费用台账 + 路线联动 数据模型 ---------- */
+const COLS=[
+  {key:'transport',name:'交通',hint:'高铁/租车/油费/停车'},
+  {key:'stay',name:'住宿',hint:''},
+  {key:'ticket',name:'门票',hint:'景区/乐园'},
+  {key:'food',name:'吃饭',hint:''},
+  {key:'other',name:'其他',hint:''}
+];
+const GROUP={transport:'交通',stay:'住宿',ticket:'门票',food:'吃饭',other:'其他'};
+const GCOLOR={交通:'#1d4ed8',住宿:'#6d28d9',门票:'#b45309',吃饭:'#be185d',其他:'#6b7280'};
+const CATMAP={高铁票:'transport',租车费:'transport',油费:'transport',停车费:'transport',住宿:'stay',景区门票:'ticket',吃饭:'food',其他:'other'};
+function tierStr(days){
+  const d=Math.max(1,parseInt(days)||1);
+  if(d<=2)return '1-2天'; if(d<=4)return '3-4天'; if(d<=7)return '5-7天'; return '8天+';
+}
+function tierToDays(t){ if(t==='1-2天')return 2; if(t==='3-4天')return 3; if(t==='5-7天')return 5; if(t==='8天+')return 8; return 3; }
+function emptyDay(day){return {day,transport:{a:0,t:'fixed'},stay:{a:0,t:'fixed'},ticket:{a:0,t:'fixed'},food:{a:0,t:'fixed'},other:{a:0,t:'fixed'},note:''};}
+function buildEmptyDayCosts(days){ const arr=[emptyDay(0)]; for(let i=1;i<=days;i++) arr.push(emptyDay(i)); return arr; }
+function ensureDayCosts(r){
+  if(!r.dayCosts){ r.dayCosts=[emptyDay(0)]; for(let i=1;i<=r.days;i++) r.dayCosts.push(emptyDay(i)); }
+  // 迁移老的 ledger / 老 daily[].costs.items（若有）
+  if(r.ledger&&r.ledger.length){ r.ledger.forEach(c=>{ const day=Math.max(0,Math.min(r.days,c.day||0)); const k=CATMAP[c.category]||'other'; const row=r.dayCosts.find(d=>d.day===day); if(row){row[k].a+=(+c.amount||0); if(c.type==='est') row[k].t='est';} }); r.ledger=[]; }
+  if(r.daily&&r.daily.length){ r.daily.forEach((d,i)=>{ const items=(d.costs&&d.costs.items)||[]; if(!items.length) return; const day=Math.max(1,Math.min(r.days,i+1)); const row=r.dayCosts.find(x=>x.day===day); if(!row) return; items.forEach(it=>{ const k=CATMAP[it.category]||'other'; row[k].a+=(+it.amount||0); if(it.type==='est') row[k].t='est'; }); }); }
+  return r.dayCosts;
+}
+function mergedCosts(r){ const e=ROUTE_EDIT[r.id]; if(e&&e.dayCosts) return e.dayCosts; return ensureDayCosts(r); }
+function mergedPax(r){ const e=ROUTE_EDIT[r.id]; return (e&&e.pax)?e.pax:(r.pax||5); }
+function sums(dc){ let f=0,e=0; (dc||[]).forEach(row=>{ COLS.forEach(({key})=>{ const v=row[key]||{}; const a=+v.a||0; if(v.t==='est') e+=a; else f+=a; }); }); return {f,e,t:f+e}; }
+function daySum(row){ return COLS.reduce((s,{key})=>s+(+row[key].a||0),0); }
+let ROUTE_FILTER='all';
+function routeExistsByName(name){ if(!name) return false; const n=name.replace(/（.*?）/g,'').trim(); return ROUTE_DB.some(r=>r.name.replace(/（.*?）/g,'').trim()===n); }
+function jumpToRouteByName(name){ const n=name.replace(/（.*?）/g,'').trim(); const r=ROUTE_DB.find(x=>x.name.replace(/（.*?）/g,'').trim()===n); if(!r) return; if(ROUTE_FILTER!=='all' && ROUTE_FILTER!==r.status){ ROUTE_FILTER='all'; } renderRoute(); const el=document.getElementById('rc-'+r.id); if(el&&el.scrollIntoView) el.scrollIntoView({behavior:'smooth',block:'center'}); if(el){ el.classList.remove('hl'); void el.offsetWidth; el.classList.add('hl'); } }
+function setRouteFilter(k){ ROUTE_FILTER=k; renderRoute(); }
 function mergedDaily(r){ const e=ROUTE_EDIT[r.id]; return (e&&e.days)?e.days:r.daily; }
 function ensureEdit(routeId){
   if(ROUTE_EDIT[routeId]) return;
   const r=ROUTE_DB.find(x=>x.id===routeId); if(!r) return;
-  ROUTE_EDIT[routeId]={ days: JSON.parse(JSON.stringify(mergedDaily(r))), editedAt: nowISO() };
+  const dc = mergedCosts(r);
+  ROUTE_EDIT[routeId]={ days: JSON.parse(JSON.stringify(mergedDaily(r))), dayCosts: JSON.parse(JSON.stringify(dc)), pax: r.pax||5, editedAt: nowISO() };
   save(LS.routeEdit, ROUTE_EDIT);
 }
 function updR(routeId,i,f,v){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i][f]=v; save(LS.routeEdit,ROUTE_EDIT); }
@@ -876,11 +997,43 @@ function delRTL(routeId,i,j){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].t
 function delRNote(routeId,i,j){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].tips.splice(j,1); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
 function addRTL(routeId,i){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].timeline.push({time:"",action:""}); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
 function addRNote(routeId,i){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].tips.push(""); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
-function dayCostText(items){ const f=items.filter(c=>c.type!=='est').reduce((s,c)=>s+(Number(c.amount)||0),0); const e=items.filter(c=>c.type==='est').reduce((s,c)=>s+(Number(c.amount)||0),0); return '固定 ¥'+f+' · 预估 ¥'+e+' · 合计 ¥'+(f+e); }
-function addCost(routeId,i){ ensureEdit(routeId); const e=ROUTE_EDIT[routeId]; if(!e.days[i].costs) e.days[i].costs={items:[]}; if(!e.days[i].costs.items) e.days[i].costs.items=[]; e.days[i].costs.items.push({category:'其他',name:'',amount:0,type:'fixed'}); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
-function updCost(routeId,i,j,f,v){ ensureEdit(routeId); const it=ROUTE_EDIT[routeId].days[i].costs.items[j]; it[f]=(f==='amount')?Number(v):v; save(LS.routeEdit,ROUTE_EDIT); if(f!=='name'){ const el=document.getElementById('costsum-'+routeId+'-'+i); if(el) el.textContent=dayCostText(ROUTE_EDIT[routeId].days[i].costs.items); } }
-function toggleCostType(routeId,i,j){ ensureEdit(routeId); const it=ROUTE_EDIT[routeId].days[i].costs.items[j]; it.type=(it.type==='est')?'fixed':'est'; save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
-function delCost(routeId,i,j){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].costs.items.splice(j,1); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
+/* ---------- 费用台账（按天一行，参考飞书 excel 模式） ---------- */
+let LEDGER_ROUTE_ID=null;
+function openLedger(id){
+  ensureEdit(id); LEDGER_ROUTE_ID=id;
+  const r=ROUTE_DB.find(x=>x.id===id); if(!r) return;
+  document.getElementById('lgTitle').textContent='📒 '+r.name+' · 费用台账';
+  document.getElementById('lgPax').textContent=mergedPax(r);
+  renderLedger(); openMask('mLedger');
+}
+function renderLedger(){
+  const e=ROUTE_EDIT[LEDGER_ROUTE_ID]; if(!e) return;
+  const dc=e.dayCosts, s=sums(dc);
+  const pax=mergedPax(ROUTE_DB.find(x=>x.id===LEDGER_ROUTE_ID)||{pax:5});
+  const per=Math.round(s.t/pax);
+  document.getElementById('lgSum').innerHTML=`固定 <b>¥${s.f}</b> · 预估 <b>¥${s.e}</b> · 合计 <b>¥${s.t}</b> · 人均 <b>¥${per}</b>`;
+  const rows=dc.slice().sort((a,b)=>(a.day===0?999:a.day)-(b.day===0?999:b.day));
+  let h=`<table class="lg"><thead><tr><th style="width:64px;">日期</th>${COLS.map(c=>`<th>${c.name}<span class="cat-hint">${c.hint}</span></th>`).join('')}<th style="width:84px;">当日合计</th><th style="min-width:120px;">备注</th></tr></thead><tbody>`;
+  rows.forEach(row=>{
+    const ds=daySum(row); const label=row.day===0?'全程':'Day'+row.day;
+    h+=`<tr>
+      <td style="font-weight:700;background:#f9fafb;">${label}</td>
+      ${COLS.map(({key})=>{ const v=row[key]||{a:0,t:'fixed'}; return `<td><input class="num" type="number" min="0" value="${v.a||''}" placeholder="0" oninput="updCost('${row.day}','${key}',this.value)" onfocus="this.select()"><br><button class="ctog ${v.t==='est'?'est':''}" onclick="togCost('${row.day}','${key}')">${v.t==='est'?'预估':'固定'}</button></td>`; }).join('')}
+      <td style="font-weight:700;background:#fffbeb;">¥${ds}</td>
+      <td><input class="note" value="${esc(row.note||'')}" placeholder="当天备注" oninput="updNote('${row.day}',this.value)"></td>
+    </tr>`;
+  });
+  h+=`<tr class="day-total"><td>合计</td>${COLS.map(({key})=>{ const colTotal=rows.reduce((sum,row)=>sum+(+row[key].a||0),0); return `<td>¥${colTotal}</td>`; }).join('')}<td>¥${s.t}</td><td></td></tr>`;
+  h+=`</tbody></table>`;
+  document.getElementById('lgTable').innerHTML=h;
+  const g={}; rows.forEach(row=>{ COLS.forEach(({key})=>{const k=GROUP[key]; g[k]=(g[k]||0)+(+row[key].a||0);}); });
+  document.getElementById('lgFoot').innerHTML='<span>分类小计：</span>'+Object.keys(g).map(k=>`<span>${k} <b>¥${g[k]}</b></span>`).join('')+`<span style="margin-left:auto;">固定 <b>¥${s.f}</b> · 预估 <b>¥${s.e}</b></span>`;
+}
+function findRow(day){ const e=ROUTE_EDIT[LEDGER_ROUTE_ID]; return e&&e.dayCosts.find(r=>r.day===Number(day)); }
+function updCost(day,key,val){ const row=findRow(day); if(!row)return; row[key].a=Math.max(0,Number(val)||0); save(LS.routeEdit,ROUTE_EDIT); renderLedger(); renderRoute(); }
+function togCost(day,key){ const row=findRow(day); if(!row)return; row[key].t=row[key].t==='est'?'fixed':'est'; save(LS.routeEdit,ROUTE_EDIT); renderLedger(); renderRoute(); }
+function updNote(day,val){ const row=findRow(day); if(!row)return; row.note=val; save(LS.routeEdit,ROUTE_EDIT); }
+function editPax(){ const cur=ROUTE_DB.find(x=>x.id===LEDGER_ROUTE_ID); const pv=mergedPax(cur||{pax:5}); const v=prompt('这趟一共几个人？',pv); if(v===null)return; const p=Math.max(1,parseInt(v)||1); const e=ROUTE_EDIT[LEDGER_ROUTE_ID]; if(e) e.pax=p; if(cur&&!e) cur.pax=p; document.getElementById('lgPax').textContent=p; if(e) save(LS.routeEdit,ROUTE_EDIT); renderLedger(); renderRoute(); }
 function toggleEditRoute(routeId){ EDIT_MODE[routeId]=!EDIT_MODE[routeId]; renderRoute(); }
 function autoGrow(){ document.querySelectorAll('textarea.rinp').forEach(t=>{ t.style.height='auto'; t.style.height=t.scrollHeight+'px'; }); }
 function exportRoute(routeId){
@@ -918,24 +1071,15 @@ function dayCardHTML(d, idx, routeId){
   const addNote = editing?`<div class="rsec-t">⚠️ 注意事项<span class="radd" onclick="addRNote('${routeId}',${idx})">＋ 加一条</span></div>`:`<div class="rsec-t">⚠️ 注意事项</div>`;
   const routeVal = editing?`<input class="rinp" value="${esc(d.route||"")}" oninput="updR('${routeId}',${idx},'route',this.value)">`:`<span>${esc(d.route)||"—"}</span>`;
   const hi = hotelHi(d);
-  const costs = (d.costs && d.costs.items) ? d.costs.items : [];
-  const fixedSum = costs.filter(c=>c.type!=='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
-  const estSum = costs.filter(c=>c.type==='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
-  const dayTotal = fixedSum+estSum;
-  let costSec;
-  if(editing){
-    costSec = `<div class="rsec"><div class="rsec-t">💰 当日费用<span class="radd" onclick="addCost('${routeId}',${idx})">＋ 加一项</span></div>`+
-      (costs.length?costs.map((c,j)=>`<div class="costrow">
-        <select class="rinp" onchange="updCost('${routeId}',${idx},${j},'category',this.value)">${COST_CATS.map(cat=>`<option ${cat===c.category?'selected':''}>${cat}</option>`).join('')}</select>
-        <input class="rinp" value="${esc(c.name||'')}" oninput="updCost('${routeId}',${idx},${j},'name',this.value)" placeholder="项目">
-        <input class="rinp num" type="number" value="${esc(c.amount||0)}" oninput="updCost('${routeId}',${idx},${j},'amount',this.value)">
-        <button class="ctoggle ${c.type==='est'?'est':''}" onclick="toggleCostType('${routeId}',${idx},${j})">${c.type==='est'?'预估':'固定'}</button>
-        <span class="rdel" onclick="delCost('${routeId}',${idx},${j})">✕</span>
-      </div>`).join('') : '<div class="rempty">（暂无，点“＋ 加一项”）</div>')+`</div>`;
-  } else {
-    costSec = `<div class="rsec"><div class="rsec-t">💰 当日费用</div>`+
-      (costs.length?`<div class="costsum" id="costsum-${routeId}-${idx}">固定 ¥${fixedSum} · 预估 ¥${estSum} · 合计 <b>¥${dayTotal}</b></div>`+costs.map(c=>`<div class="costitem"><span class="cbadge">${esc(c.category||'其他')}</span>${esc(c.name||'')}<span class="camt">${c.type==='est'?'≈':''}¥${Number(c.amount)||0}</span></div>`).join('') : '<div class="rempty">（暂无）</div>')+`</div>`;
-  }
+  const dcRow = (mergedCosts(ROUTE_DB.find(x=>x.id===routeId))||[]).find(x=>x.day===idx+1) || emptyDay(idx+1);
+  const f = COLS.reduce((s,{key})=> s + (dcRow[key].t!=='est'? dcRow[key].a:0),0);
+  const e = COLS.reduce((s,{key})=> s + (dcRow[key].t==='est'? dcRow[key].a:0),0);
+  const dayTotal = f+e;
+  const costSec = `<div class="rsec"><div class="rsec-t">💰 当日费用</div>`+
+    (dayTotal>0 ? `<div class="costsum">固定 ¥${f} · 预估 ¥${e} · 合计 <b>¥${dayTotal}</b></div>`+
+      COLS.filter(({key})=>dcRow[key].a>0).map(({key,name})=>`<div class="costitem"><span class="cbadge">${name}</span><span class="camt">${dcRow[key].t==='est'?'≈':''}¥${dcRow[key].a}</span></div>`).join('')
+     : '<div class="rempty">（暂无，点上方「📒 费用台账」记录）</div>')+
+    `</div>`;
   const hotelVal = editing?`<input class="rinp" value="${esc(d.hotel||"")}" oninput="updR('${routeId}',${idx},'hotel',this.value)">`:`<span class="${hi?'rhotel-hi':''}">${esc(d.hotel||"—")}${hi?' ⚠️高原':''}</span>`;
   return `<div class="daycard">
     <div class="daycard-h"><span class="dayno">Day${idx+1}</span><span class="daydate">${esc(d.date)}</span><span class="daymode">${esc(d.mode)}</span></div>
@@ -950,18 +1094,22 @@ function dayCardHTML(d, idx, routeId){
 }
 function renderRoute(){
   const box=document.getElementById('routeList');
-  if(!ROUTE_DB.length){box.innerHTML='<div class="panel"><div class="empty">还没有任何路线。确认目的地后会自动生成「规划中」路线；走过的路线我会帮你记录在这里。</div></div>';return;}
-  box.innerHTML=ROUTE_DB.map(r=>{
+  const filters=[['all','全部'],['planned','🧭 规划中'],['done','✅ 已走过']];
+  const fhtml=`<div class="rfilter">${filters.map(([k,lab])=>`<span class="chip ${ROUTE_FILTER===k?'on':''}" onclick="setRouteFilter('${k}')">${lab}</span>`).join('')}</div>`;
+  if(!ROUTE_DB.length){box.innerHTML=fhtml+'<div class="panel"><div class="empty">还没有任何路线。确认目的地后会自动生成「规划中」路线；走过的路线我会帮你记录在这里。</div></div>';return;}
+  const list=ROUTE_DB.filter(r=> ROUTE_FILTER==='all' || r.status===ROUTE_FILTER);
+  if(!list.length){box.innerHTML=fhtml+'<div class="panel"><div class="empty">这个筛选下还没有路线。</div></div>';return;}
+  box.innerHTML=fhtml+list.map(r=>{
     const stTag=r.status==='done'?'<span class="tag" style="background:#dcfce7;color:#15803d;">✅ 已走过</span>':'<span class="tag t-best">🧭 规划中</span>';
     const exTag=r.isExample?'<span class="tag" style="background:#f1f5f9;color:#64748b;">示例数据</span>':'';
-    const calBtn='';  // iPhone 日历功能暂未上线（后续版本再加），先去掉按钮
     const editing=EDIT_MODE[r.id];
     const hasEdit=!!(ROUTE_EDIT[r.id]&&ROUTE_EDIT[r.id].days);
     const merged=mergedDaily(r);
-    const allItems = merged.flatMap(d=>(d.costs&&d.costs.items)?d.costs.items:[]);
-    const tf = allItems.filter(c=>c.type!=='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
-    const te = allItems.filter(c=>c.type==='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
-    const tripCostHTML = allItems.length?`<div class="tripcost">💰 全程花费预计：固定 <b>¥${tf}</b> · 预估 <b>¥${te}</b> · 合计 <b>¥${tf+te}</b></div>`:'';
+    const dc=mergedCosts(r);
+    const s=sums(dc);
+    const pax=mergedPax(r);
+    const per=Math.round(s.t/pax);
+    const tripCostHTML = s.t>0?`<div class="tripcost">💰 全程花费：固定 <b>¥${s.f}</b> · 预估 <b>¥${s.e}</b> · 合计 <b>¥${s.t}</b> · 人均 <b>¥${per}</b>（${pax}人）<button class="syncbtn" style="padding:4px 10px;margin-left:8px;" onclick="openLedger('${r.id}')">📒 费用台账</button></div>`:`<div class="tripcost">💰 全程花费：还没记账<button class="syncbtn" style="padding:4px 10px;margin-left:8px;" onclick="openLedger('${r.id}')">📒 费用台账</button></div>`;
     const cards=merged.map((d,i)=>dayCardHTML(d,i,r.id)).join("");
     const editBar=`<div class="reditbar">
       <button class="rbtn ${editing?'on':''}" onclick="toggleEditRoute('${r.id}')">${editing?'✅ 完成编辑':'✏️ 编辑模式'}</button>
@@ -969,7 +1117,7 @@ function renderRoute(){
       ${editing&&hasEdit?`<button class="rbtn rst" onclick="resetRoute('${r.id}')">↺ 还原原计划</button>`:''}
       ${r.source==='user'?`<button class="rbtn del" onclick="delUserRoute('${r.id}')">🗑 删除</button>`:''}
     </div>`;
-    return `<div class="card route-card"><div class="cbody">
+    return `<div class="card route-card" id="rc-${r.id}"><div class="cbody">
       <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px;" onclick="toggleRoute('${r.id}')">
         <div><div style="font-size:16px;font-weight:700;">${esc(r.name)}</div>
           <div class="meta" style="margin-top:6px;"><span>📅 ${r.dateRange}</span><span>🗓 ${r.days} 天</span><span>🏷 ${r.tier}</span></div></div>
@@ -982,8 +1130,6 @@ function renderRoute(){
         <div class="daycards">${cards}</div>
         <details class="rawdet"><summary>📋 完整计划（原始底稿，每天一行）</summary>${routePlanTableHTML(merged)}</details>
         <div class="panel" style="margin-bottom:12px;"><h3>🔗 候选路线参考（收藏 > 点赞 > 浏览）</h3>${routeCandidatesHTML(r.candidateRoutes)}</div>
-        <div>${calBtn}</div>
-        <div id="cal-${r.id}"></div>
       </div>
     </div></div>`;
   }).join('');
@@ -996,7 +1142,7 @@ function syncRoutes(){
   if(!token){ toast('请先在「⚙️ GitHub 设置」里粘贴令牌'); openSettings(); return; }
   const cfg = window.APP_CONFIG || {};
   const path = (cfg.dataPath||"data/") + "routes.json";
-  const payload = ROUTE_DB.map(r=>{ const m=mergedDaily(r); return Object.assign({}, r, {daily:m}); });
+  const payload = ROUTE_DB.map(r=>{ const m=mergedDaily(r); const dc=mergedCosts(r); return Object.assign({}, r, {daily:m, dayCosts:dc, pax:mergedPax(r)}); });
   const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload,null,2))));
   (async()=>{
     let sha=null;
@@ -1021,37 +1167,75 @@ async function pullRoutesIfEmpty(){
     if(res.ok){ const arr=await res.json(); if(Array.isArray(arr)&&arr.length){ ROUTE_DB=arr; save(LS.routes,ROUTE_DB); renderRoute(); } }
   }catch(e){}
 }
-function costSummary(){
-  const lines=[];
-  let gF=0,gE=0;
+function openBook(){
+  let gf=0,ge=0,dn=0,dc=0,pn=0,pc=0;
+  ROUTE_DB.forEach(r=>{ const s=sums(mergedCosts(r)); gf+=s.f; ge+=s.e; if(r.status==='done'){dn++;dc+=s.t;}else{pn++;pc+=s.t;} });
+  if(!gf&&!ge){ document.getElementById('bookBody').innerHTML='<div class="lgempty">还没记过账。<br>打开任意行程点「📒 费用台账」开始记。</div>'; openMask('mBook'); return; }
+  let h=`<div class="bk-total"><div class="sm">全部行程合计</div><div class="big">¥${gf+ge}</div>
+    <div class="sm">固定 ¥${gf} · 预估 ¥${ge}<br>✅ 已走过 ${dn} 趟 ¥${dc}　｜　🧭 规划中 ${pn} 趟 ¥${pc}</div></div>`;
   ROUTE_DB.forEach(r=>{
-    const merged=mergedDaily(r);
-    const items=merged.flatMap(d=>(d.costs&&d.costs.items)?d.costs.items:[]);
-    const f=items.filter(c=>c.type!=='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
-    const e=items.filter(c=>c.type==='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
-    gF+=f; gE+=e;
-    lines.push(`【${r.name}】(${r.status==='done'?'已走过':'规划中'}) 固定 ¥${f} · 预估 ¥${e} · 合计 ¥${f+e}`);
-    items.forEach(c=> lines.push(`   - ${c.category}${c.name?('·'+c.name):''}: ${c.type==='est'?'≈':''}¥${Number(c.amount)||0}`));
+    const s=sums(mergedCosts(r)); if(!s.t) return;
+    const pax=mergedPax(r), per=Math.round(s.t/pax), daily=r.days?Math.round(s.t/r.days):0;
+    const g={}; mergedCosts(r).forEach(row=>{ COLS.forEach(({key})=>{const k=GROUP[key]; g[k]=(g[k]||0)+(+row[key].a||0);}); });
+    const max=Math.max(...Object.values(g));
+    h+=`<div class="bk-trip">
+      <div class="h"><span class="nm">${r.status==='done'?'✅':'🧭'} ${esc(r.name)}</span><span class="num">¥${s.t}</span></div>
+      <div class="bk-sub">${r.status==='done'?'已走过':'规划中'} · ${r.days}天 · ${pax}人　｜　人均 <b>¥${per}</b> · 日均 <b>¥${daily}</b> · 固定 ¥${s.f} / 预估 ¥${s.e}</div>
+      <div class="bars">${Object.keys(g).map(k=>`<div class="barrow"><span class="lb">${k}</span>
+        <span class="bt"><i style="width:${max?Math.round(g[k]/max*100):0}%;background:${GCOLOR[k]}"></i></span>
+        <span class="vv">¥${g[k]}</span></div>`).join('')}</div>
+      <span class="more" onclick="toggleDetail('${r.id}',this)">▸ 展开每日明细</span>
+      <div id="bd-${r.id}" style="display:none;margin-top:8px;">${bookDetail(r)}</div>
+    </div>`;
   });
-  if(!lines.length){ toast('还没有任何费用记录'); return; }
-  lines.unshift(`【周末雷达 · 全部行程花费汇总】 固定合计 ¥${gF} · 预估合计 ¥${gE} · 总合计 ¥${gF+gE}`);
-  copy(lines.join('\n'));
-  toast('📊 花费汇总已复制到剪贴板');
+  document.getElementById('bookBody').innerHTML=h; openMask('mBook');
+}
+function bookDetail(r){
+  return mergedCosts(r).filter(d=>d.day>0).sort((a,b)=>a.day-b.day).map(row=>{
+    const s=daySum(row);
+    const parts=COLS.filter(({key})=>row[key].a>0).map(({key,name})=>`${name}${row[key].t==='est'?'≈':''}¥${row[key].a}`).join('　');
+    return `<div class="dayrow" style="font-size:12.5px;color:#374151;padding:6px 0;border-bottom:1px dashed #f1f2f4;display:flex;justify-content:space-between;gap:10px;"><span style="font-weight:600;color:var(--brand);flex-shrink:0;">Day${row.day}</span><span style="flex:1;line-height:1.6;color:var(--sub);">${parts||'无记录'}${row.note?' · '+esc(row.note):''}</span><span style="font-weight:600;white-space:nowrap;">¥${s}</span></div>`;
+  }).join('');
+}
+function toggleDetail(id,el){const b=document.getElementById('bd-'+id);const open=b.style.display!=='none';b.style.display=open?'none':'block';el.textContent=open?'▸ 展开每日明细':'▾ 收起明细';}
+function copyBook(){
+  const lines=[];let gf=0,ge=0;
+  ROUTE_DB.forEach(r=>{ const s=sums(mergedCosts(r));if(!s.t)return;gf+=s.f;ge+=s.e;
+    lines.push(`【${r.name}】(${r.status==='done'?'已走过':'规划中'}) 固定 ¥${s.f} · 预估 ¥${s.e} · 合计 ¥${s.t}`);
+    mergedCosts(r).forEach(row=>{const ds=daySum(row);if(!ds)return; const label=row.day===0?'全程':'Day'+row.day;
+      lines.push(`   - ${label}: ${COLS.filter(({key})=>row[key].a>0).map(({key,name})=>`${name}${row[key].t==='est'?'≈':''}¥${row[key].a}`).join(' / ')}`);});});
+  lines.unshift(`【周末雷达 · 花费账本】合计 ¥${gf+ge}（固定 ¥${gf} / 预估 ¥${ge}）`);
+  copy(lines.join('\n')); toast('已复制成文本');
 }
 function openSettings(){ document.getElementById('ghToken').value=load(LS.ghToken,''); openMask('mSettings'); }
 function saveGhToken(){ const v=document.getElementById('ghToken').value.trim(); save(LS.ghToken,v); closeMask('mSettings'); toast(v?'✅ 令牌已保存（仅存本机）':'已清空令牌'); }
-function openNewRoute(){ document.getElementById('nrName').value=''; document.getElementById('nrDays').value=3; document.getElementById('nrRange').value=''; document.getElementById('nrStatus').value='planned'; document.getElementById('nrTier').value='3-4天'; openMask('mNewRoute'); }
+function openNewRoute(){ document.getElementById('nrName').value=''; document.getElementById('nrDays').value=3; document.getElementById('nrRange').value=''; document.getElementById('nrStatus').value='planned'; autoTierNew(); openMask('mNewRoute'); }
+function autoTierNew(){ const d=parseInt(document.getElementById('nrDays').value)||3; document.getElementById('nrTierShow').textContent=tierStr(d); }
 function submitNewRoute(){
   const name=document.getElementById('nrName').value.trim(); if(!name){ toast('先填行程名称'); return; }
   const days=Math.max(1,Math.min(30,parseInt(document.getElementById('nrDays').value)||3));
   const status=document.getElementById('nrStatus').value;
   const range=document.getElementById('nrRange').value.trim()||'待定';
-  const tier=document.getElementById('nrTier').value;
+  const tier=tierStr(days);
   const id='r-user-'+Date.now();
-  const r={ id, name, status, source:'user', dateRange:range, days, tier, daily: genPlan(name,days), candidateRoutes:[] };
+  const r={ id, name, status, source:'user', dateRange:range, days, tier, pax:5, daily: genPlan(name,days), dayCosts: buildEmptyDayCosts(days), candidateRoutes:[] };
   ROUTE_DB.unshift(r); save(LS.routes,ROUTE_DB); closeMask('mNewRoute'); renderRoute(); toast('✅ 已生成 '+days+' 天空白行程，点「✏️ 编辑模式」开始填');
 }
 function delUserRoute(id){ if(!confirm('确定删除这条行程？此操作不可恢复。')) return; const i=ROUTE_DB.findIndex(x=>x.id===id); if(i<0) return; ROUTE_DB.splice(i,1); delete ROUTE_EDIT[id]; save(LS.routes,ROUTE_DB); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); toast('已删除行程'); }
+
+/* ---------- 加进路线（本周最热 / 下一个假期 / 心愿单 → 路线库） ---------- */
+function askPlanFromCard(id){ const d=get(id); if(!d){toast('没找到这个目的地');return;} document.getElementById('pName').value=d.name; document.getElementById('pRange').value=''; document.getElementById('pDays').value=3; autoTierPlan(); document.querySelector('input[name=pst][value=planned]').checked=true; openMask('mPlan'); }
+function askPlanFromWish(id){ const w=WISH.find(x=>x.id===id); if(!w){toast('没找到这个心愿');return;} document.getElementById('pName').value=w.name; document.getElementById('pRange').value=''; document.getElementById('pDays').value=tierToDays(w.tier); autoTierPlan(); document.querySelector('input[name=pst][value=planned]').checked=true; openMask('mPlan'); }
+function autoTierPlan(){ const d=parseInt(document.getElementById('pDays').value)||2; document.getElementById('pTierShow').textContent=tierStr(d); }
+function submitPlan(){
+  const name=document.getElementById('pName').value.trim(); if(!name){toast('先填目的地');return;}
+  if(routeExistsByName(name)){ toast('路线库里已经有「'+name+'」了'); closeMask('mPlan'); return; }
+  const days=Math.max(1,Math.min(30,parseInt(document.getElementById('pDays').value)||2));
+  const status=document.querySelector('input[name=pst]:checked').value;
+  const r={ id:'r-u'+Date.now(), name, status, source:'user', dateRange:document.getElementById('pRange').value.trim()||'待定', days, tier:tierStr(days), pax:5, daily:genPlan(name,days), dayCosts:buildEmptyDayCosts(days), candidateRoutes:[] };
+  ROUTE_DB.unshift(r); save(LS.routes,ROUTE_DB); ROUTE_FILTER='all'; closeMask('mPlan'); renderRoute();
+  setTimeout(()=>jumpToRouteByName(name),80); toast('✅ 已加进路线库，可以排行程、记费用了');
+}
 
 /* ===================== 初始化 ===================== */
 refreshFab(); restoreState();
