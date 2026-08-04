@@ -1,6 +1,6 @@
 {
-  "updatedAt": "2026-08-03",
-  "note": "路线库真值源（雪花维护）。记录所有走过的路线(done) + 规划中路线(planned)，每条含完整 Day-by-Day 行程(daily) 与候选路线参考(candidateRoutes)。工具内嵌相同 seed，通过「同步给雪花」机制对齐。",
+  "updatedAt": "2026-08-04",
+  "note": "路线库真值源（雪花维护）。记录所有走过的路线(done) + 规划中路线(planned)，每条含完整 Day-by-Day 行程(daily)、费用台账(dayCosts)与候选路线参考(candidateRoutes)。工具内嵌相同 seed，通过「同步给雪花」机制对齐。",
   "routes": [
     {
       "id": "r-chengdu-2026",
@@ -183,7 +183,226 @@
           ]
         }
       ],
-      "candidateRoutes": []
+      "candidateRoutes": [],
+      "pax": 5,
+      "dayCosts": [
+        {
+          "day": 0,
+          "transport": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "note": "全程预留/未归类"
+        },
+        {
+          "transport": {
+            "a": 2292.5,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 236,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 200,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "day": 1,
+          "note": "广州→成都高铁，住东站"
+        },
+        {
+          "transport": {
+            "a": 3403,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 134,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 400,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "day": 2,
+          "note": "成都拿车→卧龙熊猫基地"
+        },
+        {
+          "transport": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 498,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 400,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "day": 3,
+          "note": "四姑娘山双桥沟+猫鼻梁"
+        },
+        {
+          "transport": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 439,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 400,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "day": 4,
+          "note": "长坪沟徒步→甲居藏寨"
+        },
+        {
+          "transport": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 615,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 400,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "day": 5,
+          "note": "雅拉雪山/墨石公园/塔公/鱼子西→新都桥"
+        },
+        {
+          "transport": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 400,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 400,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "day": 6,
+          "note": "居里寺垭口/甲根坝/红海子→康定"
+        },
+        {
+          "transport": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 221,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 400,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "day": 7,
+          "note": "木格措/泸定桥/雅安→三星堆"
+        },
+        {
+          "transport": {
+            "a": 2359,
+            "t": "fixed"
+          },
+          "stay": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "ticket": {
+            "a": 0,
+            "t": "fixed"
+          },
+          "food": {
+            "a": 400,
+            "t": "fixed"
+          },
+          "other": {
+            "a": 200,
+            "t": "fixed"
+          },
+          "day": 8,
+          "note": "三星堆→广州高铁"
+        }
+      ]
     }
   ]
 }
