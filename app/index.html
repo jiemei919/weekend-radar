@@ -251,6 +251,7 @@
       <button class="syncbtn" onclick="syncRoutes()">☁️ 保存并同步（写回 GitHub）</button>
       <button class="syncbtn" style="background:var(--brand);color:#fff;border-color:var(--brand);" onclick="openNewRoute()">＋ 新建行程</button>
       <button class="syncbtn" onclick="openSettings()">⚙️ GitHub 设置</button>
+      <button class="syncbtn" onclick="costSummary()">📊 花费汇总</button>
     </div>
     <div id="routeList"></div>
   </div>
@@ -664,6 +665,7 @@ function fbText(){
 }
 function copyFeedback(){ copy(fbText()); }
 function closeMask(id){document.getElementById(id).classList.remove('show');}
+function openMask(id){const el=document.getElementById(id); if(el) el.classList.add('show');}
 function swapBatch(){
   swapIdx = (swapIdx+1) % HOT_BATCHES.length;
   const b = HOT_BATCHES[swapIdx];
@@ -1018,6 +1020,23 @@ async function pullRoutesIfEmpty(){
     const res=await fetch(`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch||'main'}/${cfg.dataPath||'data/'}routes.json`);
     if(res.ok){ const arr=await res.json(); if(Array.isArray(arr)&&arr.length){ ROUTE_DB=arr; save(LS.routes,ROUTE_DB); renderRoute(); } }
   }catch(e){}
+}
+function costSummary(){
+  const lines=[];
+  let gF=0,gE=0;
+  ROUTE_DB.forEach(r=>{
+    const merged=mergedDaily(r);
+    const items=merged.flatMap(d=>(d.costs&&d.costs.items)?d.costs.items:[]);
+    const f=items.filter(c=>c.type!=='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
+    const e=items.filter(c=>c.type==='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
+    gF+=f; gE+=e;
+    lines.push(`【${r.name}】(${r.status==='done'?'已走过':'规划中'}) 固定 ¥${f} · 预估 ¥${e} · 合计 ¥${f+e}`);
+    items.forEach(c=> lines.push(`   - ${c.category}${c.name?('·'+c.name):''}: ${c.type==='est'?'≈':''}¥${Number(c.amount)||0}`));
+  });
+  if(!lines.length){ toast('还没有任何费用记录'); return; }
+  lines.unshift(`【周末雷达 · 全部行程花费汇总】 固定合计 ¥${gF} · 预估合计 ¥${gE} · 总合计 ¥${gF+gE}`);
+  copy(lines.join('\n'));
+  toast('📊 花费汇总已复制到剪贴板');
 }
 function openSettings(){ document.getElementById('ghToken').value=load(LS.ghToken,''); openMask('mSettings'); }
 function saveGhToken(){ const v=document.getElementById('ghToken').value.trim(); save(LS.ghToken,v); closeMask('mSettings'); toast(v?'✅ 令牌已保存（仅存本机）':'已清空令牌'); }
