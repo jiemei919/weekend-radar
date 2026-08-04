@@ -1,7 +1,7 @@
 // 周末雷达 Service Worker：离线缓存静态资源，让 Mac / iPhone 主屏幕 / 微信 H5 都能秒开
-const CACHE = 'radar-v7';
+const CACHE = 'radar-v8';
 const ASSETS = [
-  './', './index.html', './data.js', './holidays.js', './visited.js',
+  './', './index.html', './config.js', './data.js', './holidays.js', './visited.js',
   './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'
 ];
 

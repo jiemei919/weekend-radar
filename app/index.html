@@ -149,6 +149,20 @@
   .rkv{font-size:13px;line-height:1.5;}
   .rhotel-hi{color:#dc2626;font-weight:700;}
   .rempty{font-size:12.5px;color:#cbd5e1;}
+  .tripcost{margin-top:8px;font-size:13.5px;color:#374151;background:var(--brand-soft);border:1px solid #bfe3d4;border-radius:9px;padding:8px 12px;}
+  .tripcost b{color:var(--brand);}
+  .costsum{font-size:13px;color:#374151;margin-bottom:6px;}
+  .costsum b{color:var(--amber);}
+  .costitem{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;border-bottom:1px dashed var(--line);}
+  .costitem:last-child{border-bottom:none;}
+  .cbadge{background:#eef2ff;color:#4338ca;border-radius:6px;padding:2px 8px;font-size:11.5px;white-space:nowrap;}
+  .camt{margin-left:auto;font-weight:700;color:#374151;}
+  .costrow{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap;}
+  .costrow select,.costrow input.rinp{flex:1;min-width:90px;}
+  .costrow input.num{max-width:90px;}
+  .ctoggle{border:1px solid var(--line);background:#fff;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;color:var(--sub);white-space:nowrap;}
+  .ctoggle.est{background:var(--amber-soft);color:var(--amber);border-color:#f3d8a8;}
+  .rbtn.del{color:var(--rose);border-color:#f3c0d6;}
   .rinp{width:100%;font-family:inherit;font-size:13px;border:1px solid #d1d5db;border-radius:6px;padding:5px 8px;background:#fffef5;}
   .rinp.rt{width:58px;flex:0 0 58px;text-align:center;}
   .rinp.rtarea{resize:vertical;min-height:30px;line-height:1.5;}
@@ -233,7 +247,11 @@
   <!-- 旅行路线 -->
   <div class="page" id="p-route">
     <div class="hintbar">🗺️ 这里记录你<b>所有走过的路线</b>和<b>正在规划的路线</b>。点击任意一条展开看完整 Day-by-Day 行程卡（对齐你飞书手工表格式）。规划中路线可点「✏️ 编辑模式」随手改、再「📤 导出改动」发雪花落库。确认新目的地后，雪花会自动新增一条「规划中」路线。（iPhone 日历导入功能后续版本再加）</div>
-    <div style="margin-bottom:16px;"><button class="syncbtn" onclick="syncRoutes()">☁️ 导出同步给雪花（落库 data/routes.json）</button></div>
+    <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="syncbtn" onclick="syncRoutes()">☁️ 保存并同步（写回 GitHub）</button>
+      <button class="syncbtn" style="background:var(--brand);color:#fff;border-color:var(--brand);" onclick="openNewRoute()">＋ 新建行程</button>
+      <button class="syncbtn" onclick="openSettings()">⚙️ GitHub 设置</button>
+    </div>
     <div id="routeList"></div>
   </div>
 
@@ -261,12 +279,51 @@
   <div class="mbtns"><button onclick="closeMask('mBeen')">取消</button><button class="ok" onclick="submitBeen()">提交</button></div>
 </div></div>
 
+<!-- GitHub 设置 -->
+<div class="mask" id="mSettings"><div class="modal">
+  <h4>⚙️ GitHub 同步设置</h4>
+  <div class="hint">把你的个人访问令牌粘贴一次（以 <b>ghp_</b> 开头）。它只存在你这台设备的浏览器里，不会上传、不进仓库，可随时在 GitHub 撤销。粘贴后点「保存并同步」即可跨设备。</div>
+  <textarea id="ghToken" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;" placeholder="ghp_..."></textarea>
+  <div class="mbtns"><button onclick="closeMask('mSettings')">取消</button><button class="ok" onclick="saveGhToken()">保存</button></div>
+</div></div>
+
+<!-- 新建行程 -->
+<div class="mask" id="mNewRoute"><div class="modal">
+  <h4>＋ 新建行程</h4>
+  <div class="hint">填好基本信息，系统会生成 N 天空白每日卡，之后你可以随手编辑、记费用。</div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px;">
+    <label style="font-size:13px;color:var(--sub);">行程名称<input id="nrName" class="rinp" style="margin-top:4px;" placeholder="如：国庆·海南环岛"></label>
+    <div style="display:flex;gap:10px;">
+      <label style="font-size:13px;color:var(--sub);flex:1;">状态
+        <select id="nrStatus" class="rinp" style="margin-top:4px;">
+          <option value="planned">🧭 规划中</option>
+          <option value="done">✅ 已走过</option>
+        </select>
+      </label>
+      <label style="font-size:13px;color:var(--sub);flex:1;">天数
+        <input id="nrDays" type="number" min="1" max="30" value="3" class="rinp" style="margin-top:4px;">
+      </label>
+    </div>
+    <label style="font-size:13px;color:var(--sub);">日期范围<input id="nrRange" class="rinp" style="margin-top:4px;" placeholder="如：2026-10-01 ~ 2026-10-03"></label>
+    <label style="font-size:13px;color:var(--sub);">档位
+      <select id="nrTier" class="rinp" style="margin-top:4px;">
+        <option value="1-2天">1-2 天（珠三角）</option>
+        <option value="3-4天">3-4 天（广东+邻省）</option>
+        <option value="5-7天">5-7 天（跨省）</option>
+        <option value="8天+">8 天+（远途）</option>
+      </select>
+    </label>
+  </div>
+  <div class="mbtns"><button onclick="closeMask('mNewRoute')">取消</button><button class="ok" onclick="submitNewRoute()">生成空白行程</button></div>
+</div></div>
+
 <button class="fab" id="fab" onclick="copyFeedback()">📋 复制反馈同步给雪花（<span id="fbN">0</span> 条）</button>
 <div id="toast"></div>
 
 <script src="data.js"></script>
 <script src="holidays.js"></script>
 <script src="visited.js"></script>
+<script src="config.js"></script>
 <script>
 /* ===================== 数据层 ===================== */
 const R = window.RADAR;
@@ -321,7 +378,7 @@ const ROUTE_SEED = [
 const LS = {
   wish: "radar-wish-v1", routes: "radar-routes-v1", fb: "radar-fb-v1",
   leave: "radar-leave-v1", confirmed: "radar-confirmed-v1", visitedAdd: "radar-visited-add-v1",
-  routeEdit: "radar-route-edit-v1"
+  routeEdit: "radar-route-edit-v1", ghToken: "radar-gh-token-v1"
 };
 function load(key, seed){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):seed; }catch(e){ return seed; } }
 function save(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
@@ -737,9 +794,10 @@ function showConfirmed(){
   document.getElementById('confirmedPanel').style.display='block';
   document.getElementById('confirmedText').innerHTML=`🎯 <b>${confirmed.destination}</b><br>📅 窗口：${confirmed.dateRange}（${confirmed.days} 天）<br>🚗 档位：${confirmed.tier}<br>📝 选择理由：${confirmed.why}<br><span style="color:var(--brand);">✅ 已自动写入「🗺️ 旅行路线」路线库（规划中）</span>`;
 }
+const COST_CATS=["高铁票","住宿","景区门票","租车费","油费","吃饭","停车费","其他"];
 function genPlan(name,days){
   const arr=[];
-  for(let i=1;i<=days;i++) arr.push({date:'规划中',mode:'待定',plan:`Day${i} 行程待排（在对话里说"排一下 ${name} 的 Day${i}"）`,hotel:'待定',route:'',timeline:[],tips:[]});
+  for(let i=1;i<=days;i++) arr.push({date:'规划中',mode:'待定',plan:`Day${i} 行程待排（在对话里说"排一下 ${name} 的 Day${i}"）`,hotel:'待定',route:'',timeline:[],tips:[],costs:{items:[]}});
   return arr;
 }
 
@@ -816,11 +874,16 @@ function delRTL(routeId,i,j){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].t
 function delRNote(routeId,i,j){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].tips.splice(j,1); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
 function addRTL(routeId,i){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].timeline.push({time:"",action:""}); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
 function addRNote(routeId,i){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].tips.push(""); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
+function dayCostText(items){ const f=items.filter(c=>c.type!=='est').reduce((s,c)=>s+(Number(c.amount)||0),0); const e=items.filter(c=>c.type==='est').reduce((s,c)=>s+(Number(c.amount)||0),0); return '固定 ¥'+f+' · 预估 ¥'+e+' · 合计 ¥'+(f+e); }
+function addCost(routeId,i){ ensureEdit(routeId); const e=ROUTE_EDIT[routeId]; if(!e.days[i].costs) e.days[i].costs={items:[]}; if(!e.days[i].costs.items) e.days[i].costs.items=[]; e.days[i].costs.items.push({category:'其他',name:'',amount:0,type:'fixed'}); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
+function updCost(routeId,i,j,f,v){ ensureEdit(routeId); const it=ROUTE_EDIT[routeId].days[i].costs.items[j]; it[f]=(f==='amount')?Number(v):v; save(LS.routeEdit,ROUTE_EDIT); if(f!=='name'){ const el=document.getElementById('costsum-'+routeId+'-'+i); if(el) el.textContent=dayCostText(ROUTE_EDIT[routeId].days[i].costs.items); } }
+function toggleCostType(routeId,i,j){ ensureEdit(routeId); const it=ROUTE_EDIT[routeId].days[i].costs.items[j]; it.type=(it.type==='est')?'fixed':'est'; save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
+function delCost(routeId,i,j){ ensureEdit(routeId); ROUTE_EDIT[routeId].days[i].costs.items.splice(j,1); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); }
 function toggleEditRoute(routeId){ EDIT_MODE[routeId]=!EDIT_MODE[routeId]; renderRoute(); }
 function autoGrow(){ document.querySelectorAll('textarea.rinp').forEach(t=>{ t.style.height='auto'; t.style.height=t.scrollHeight+'px'; }); }
 function exportRoute(routeId){
   const r=ROUTE_DB.find(x=>x.id===routeId); if(!r) return;
-  const payload={ routeId, editedAt: nowISO(), days: mergedDaily(r).map(d=>({date:d.date,mode:d.mode,timeline:d.timeline,route:d.route,hotel:d.hotel,tips:d.tips})) };
+  const payload={ routeId, editedAt: nowISO(), days: mergedDaily(r).map(d=>({date:d.date,mode:d.mode,timeline:d.timeline,route:d.route,hotel:d.hotel,tips:d.tips,costs:d.costs||{items:[]}})) };
   copy('【周末雷达·路线编辑同步】\n'+JSON.stringify(payload,null,2));
 }
 function resetRoute(routeId){
@@ -853,6 +916,24 @@ function dayCardHTML(d, idx, routeId){
   const addNote = editing?`<div class="rsec-t">⚠️ 注意事项<span class="radd" onclick="addRNote('${routeId}',${idx})">＋ 加一条</span></div>`:`<div class="rsec-t">⚠️ 注意事项</div>`;
   const routeVal = editing?`<input class="rinp" value="${esc(d.route||"")}" oninput="updR('${routeId}',${idx},'route',this.value)">`:`<span>${esc(d.route)||"—"}</span>`;
   const hi = hotelHi(d);
+  const costs = (d.costs && d.costs.items) ? d.costs.items : [];
+  const fixedSum = costs.filter(c=>c.type!=='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
+  const estSum = costs.filter(c=>c.type==='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
+  const dayTotal = fixedSum+estSum;
+  let costSec;
+  if(editing){
+    costSec = `<div class="rsec"><div class="rsec-t">💰 当日费用<span class="radd" onclick="addCost('${routeId}',${idx})">＋ 加一项</span></div>`+
+      (costs.length?costs.map((c,j)=>`<div class="costrow">
+        <select class="rinp" onchange="updCost('${routeId}',${idx},${j},'category',this.value)">${COST_CATS.map(cat=>`<option ${cat===c.category?'selected':''}>${cat}</option>`).join('')}</select>
+        <input class="rinp" value="${esc(c.name||'')}" oninput="updCost('${routeId}',${idx},${j},'name',this.value)" placeholder="项目">
+        <input class="rinp num" type="number" value="${esc(c.amount||0)}" oninput="updCost('${routeId}',${idx},${j},'amount',this.value)">
+        <button class="ctoggle ${c.type==='est'?'est':''}" onclick="toggleCostType('${routeId}',${idx},${j})">${c.type==='est'?'预估':'固定'}</button>
+        <span class="rdel" onclick="delCost('${routeId}',${idx},${j})">✕</span>
+      </div>`).join('') : '<div class="rempty">（暂无，点“＋ 加一项”）</div>')+`</div>`;
+  } else {
+    costSec = `<div class="rsec"><div class="rsec-t">💰 当日费用</div>`+
+      (costs.length?`<div class="costsum" id="costsum-${routeId}-${idx}">固定 ¥${fixedSum} · 预估 ¥${estSum} · 合计 <b>¥${dayTotal}</b></div>`+costs.map(c=>`<div class="costitem"><span class="cbadge">${esc(c.category||'其他')}</span>${esc(c.name||'')}<span class="camt">${c.type==='est'?'≈':''}¥${Number(c.amount)||0}</span></div>`).join('') : '<div class="rempty">（暂无）</div>')+`</div>`;
+  }
   const hotelVal = editing?`<input class="rinp" value="${esc(d.hotel||"")}" oninput="updR('${routeId}',${idx},'hotel',this.value)">`:`<span class="${hi?'rhotel-hi':''}">${esc(d.hotel||"—")}${hi?' ⚠️高原':''}</span>`;
   return `<div class="daycard">
     <div class="daycard-h"><span class="dayno">Day${idx+1}</span><span class="daydate">${esc(d.date)}</span><span class="daymode">${esc(d.mode)}</span></div>
@@ -860,6 +941,7 @@ function dayCardHTML(d, idx, routeId){
       <div class="rsec">${addTL}${tl||'<div class="rempty">（无）</div>'}</div>
       <div class="rsec"><div class="rsec-t">🚗 路线</div><div class="rkv">${routeVal}</div></div>
       <div class="rsec"><div class="rsec-t">🏨 住宿</div><div class="rkv">${hotelVal}</div></div>
+      ${costSec}
       <div class="rsec">${addNote}${tips||'<div class="rempty">（无）</div>'}</div>
     </div>
   </div>`;
@@ -874,11 +956,16 @@ function renderRoute(){
     const editing=EDIT_MODE[r.id];
     const hasEdit=!!(ROUTE_EDIT[r.id]&&ROUTE_EDIT[r.id].days);
     const merged=mergedDaily(r);
+    const allItems = merged.flatMap(d=>(d.costs&&d.costs.items)?d.costs.items:[]);
+    const tf = allItems.filter(c=>c.type!=='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
+    const te = allItems.filter(c=>c.type==='est').reduce((s,c)=>s+(Number(c.amount)||0),0);
+    const tripCostHTML = allItems.length?`<div class="tripcost">💰 全程花费预计：固定 <b>¥${tf}</b> · 预估 <b>¥${te}</b> · 合计 <b>¥${tf+te}</b></div>`:'';
     const cards=merged.map((d,i)=>dayCardHTML(d,i,r.id)).join("");
     const editBar=`<div class="reditbar">
       <button class="rbtn ${editing?'on':''}" onclick="toggleEditRoute('${r.id}')">${editing?'✅ 完成编辑':'✏️ 编辑模式'}</button>
       ${editing?`<button class="rbtn exp" onclick="exportRoute('${r.id}')">📤 导出改动</button>`:''}
       ${editing&&hasEdit?`<button class="rbtn rst" onclick="resetRoute('${r.id}')">↺ 还原原计划</button>`:''}
+      ${r.source==='user'?`<button class="rbtn del" onclick="delUserRoute('${r.id}')">🗑 删除</button>`:''}
     </div>`;
     return `<div class="card route-card"><div class="cbody">
       <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;gap:12px;" onclick="toggleRoute('${r.id}')">
@@ -887,6 +974,7 @@ function renderRoute(){
         <div style="font-size:20px;color:var(--sub);" id="caret-${r.id}">▾</div>
       </div>
       <div class="tags" style="margin-top:8px;">${stTag}${exTag}</div>
+      ${tripCostHTML}
       <div id="body-${r.id}" class="route-body">
         ${editBar}
         <div class="daycards">${cards}</div>
@@ -901,12 +989,56 @@ function renderRoute(){
 }
 function toggleRoute(id){const b=document.getElementById('body-'+id);const c=document.getElementById('caret-'+id);if(b.style.display==='none'){b.style.display='block';c.textContent='▾';}else{b.style.display='none';c.textContent='▸';}}
 function tlText(d){ const t=(d.timeline||[]).map(x=>(x.time?x.time+' ':'')+x.action).filter(Boolean).join('；'); return t||(d.plan||''); }
-function syncRoutes(){ copy('【周末雷达·路线库同步】\n'+JSON.stringify(ROUTE_DB)); }
+function syncRoutes(){
+  const token = load(LS.ghToken, "");
+  if(!token){ toast('请先在「⚙️ GitHub 设置」里粘贴令牌'); openSettings(); return; }
+  const cfg = window.APP_CONFIG || {};
+  const path = (cfg.dataPath||"data/") + "routes.json";
+  const payload = ROUTE_DB.map(r=>{ const m=mergedDaily(r); return Object.assign({}, r, {daily:m}); });
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload,null,2))));
+  (async()=>{
+    let sha=null;
+    try{ const g=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{headers:{Authorization:'Bearer '+token}}); if(g.ok){ const j=await g.json(); sha=j.sha; } }catch(e){}
+    const body={message:"chore: 同步周末雷达路线库 "+new Date().toISOString().slice(0,10),content, branch:cfg.branch||"main"};
+    if(sha) body.sha=sha;
+    try{
+      const res=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{
+        method:'PUT', headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+        body: JSON.stringify(body)
+      });
+      if(res.ok){ save(LS.routes, ROUTE_DB); toast('✅ 已同步到 GitHub（关机 / 换设备都能看）'); }
+      else { const e=await res.json().catch(()=>({})); toast('❌ 同步失败：'+(e.message||res.status)); }
+    }catch(e){ toast('❌ 网络错误：'+e.message); }
+  })();
+}
+async function pullRoutesIfEmpty(){
+  if(localStorage.getItem(LS.routes)) return;
+  const cfg=window.APP_CONFIG||{};
+  try{
+    const res=await fetch(`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch||'main'}/${cfg.dataPath||'data/'}routes.json`);
+    if(res.ok){ const arr=await res.json(); if(Array.isArray(arr)&&arr.length){ ROUTE_DB=arr; save(LS.routes,ROUTE_DB); renderRoute(); } }
+  }catch(e){}
+}
+function openSettings(){ document.getElementById('ghToken').value=load(LS.ghToken,''); openMask('mSettings'); }
+function saveGhToken(){ const v=document.getElementById('ghToken').value.trim(); save(LS.ghToken,v); closeMask('mSettings'); toast(v?'✅ 令牌已保存（仅存本机）':'已清空令牌'); }
+function openNewRoute(){ document.getElementById('nrName').value=''; document.getElementById('nrDays').value=3; document.getElementById('nrRange').value=''; document.getElementById('nrStatus').value='planned'; document.getElementById('nrTier').value='3-4天'; openMask('mNewRoute'); }
+function submitNewRoute(){
+  const name=document.getElementById('nrName').value.trim(); if(!name){ toast('先填行程名称'); return; }
+  const days=Math.max(1,Math.min(30,parseInt(document.getElementById('nrDays').value)||3));
+  const status=document.getElementById('nrStatus').value;
+  const range=document.getElementById('nrRange').value.trim()||'待定';
+  const tier=document.getElementById('nrTier').value;
+  const id='r-user-'+Date.now();
+  const r={ id, name, status, source:'user', dateRange:range, days, tier, daily: genPlan(name,days), candidateRoutes:[] };
+  ROUTE_DB.unshift(r); save(LS.routes,ROUTE_DB); closeMask('mNewRoute'); renderRoute(); toast('✅ 已生成 '+days+' 天空白行程，点「✏️ 编辑模式」开始填');
+}
+function delUserRoute(id){ if(!confirm('确定删除这条行程？此操作不可恢复。')) return; const i=ROUTE_DB.findIndex(x=>x.id===id); if(i<0) return; ROUTE_DB.splice(i,1); delete ROUTE_EDIT[id]; save(LS.routes,ROUTE_DB); save(LS.routeEdit,ROUTE_EDIT); renderRoute(); toast('已删除行程'); }
 
 /* ===================== 初始化 ===================== */
 refreshFab(); restoreState();
 nextHolidayInfo(); renderHoliday(); renderLeaveList(); renderHotWishState();
 if(confirmed) showConfirmed();
+renderRoute(); pullRoutesIfEmpty();
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} }); }
 </script>
 </body>
