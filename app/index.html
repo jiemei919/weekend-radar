@@ -47,6 +47,9 @@
   .card.bonus{border:2px dashed #86efac;position:relative;}
   .card.bonus::before{content:"🎡 铄铄专属彩蛋位 · 不占主榜名额";position:absolute;z-index:2;top:-1px;left:-1px;background:#15803d;color:#fff;font-size:11px;padding:3px 10px;border-radius:14px 0 10px 0;}
   .cover{height:110px;position:relative;display:flex;align-items:flex-end;padding:12px 16px;color:#fff;}
+  .marked-badge{position:absolute;left:14px;top:42px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;color:#fff;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+  .marked-badge.dislike{background:rgba(239,68,68,.95);}
+  .marked-badge.been{background:rgba(16,185,129,.95);}
   .cover .emoji{position:absolute;right:14px;top:10px;font-size:34px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));}
   .cover .rank{position:absolute;left:14px;top:12px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4);padding:2px 9px;border-radius:20px;font-size:12px;font-weight:600;}
   .cover h3{font-size:17px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.3);line-height:1.3;}
@@ -309,10 +312,11 @@
 <!-- 没兴趣弹层 -->
 <div class="mask" id="mDislike"><div class="modal">
   <h4>为什么不感兴趣？</h4>
-  <div class="hint">告诉雪花原因，下次推得更准（必选一项）</div>
+  <div class="hint">告诉雪花原因，下次推得更准（选一项，或自己填一句）</div>
   <div class="chips" id="dChips">
-    <span class="chip">太远了</span><span class="chip">感觉人会很多</span><span class="chip">这类地方不感兴趣</span><span class="chip">已经去过了</span><span class="chip">最近没时间</span>
+    <span class="chip">太远了</span><span class="chip">感觉人会很多</span><span class="chip">这类地方不感兴趣</span><span class="chip" data-route="been">已经去过了</span><span class="chip">最近没时间</span>
   </div>
+  <textarea id="dislikeNote" placeholder="自由填写原因（选填）：比如『带老人不方便』『上次体验不好』"></textarea>
   <div class="mbtns"><button onclick="closeMask('mDislike')">取消</button><button class="ok" onclick="submitDislike()">提交</button></div>
 </div></div>
 
@@ -888,7 +892,18 @@ function fallbackCopy(t){
   }catch(e){ prompt('手动复制以下内容发给雪花：', t); }
 }
 function parsePost(s){const n=parseFloat(s);const u=s.slice(-1);return u==='w'?n*10000:u==='k'?n*1000:n;}
-function get(id){return [...R.items, R.bonus].find(d=>d.id===id);}
+function allHotCards(){
+  const arr=[...R.items];
+  if(R.bonus) arr.push(R.bonus);
+  HOT_ALTS.forEach(a=>arr.push(...a));
+  return arr;
+}
+function get(id){return allHotCards().find(d=>d.id===id);}
+// 该卡片在 feedback 里的标记类型：'dislike' | 'been' | null（用于「已标记」标签 + 跨换批保留）
+function markedType(id){
+  const f=feedback.find(x=>x.id===id);
+  return f?f.type:null;
+}
 function getRec(id){return RECS.find(x=>x.id===id);}
 
 /* ============ 已去过去重：三档规则 ============
@@ -1002,8 +1017,9 @@ function cardHTML(d, i, isBonus, withConfirm){
   const planBtn = routeExistsByName(d.name)
     ? `<button class="inlib" onclick="jumpToRouteByName('${esc(d.name)}')">🗺️ 已在路线库</button>`
     : `<button class="plan" onclick="askPlanFromCard(${d.id})">🗺️ 加进路线</button>`;
-  return `<div class="card${isBonus?' bonus':''}" id="card${d.id}">
-    <div class="cover" style="background:${d.grad}"><span class="rank">${isBonus?'🎁 彩蛋':'No.'+(i+1)}</span><span class="emoji">${d.emoji}</span><h3>${d.name}</h3></div>
+  const mk = markedType(d.id);
+  return `<div class="card${isBonus?' bonus':''}${mk==='dislike'?' dimmed':''}" id="card${d.id}">
+    <div class="cover" style="background:${d.grad}"><span class="rank">${isBonus?'🎁 彩蛋':'No.'+(i+1)}</span><span class="emoji">${d.emoji}</span><h3>${d.name}</h3>${mk?`<span class="marked-badge ${mk}">${mk==='dislike'?'👎 你标记过没兴趣':'✅ 你标记去过'}</span>`:''}</div>
     <div class="cbody">
       <div class="tags">${tags}</div>
       <div class="meta"><span>🚗 <b>${d.drive}</b></span><span class="src">📡 ${d.src} <span class="hot">🔥 ${d.hot}</span></span></div>
@@ -1082,9 +1098,15 @@ function saveFb(entry){
 function dislike(id){cur=id;document.querySelectorAll('#dChips .chip').forEach(c=>c.classList.remove('sel'));document.getElementById('mDislike').classList.add('show');}
 document.querySelectorAll('#dChips .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#dChips .chip').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');});
 function submitDislike(){
-  const sel=document.querySelector('#dChips .chip.sel');if(!sel){toast('请选一个原因～');return;}
+  const sel=document.querySelector('#dChips .chip.sel');
+  const txt=document.getElementById('dislikeNote').value.trim();
+  if(!sel && !txt){toast('请选一个原因或填一句～');return;}
+  const isBeen = sel && sel.dataset.route==='been';
   closeMask('mDislike');
-  saveFb({id:cur, name:get(cur).name, type:'dislike', reason:sel.textContent});
+  if(isBeen){ been(cur); return; }   // 选了「已经去过了」→ 走评分流程
+  const reason=(sel?sel.textContent:'')+(sel&&txt?('：'+txt):txt);
+  saveFb({id:cur, name:get(cur).name, type:'dislike', reason});
+  rerenderHot();
   toast('已记录 ✍️ 点右下角按钮同步给雪花');
 }
 function been(id){cur=id;stars=0;paintStars();document.querySelectorAll('#bChips .chip').forEach(c=>c.classList.remove('sel'));
@@ -1109,6 +1131,7 @@ function submitBeen(){
       review: note, addedAt: ymd(new Date()) });
     save(LS.visitedAdd, VISIT_ADD);
   }
+  rerenderHot();   // 立即把该地移出当前屏并进「已过滤」；下次换批也会因 VISIT_ADD 而屏蔽
   toast('已记录 📈 已加入「已去过」，下次不再推荐');
 }
 function fbText(){
@@ -1133,6 +1156,8 @@ function swapBatch(){
   copy(`【周末雷达】这批都不合适，换一批。当前批次：${shown}`);
   toast('已换到第 '+(swapIdx+1)+' 批（共 '+HOT_BATCHES.length+' 批）· 都不合适可把复制的文字发雪花定制');
 }
+// 重新渲染当前批次（换批/提交反馈后调用）：重新跑「已去过 + 已标记没兴趣」过滤，保证跨批生效
+function rerenderHot(){ const b=HOT_BATCHES[swapIdx]; renderHotChips(b.items, b.bonus); }
 
 /* ===================== 收心愿 ===================== */
 function addWish(id){
