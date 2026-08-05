@@ -412,6 +412,9 @@
 <script src="holidays.js"></script>
 <script src="visited.js"></script>
 <script src="config.js"></script>
+<script src="taste-profile.js"></script>
+<script src="candidates.js"></script>
+<script src="match-engine.js"></script>
 <script>
 /* ===================== 数据层 ===================== */
 const R = window.RADAR;
@@ -896,6 +899,7 @@ function allHotCards(){
   const arr=[...R.items];
   if(R.bonus) arr.push(R.bonus);
   HOT_ALTS.forEach(a=>arr.push(...a));
+  RECS.forEach(x=>arr.push(x));   // 含下一个假期候选，使 RECS 卡片反馈也能安全取 name
   return arr;
 }
 function get(id){return allHotCards().find(d=>d.id===id);}
@@ -1031,6 +1035,7 @@ function cardHTML(d, i, isBonus, withConfirm){
       ${postsHTML}
       <div class="acts">
         ${planBtn}${confirm}${wishBtn}
+        <button class="like" onclick="like(${d.id})">👍 想去</button>
         <button onclick="dislike(${d.id})">👎 没兴趣</button>
         <button onclick="been(${d.id})">✅ 去过了</button>
       </div>
@@ -1079,6 +1084,39 @@ function togglePosts(id){
   else{box.classList.add('open');btn.textContent='🔼 收起推荐帖';}
 }
 
+/* ===================== 偏好匹配层（内部算分·界面只给好玩理由，不显分数/标签） ===================== */
+const ME = window.MatchEngine;
+// 运行时可变画像：深拷贝真值源，启动时套用本地已存学习 delta
+const _TP = window.TASTE_PROFILE || {dimensions:[],reject:[],special_rules:[]};
+const BASE_WEIGHTS = {};
+(_TP.dimensions||[]).forEach(d=>{ BASE_WEIGHTS[d.key]=d.weight; });
+let PROFILE = JSON.parse(JSON.stringify(_TP));
+// 本地学习记录（👍/👎 累计 delta + 日志），跨会话持久；待导出落库 data/taste-profile.json
+let LEARN = load('radar-learn-v1', {deltas:{}, log:[]});
+(function applyLearn(){
+  (PROFILE.dimensions||[]).forEach(d=>{
+    const dl = LEARN.deltas[d.key]||0;
+    if(dl) d.weight = Math.max(0, Math.min(BASE_WEIGHTS[d.key]+0.15, BASE_WEIGHTS[d.key]+dl));
+  });
+})();
+function getCand(id){ return ME.getCand(window.CANDIDATES, id); }
+// 保守阈值：相对「强偏好维度权重合计」。0.3 避免误杀家庭强项（清远长隆等），洁梅可收紧
+const MATCH_THRESHOLD = 0.3;
+function scoreOne(c, profile){ return ME.scoreOne(c, profile); }
+function matchCandidates(pool){ return ME.matchCandidates(pool, PROFILE, window.CANDIDATES, MATCH_THRESHOLD); }
+// 界面唯一展示的「为什么好玩/适合你们」：直接取卡片已有的自然语言 why（不生成、不显标签）
+function funReason(d){ return d.why || ''; }
+// 反馈回流学习器：👍/👎 按命中维度微调运行时权重，写日志+累计 delta 并持久
+function learnFromFeedback(id, type){
+  const c = getCand(id); if(!c) return;
+  const r = scoreOne(c, PROFILE); if(!r.matched.length) return;
+  const changed = ME.applyLearnDelta(PROFILE.dimensions, r.matched, type, BASE_WEIGHTS);
+  changed.forEach(ch=>{ LEARN.deltas[ch.key] = (LEARN.deltas[ch.key]||0) + ch.applied; });
+  const nm = (get(id)||getRec(id)||{}).name || c.name;
+  LEARN.log.push({date: ymd(new Date()), id, name: nm, type, dims: r.matched});
+  save('radar-learn-v1', LEARN);
+}
+
 /* ===================== 反馈（没兴趣 / 去过 / 同步） ===================== */
 function refreshFab(){
   const n=feedback.length;
@@ -1106,8 +1144,16 @@ function submitDislike(){
   if(isBeen){ been(cur); return; }   // 选了「已经去过了」→ 走评分流程
   const reason=(sel?sel.textContent:'')+(sel&&txt?('：'+txt):txt);
   saveFb({id:cur, name:get(cur).name, type:'dislike', reason});
+  learnFromFeedback(cur,'dislike');
   rerenderHot();
   toast('已记录 ✍️ 点右下角按钮同步给雪花');
+}
+function like(id){
+  cur=id;
+  const nm=(get(id)||getRec(id)||{}).name||'';
+  saveFb({id, name:nm, type:'like'});
+  learnFromFeedback(id,'like');
+  toast('已记录 ❤️ 想去的都会越推越贴合你们');
 }
 function been(id){cur=id;stars=0;paintStars();document.querySelectorAll('#bChips .chip').forEach(c=>c.classList.remove('sel'));
   document.getElementById('beenNote').value='';
@@ -1136,12 +1182,20 @@ function submitBeen(){
 }
 function fbText(){
   const lines=feedback.map(f=>{
+    if(f.type==='like') return `- ${f.name}：👍想去`;
     if(f.type==='dislike') return `- ${f.name}：👎没兴趣（${f.reason}）`;
     return `- ${f.name}：✅去过 ${f.stars}星${f.tags.length?'（'+f.tags.join('、')+'）':''}${f.note?'｜'+f.note:''}`;
   });
   let t = `【周末雷达反馈 · ${R.week}】\n${lines.join('\n')}`;
   if(VISIT_ADD.length){
     t += `\n\n【待落库 data/visited.json 的新增已去过】\n` + JSON.stringify(VISIT_ADD);
+  }
+  if(LEARN && LEARN.log && LEARN.log.length){
+    const changed = (PROFILE.dimensions||[]).filter(d=>Math.abs((LEARN.deltas[d.key]||0))>0.0001)
+      .map(d=>`${d.label} ${BASE_WEIGHTS[d.key].toFixed(2)}→${d.weight.toFixed(2)}`);
+    t += `\n\n【偏好学习记录（已本地生效，待落库 data/taste-profile.json）】\n`
+       + LEARN.log.map(l=>`- ${l.date} ${l.type==='like'?'👍想去':'👎没兴趣'}·${l.name}（命中：${l.dims.join('/')}）`).join('\n')
+       + (changed.length? `\n当前权重相对基线已调整：${changed.join('、')}` : '');
   }
   return t;
 }
@@ -1228,7 +1282,10 @@ function calcLeave(){
 let RECS_OK = [], RECS_BLOCKED = [];
 function prepareRecs(){
   const r = applyVisitFilter(RECS.slice(), leaveTierName || null);
-  RECS_OK = r.pass; RECS_BLOCKED = r.blocked;
+  const m = matchCandidates(r.pass);          // 在已过「去过」过滤的集合上做偏好匹配（排序 + 偏好拦截）
+  RECS_OK = m.passed.map(x=>x.d);
+  const prefBlocked = m.blocked.map(x=>({name:x.d.name, matched:'偏好不匹配', reason:(x.reasons.join('；')||'偏好匹配度低于阈值')}));
+  RECS_BLOCKED = r.blocked.concat(prefBlocked);
 }
 function blockedNoteHTML(){
   if(!RECS_BLOCKED.length) return '';

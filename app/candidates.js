@@ -1,0 +1,401 @@
+window.CANDIDATES = {
+  "1": {
+    "id": 1,
+    "name": "茂名信宜 · 广东虎跳峡度假区",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 1,
+      "quiet": 1,
+      "photo": 1,
+      "outdoor": 1,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0,
+      "temple": 0,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "2": {
+    "id": 2,
+    "name": "佛山 · 西樵山",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.3,
+      "quiet": 0.6,
+      "photo": 0.8,
+      "outdoor": 1,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0.5,
+      "shopping": 0,
+      "temple": 0.55,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "3": {
+    "id": 3,
+    "name": "深圳 · 甘坑古镇 + 二十四史书院",
+    "p": {
+      "nature": 0.4,
+      "zoo": 0,
+      "chill": 0.4,
+      "quiet": 1,
+      "photo": 1,
+      "outdoor": 0.2,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0.4,
+      "shopping": 0.3,
+      "temple": 0.2,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "4": {
+    "id": 4,
+    "name": "肇庆 · 鼎湖山",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.4,
+      "quiet": 0.8,
+      "photo": 0.8,
+      "outdoor": 1,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0,
+      "temple": 0.55,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "5": {
+    "id": 5,
+    "name": "惠州 · 罗浮山",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.3,
+      "quiet": 0.7,
+      "photo": 0.7,
+      "outdoor": 1,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0,
+      "temple": 0.55,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "99": {
+    "id": 99,
+    "name": "深圳科学技术馆（光明区·2026新馆）",
+    "p": {
+      "nature": 0,
+      "zoo": 0.4,
+      "chill": 0,
+      "quiet": 0.3,
+      "photo": 0.5,
+      "outdoor": 0,
+      "parent": 1,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0.5,
+      "shopping": 0,
+      "temple": 0,
+      "food": 0
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "101": {
+    "id": 101,
+    "name": "湛江 · 雷州半岛+硇洲岛（3-4天·粤西）",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.5,
+      "quiet": 0.9,
+      "photo": 1,
+      "outdoor": 0.6,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0.3,
+      "shopping": 0,
+      "temple": 0.3,
+      "food": 0.4
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "102": {
+    "id": 102,
+    "name": "福建 · 泉州古城+海岸（3-4天·高铁）",
+    "p": {
+      "nature": 0.7,
+      "zoo": 0,
+      "chill": 0.4,
+      "quiet": 0.5,
+      "photo": 1,
+      "outdoor": 0.4,
+      "parent": 0.7,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0.6,
+      "shopping": 0.4,
+      "temple": 0.6,
+      "food": 0.4
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "103": {
+    "id": 103,
+    "name": "清远 · 长隆森林王国+长颈鹿城堡酒店（2-3天·度假酒店）",
+    "p": {
+      "nature": 0.4,
+      "zoo": 1,
+      "chill": 0.9,
+      "quiet": 0.3,
+      "photo": 0.6,
+      "outdoor": 0.4,
+      "parent": 1,
+      "ip_park": 0,
+      "changlong": 1,
+      "museum": 0,
+      "shopping": 0,
+      "temple": 0,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "901": {
+    "id": 901,
+    "name": "惠州 · 双月湾（亲子海边）",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.6,
+      "quiet": 0.6,
+      "photo": 1,
+      "outdoor": 0.5,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0,
+      "temple": 0,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "902": {
+    "id": 902,
+    "name": "深圳 · 甘坑古镇 + 二十四史书院",
+    "p": {
+      "nature": 0.4,
+      "zoo": 0,
+      "chill": 0.4,
+      "quiet": 1,
+      "photo": 1,
+      "outdoor": 0.2,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0.4,
+      "shopping": 0.3,
+      "temple": 0.2,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "903": {
+    "id": 903,
+    "name": "广州 · 南沙滨海（天后宫+湿地公园）",
+    "p": {
+      "nature": 0.8,
+      "zoo": 0,
+      "chill": 0.4,
+      "quiet": 0.7,
+      "photo": 0.8,
+      "outdoor": 0.3,
+      "parent": 0.7,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0,
+      "temple": 0.3,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "904": {
+    "id": 904,
+    "name": "惠州 · 罗浮山（道教名山）",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.3,
+      "quiet": 0.7,
+      "photo": 0.7,
+      "outdoor": 1,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0,
+      "temple": 0.55,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "905": {
+    "id": 905,
+    "name": "深圳 · 大鹏所城 + 杨梅坑",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.4,
+      "quiet": 0.7,
+      "photo": 1,
+      "outdoor": 0.6,
+      "parent": 0.7,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0.4,
+      "shopping": 0,
+      "temple": 0.2,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "911": {
+    "id": 911,
+    "name": "广州 · 融创文旅城（室内雪世界）",
+    "p": {
+      "nature": 0,
+      "zoo": 0,
+      "chill": 0.5,
+      "quiet": 0.3,
+      "photo": 0.6,
+      "outdoor": 0,
+      "parent": 1,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0.4,
+      "temple": 0,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "912": {
+    "id": 912,
+    "name": "惠州 · 西湖 + 水东街",
+    "p": {
+      "nature": 0.9,
+      "zoo": 0,
+      "chill": 0.5,
+      "quiet": 0.8,
+      "photo": 0.9,
+      "outdoor": 0.3,
+      "parent": 0.7,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0.3,
+      "shopping": 0.4,
+      "temple": 0.2,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "913": {
+    "id": 913,
+    "name": "深圳 · 欢乐港湾（宝安海边）",
+    "p": {
+      "nature": 0.5,
+      "zoo": 0,
+      "chill": 0.4,
+      "quiet": 0.4,
+      "photo": 1,
+      "outdoor": 0.4,
+      "parent": 0.8,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0.4,
+      "temple": 0,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "914": {
+    "id": 914,
+    "name": "阳江 · 沙扒湾（自驾3.5h海边）",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.5,
+      "quiet": 0.9,
+      "photo": 1,
+      "outdoor": 0.4,
+      "parent": 0.7,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0.2,
+      "temple": 0,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  },
+  "915": {
+    "id": 915,
+    "name": "广州 · 增城白水寨（瀑布）",
+    "p": {
+      "nature": 1,
+      "zoo": 0,
+      "chill": 0.3,
+      "quiet": 0.7,
+      "photo": 0.8,
+      "outdoor": 1,
+      "parent": 0.7,
+      "ip_park": 0,
+      "changlong": 0,
+      "museum": 0,
+      "shopping": 0,
+      "temple": 0,
+      "food": 0.3
+    },
+    "avoid": [],
+    "special": {}
+  }
+};
