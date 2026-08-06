@@ -7,7 +7,8 @@ const idx = fs.readFileSync('app/index.html', 'utf8');
 let html = idx;
 for (const f of ['config.js', 'data.js', 'taste-profile.js', 'candidates.js', 'match-engine.js']) {
   const code = fs.readFileSync('app/' + f, 'utf8');
-  html = html.replace(`<script src="${f}"></script>`, `<script>${code}</script>`);
+  const re = new RegExp('<script src="' + f.replace(/\./g, '\\.').replace(/\?/g, '\\?') + '(\\?v=[^"]*)?"></script>');
+  html = html.replace(re, `<script>${code}</script>`);
 }
 
 const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'https://jiemei919.github.io/weekend-radar/app/', pretendToBeVisual: true });

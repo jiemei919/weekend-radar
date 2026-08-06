@@ -5,7 +5,8 @@ const { JSDOM, VirtualConsole } = require('jsdom');
 let html = fs.readFileSync('app/index.html', 'utf8');
 ['data.js', 'holidays.js', 'visited.js', 'config.js', 'taste-profile.js', 'candidates.js', 'match-engine.js'].forEach(f => {
   const code = fs.readFileSync('app/' + f, 'utf8');
-  html = html.replace('<script src="' + f + '"></script>', '<script>' + code + '</script>');
+  const re = new RegExp('<script src="' + f.replace(/\./g, '\\.').replace(/\?/g, '\\?') + '(\\?v=[^"]*)?"></script>');
+  html = html.replace(re, '<script>' + code + '</script>');
 });
 
 const errors = [];

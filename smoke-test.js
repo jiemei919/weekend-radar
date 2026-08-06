@@ -5,6 +5,10 @@ const errs = [];
 class LocalOnly extends ResourceLoader {
   fetch(url, opt){
     if(/api\.github\.com|raw\.githubusercontent\.com/.test(url)) return Promise.reject(new Error("no-net"));
+    // 本地测试时去掉 ?v=1.x 缓存戳，避免文件系统把 data.js?v=1.1.2 当成文件名
+    if(typeof url === 'string' && url.startsWith('file://')){
+      url = url.replace(/\?v=[^&]*/, '');
+    }
     return super.fetch(url, opt);
   }
 }

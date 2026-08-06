@@ -338,6 +338,9 @@
   <div class="hint">把你的个人访问令牌粘贴一次（以 <b>ghp_</b> 开头）。它只存在你这台设备的浏览器里，不会上传、不进仓库，可随时在 GitHub 撤销。粘贴后点「保存并同步」即可跨设备。</div>
   <textarea id="ghToken" rows="3" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font-size:12px;" placeholder="ghp_..."></textarea>
   <div class="mbtns"><button onclick="closeMask('mSettings')">取消</button><button class="ok" onclick="saveGhToken()">保存</button></div>
+  <hr style="border:none;border-top:1px solid var(--line);margin:14px 0;">
+  <div class="hint">如果本周最热“换一批”后目的地全部消失，可能是你之前在本机标记过“去过了/没兴趣”的本地状态把备选池过滤光了。点下面清除本地标记后会刷新页面，不会删除已同步给雪花的记录。</div>
+  <div class="mbtns"><button onclick="clearLocalMarks()">🧹 清除本地标记</button></div>
 </div></div>
 
 <!-- 新建行程 -->
@@ -408,13 +411,13 @@
 <button class="fab" id="fab" onclick="copyFeedback()">📋 复制反馈同步给雪花（<span id="fbN">0</span> 条）</button>
 <div id="toast"></div>
 
-<script src="data.js"></script>
-<script src="holidays.js"></script>
-<script src="visited.js"></script>
-<script src="config.js"></script>
-<script src="taste-profile.js"></script>
-<script src="candidates.js"></script>
-<script src="match-engine.js"></script>
+<script src="data.js?v=1.1.2"></script>
+<script src="holidays.js?v=1.1.2"></script>
+<script src="visited.js?v=1.1.2"></script>
+<script src="config.js?v=1.1.2"></script>
+<script src="taste-profile.js?v=1.1.2"></script>
+<script src="candidates.js?v=1.1.2"></script>
+<script src="match-engine.js?v=1.1.2"></script>
 <script>
 /* ===================== 数据层 ===================== */
 const R = window.RADAR;
@@ -842,7 +845,7 @@ const ROUTE_SEED = [
 const LS = {
   wish: "radar-wish-v1", routes: "radar-routes-v1", fb: "radar-fb-v1",
   leave: "radar-leave-v1", confirmed: "radar-confirmed-v1", visitedAdd: "radar-visited-add-v1",
-  routeEdit: "radar-route-edit-v1", ghToken: "radar-gh-token-v1"
+  routeEdit: "radar-route-edit-v1", ghToken: "radar-gh-token-v1", learn: "radar-learn-v1"
 };
 function load(key, seed){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):seed; }catch(e){ return seed; } }
 function save(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
@@ -1042,13 +1045,32 @@ function cardHTML(d, i, isBonus, withConfirm){
     </div>
   </div>`;
 }
+function emptyHotState(reason){
+  return `<div class="card" style="padding:16px;text-align:center;color:var(--sub);">
+    <div style="font-size:32px;margin-bottom:8px;">🍃</div>
+    <div style="font-weight:700;color:var(--text);margin-bottom:6px;">这一批暂时没有可推荐的目的地</div>
+    <div style="font-size:13px;line-height:1.6;">${reason}<br>如果你刚才是误标记，可以点右上角 ⚙️ 设置 →「清除本地标记」重置；<br>或者把“想去哪类地方”发给雪花，定制下一批。</div>
+  </div>`;
+}
 function renderHotChips(items, bonus){
+  if(!Array.isArray(items)){
+    console.error('[renderHotChips] items 不是数组', items);
+    document.getElementById('hotCards').innerHTML = emptyHotState('数据加载异常，请刷新页面重试。');
+    return;
+  }
   const hotFilter = applyVisitFilter(items.slice(), null);
   const bonusCheck = bonus ? visitCheck(bonus.name, null) : null;
   if(bonus && bonusCheck.ok) bonus._visit = bonusCheck;
-  document.getElementById('hotCards').innerHTML =
-    hotFilter.pass.map((d,i)=>cardHTML(d,i,false,false)).join('') +
+  const cardsHTML = hotFilter.pass.map((d,i)=>cardHTML(d,i,false,false)).join('') +
     ((bonus && bonusCheck.ok) ? cardHTML(bonus,0,true,false) : '');
+  if(!cardsHTML){
+    const why = hotFilter.blocked.length
+      ? `本批 ${items.length} 个目的地均命中「已去过」或本地标记。`
+      : '本批没有可展示的目的地。';
+    document.getElementById('hotCards').innerHTML = emptyHotState(why);
+  } else {
+    document.getElementById('hotCards').innerHTML = cardsHTML;
+  }
   const autoFiltered = hotFilter.blocked.concat(
     (bonus && !bonusCheck.ok) ? [{name:bonus.name, reason:bonusCheck.reason, matched:bonusCheck.matched}] : []
   ).map(b=>({ name:b.name, reason:(b.matched && b.matched!==b.name ? "命中已去过「"+b.matched+"」：" : "") + b.reason }));
@@ -1092,7 +1114,7 @@ const BASE_WEIGHTS = {};
 (_TP.dimensions||[]).forEach(d=>{ BASE_WEIGHTS[d.key]=d.weight; });
 let PROFILE = JSON.parse(JSON.stringify(_TP));
 // 本地学习记录（👍/👎 累计 delta + 日志），跨会话持久；待导出落库 data/taste-profile.json
-let LEARN = load('radar-learn-v1', {deltas:{}, log:[]});
+let LEARN = load(LS.learn, {deltas:{}, log:[]});
 (function applyLearn(){
   (PROFILE.dimensions||[]).forEach(d=>{
     const dl = LEARN.deltas[d.key]||0;
@@ -1114,7 +1136,7 @@ function learnFromFeedback(id, type){
   changed.forEach(ch=>{ LEARN.deltas[ch.key] = (LEARN.deltas[ch.key]||0) + ch.applied; });
   const nm = (get(id)||getRec(id)||{}).name || c.name;
   LEARN.log.push({date: ymd(new Date()), id, name: nm, type, dims: r.matched});
-  save('radar-learn-v1', LEARN);
+  save(LS.learn, LEARN);
 }
 
 /* ===================== 反馈（没兴趣 / 去过 / 同步） ===================== */
@@ -1203,15 +1225,32 @@ function copyFeedback(){ copy(fbText()); }
 function closeMask(id){document.getElementById(id).classList.remove('show');}
 function openMask(id){const el=document.getElementById(id); if(el) el.classList.add('show');}
 function swapBatch(){
+  // 防御：swapIdx 可能被异常状态污染成 NaN/undefined
+  if(typeof swapIdx !== 'number' || isNaN(swapIdx)) swapIdx = 0;
   swapIdx = (swapIdx+1) % HOT_BATCHES.length;
   const b = HOT_BATCHES[swapIdx];
+  if(!b || !Array.isArray(b.items)){
+    console.error('[swapBatch] 批次异常', swapIdx, b);
+    swapIdx = 0;
+    renderHotChips(R.items, R.bonus);
+    toast('批次数据异常，已回到第一批');
+    return;
+  }
   renderHotChips(b.items, b.bonus);
   const shown = [...b.items, b.bonus].filter(Boolean).map(d=>d.name).join('、');
   copy(`【周末雷达】这批都不合适，换一批。当前批次：${shown}`);
   toast('已换到第 '+(swapIdx+1)+' 批（共 '+HOT_BATCHES.length+' 批）· 都不合适可把复制的文字发雪花定制');
 }
 // 重新渲染当前批次（换批/提交反馈后调用）：重新跑「已去过 + 已标记没兴趣」过滤，保证跨批生效
-function rerenderHot(){ const b=HOT_BATCHES[swapIdx]; renderHotChips(b.items, b.bonus); }
+function rerenderHot(){
+  if(typeof swapIdx !== 'number' || isNaN(swapIdx)) swapIdx = 0;
+  const b = HOT_BATCHES[swapIdx] || HOT_BATCHES[0];
+  if(!b || !Array.isArray(b.items)){
+    renderHotChips(R.items, R.bonus);
+    return;
+  }
+  renderHotChips(b.items, b.bonus);
+}
 
 /* ===================== 收心愿 ===================== */
 function addWish(id){
@@ -1664,6 +1703,17 @@ function copyBook(){
 }
 function openSettings(){ document.getElementById('ghToken').value=load(LS.ghToken,''); openMask('mSettings'); }
 function saveGhToken(){ const v=document.getElementById('ghToken').value.trim(); save(LS.ghToken,v); closeMask('mSettings'); toast(v?'✅ 令牌已保存（仅存本机）':'已清空令牌'); }
+function clearLocalMarks(){
+  if(!confirm('确定清除本机的“去过了/没兴趣/想去”本地标记？已同步给雪花的反馈记录不会被删除。')) return;
+  try{
+    localStorage.removeItem(LS.visitedAdd);
+    localStorage.removeItem(LS.fb);
+    localStorage.removeItem(LS.learn);
+  }catch(e){}
+  closeMask('mSettings');
+  toast('已清除本地标记，正在刷新…');
+  setTimeout(()=>location.reload(), 800);
+}
 function openNewRoute(){ document.getElementById('nrName').value=''; document.getElementById('nrDays').value=3; document.getElementById('nrRange').value=''; document.getElementById('nrStatus').value='planned'; autoTierNew(); openMask('mNewRoute'); }
 function autoTierNew(){ const d=parseInt(document.getElementById('nrDays').value)||3; document.getElementById('nrTierShow').textContent=tierStr(d); }
 function submitNewRoute(){
