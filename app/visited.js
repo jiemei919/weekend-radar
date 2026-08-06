@@ -1,6 +1,6 @@
 /* 已去过地点库（前端镜像，勿手改；改 scripts/build_visited.py 后重跑）*/
 window.VISITED = {
- "updatedAt": "2026-08-03",
+ "updatedAt": "2026-08-06",
  "regionBlock": {
   "贵州": "洁梅老家，传统景点都跑遍了，除非有全新的景点/活动，否则不推荐"
  },
@@ -585,6 +585,20 @@ window.VISITED = {
    "city": "江门",
    "policy": "block",
    "blockReason": "海水一般，不如小径湾/深圳"
+  },
+  {
+   "name": "上下川岛",
+   "region": "广东",
+   "city": "江门",
+   "policy": "block",
+   "blockReason": "含上川岛，已去过不推"
+  },
+  {
+   "name": "杨梅坑",
+   "region": "广东",
+   "city": "深圳",
+   "policy": "block",
+   "blockReason": "已去过，大鹏所城+杨梅坑不推"
   },
   {
    "name": "三正半山温泉酒店",

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-03",
+  "updatedAt": "2026-08-06",
   "source": "飞书《已经去过的旅行目的地统计》 wiki BmzFwoDJzi217okf4iicjh1vnTe",
   "policyDef": {
     "block": "永不推荐。洁梅点名不要推、避雷、或明确说过不会再去。任何情况下都不出现在推荐榜。",
@@ -724,6 +724,24 @@
       "scope": "cn",
       "policy": "block",
       "blockReason": "海水一般，不如小径湾/深圳"
+    },
+    {
+      "name": "上下川岛",
+      "region": "广东",
+      "city": "江门",
+      "review": "上川岛去过了，台山上下川岛含上川岛，不推",
+      "scope": "cn",
+      "policy": "block",
+      "blockReason": "含上川岛，已去过不推"
+    },
+    {
+      "name": "杨梅坑",
+      "region": "广东",
+      "city": "深圳",
+      "review": "杨梅坑去过了，大鹏所城+杨梅坑不推",
+      "scope": "cn",
+      "policy": "block",
+      "blockReason": "已去过，大鹏所城+杨梅坑不推"
     },
     {
       "name": "三正半山温泉酒店",
