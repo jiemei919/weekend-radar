@@ -21,7 +21,7 @@ function ok(name, cond, extra) { if (cond) { pass++; console.log('✅ ' + name);
 
 w.addEventListener('load', () => setTimeout(() => {
   try {
-    const BAD = ['杨梅坑', '川岛', '上川岛']; // 用户明确已去过、应被 block 的地名
+    const BAD = ['杨梅坑', '川岛', '上川岛', '崇左']; // 用户明确已去过、应被 block/按核心景点拦的地名
     let leakedCards = [];        // 出现在推荐卡片里的违规地名
     let filteredEver = '';       // 累计的"已替你过滤"文案
 
@@ -40,6 +40,8 @@ w.addEventListener('load', () => setTimeout(() => {
 
     ok('本周最热卡片里从未出现已去过地(杨梅坑/川岛)', leakedCards.length === 0, leakedCards.join(','));
     ok('已去过地被自动过滤(过滤区出现"杨梅坑")', filteredEver.includes('杨梅坑'), 'filteredEver 含杨梅坑? ' + filteredEver.includes('杨梅坑'));
+    // 新逻辑：按核心景点拦截——崇左主玩法(德天瀑布+明仕田园)均去过，即使大地名"崇左"不在 visited 库也应被拦
+    ok('新逻辑·按核心景点拦截崇左(德天+明仕均去过)', filteredEver.includes('崇左'), 'filteredEver 含崇左? ' + filteredEver.includes('崇左'));
 
     // 下一个假期：RECS 来自 candidates(含 id 905 大鹏所城+杨梅坑)，同样应被拦
     const seenRECS = (w.RECS || []).map(r => r.name || '');

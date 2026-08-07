@@ -226,6 +226,12 @@
   .acts button.inlib{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
   .rfilter{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
   .rfilter .chip.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand);font-weight:600;}
+  /* 同步状态条（反馈落库透明化） */
+  .syncstat{position:fixed;left:0;right:0;bottom:0;font-size:11.5px;text-align:center;padding:5px 8px;z-index:50;}
+  .syncstat.ok{background:rgba(236,253,245,.96);color:#0f7b5f;border-top:1px solid #a7f3d0;}
+  .syncstat.pending{background:rgba(255,251,235,.97);color:#b45309;border-top:1px solid #fde68a;}
+  .syncstat.warn{background:rgba(254,242,242,.97);color:#b91c1c;border-top:1px solid #fecaca;}
+  body{padding-bottom:30px;}
 </style>
 </head>
 <body>
@@ -456,7 +462,7 @@
 <script src="taste-profile.js?v=1.3.2"></script>
 <script src="candidates.js?v=1.3.2"></script>
 <script src="match-engine.js?v=1.3.2"></script>
-<script src="hot-pool.js?v=1.3.2"></script>
+<script src="hot-pool.js?v=1.4.0"></script>
 <script>
 /* ===================== 数据层 ===================== */
 const R = window.RADAR;
@@ -884,7 +890,7 @@ const ROUTE_SEED = [
 const LS = {
   wish: "radar-wish-v1", routes: "radar-routes-v1", fb: "radar-fb-v1",
   leave: "radar-leave-v1", confirmed: "radar-confirmed-v1", visitedAdd: "radar-visited-add-v1",
-  routeEdit: "radar-route-edit-v1", ghToken: "radar-gh-token-v1", learn: "radar-learn-v1"
+  routeEdit: "radar-route-edit-v1", ghToken: "radar-gh-token-v1", learn: "radar-learn-v1", syncDirty: "radar-sync-dirty-v1"
 };
 function load(key, seed){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):seed; }catch(e){ return seed; } }
 function save(key, val){
@@ -974,16 +980,26 @@ async function pushDomain(domain){
 }
 function markDirty(domain){
   SYNC.dirty[domain]=true;
+  // 持久化脏标记：防止刷新/关页面导致内存 dirty 丢失，保证反馈 100% 不丢
+  const p = load(LS.syncDirty, {}); p[domain]=true;
+  try{ localStorage.setItem(LS.syncDirty, JSON.stringify(p)); }catch(e){}
   if(SYNC.timer) clearTimeout(SYNC.timer);
   SYNC.timer=setTimeout(flushSync, 15000);   // 15s debounce，批量推送避免 commit 刷屏
 }
 async function flushSync(){
+  // 合并内存脏标记 + 持久脏标记（防止页面关闭/刷新导致内存丢失）
+  const persist = load(LS.syncDirty, {});
+  Object.keys(persist).forEach(d=>SYNC.dirty[d]=true);
   const domains=Object.keys(SYNC.dirty);
-  if(!domains.length) return;
+  if(!domains.length){ refreshSyncStat(); return; }
+  if(!ghToken()){ refreshSyncStat(); return; }   // 无 token：持久脏标记保留，等补令牌后自动补推
   SYNC.dirty={};
-  if(!ghToken()) return;                      // 无 token 仅本地，等补令牌
   let allOk=true;
   for(const d of domains){ const ok=await pushDomain(d); if(!ok){ SYNC.dirty[d]=true; allOk=false; } }
+  // 把未成功的域写回持久脏标记（成功的一律清除），保证 100% 不丢
+  const left={}; Object.keys(SYNC.dirty).forEach(d=>left[d]=true);
+  try{ localStorage.setItem(LS.syncDirty, JSON.stringify(left)); }catch(e){}
+  refreshSyncStat();
   if(allOk) toast('☁️ 已自动同步到云端');
 }
 async function pullAll(){
@@ -1000,10 +1016,21 @@ async function pullAll(){
 }
 function initSync(){
   pullAll();                                  // 异步合并云端（不阻塞首屏）
+  // 启动后若有未同步的持久脏标记（上次没推完），立即补推
+  const p=load(LS.syncDirty,{}); if(Object.keys(p).length && ghToken()) flushSync();
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') flushSync(); });
   window.addEventListener('pagehide', ()=>{ flushSync(); });
+  refreshSyncStat();
 }
 function syncNow(){ flushSync(); }            // 手动「立即同步」按钮
+// 同步状态条：让用户随时看到反馈是否落库（已同步 / 待同步 N / 未配置令牌）
+function refreshSyncStat(){
+  const el=document.getElementById('syncStat'); if(!el) return;
+  const p=load(LS.syncDirty,{}); const pend=Object.keys(p).length;
+  if(!ghToken()){ el.textContent='⚠️ 未配置同步令牌 · 反馈仅存本机，去 ⚙️ 设置填令牌可自动上传'; el.className='syncstat warn'; return; }
+  if(pend){ el.textContent='🔄 有 '+pend+' 类反馈待上传，正在自动同步…'; el.className='syncstat pending'; }
+  else { el.textContent='☁️ 反馈已同步到云端 · 参与后续推荐优化'; el.className='syncstat ok'; }
+}
 
 let WISH = load(LS.wish, WISH_SEED);
 // 迁移：清掉早期 demo 残留的示例心愿单（洁梅从未手动添加过）
@@ -1073,7 +1100,8 @@ function getRec(id){return RECS.find(x=>x.id===id);}
    exclude 去过默认不推为目的地，可作顺路点
    revisit 有玩法+季节+天气+档位窗口才可推，卡片标【复访】        */
 function normName(s){ return (s||"").replace(/[\s·+＋、,，\-—]/g,""); }
-function hitVisited(destName){
+// 单地名对「已去过库」做 token 命中；spot 级去重复用它
+function matchVisitedName(destName){
   const n = normName(destName);
   if(!n) return null;
   let best = null, bestLen = 0;
@@ -1093,6 +1121,7 @@ function hitVisited(destName){
   });
   return best;
 }
+function hitVisited(destName){ return matchVisitedName(destName); }
 // 季节窗口判定：返回 true 合适 / false 不合适 / null 无法自动判定（需人工确认）
 function monthInSeason(season, m){
   if(!season) return null;
@@ -1103,33 +1132,58 @@ function monthInSeason(season, m){
   if(!ranges.length) return null;
   return ranges.some(([a,b]) => (a<=b) ? (m>=a && m<=b) : (m>=a || m<=b));
 }
-// 综合判定：{ok, policy, reason, badge, hint}
-function visitCheck(destName, tierName){
+// 综合判定：{ok, policy, reason, badge, hint, partial, partialHit}
+// dest 可为字符串（仅地名）或卡片对象（含 spots）；新逻辑按核心景点叠加判定
+function visitCheck(dest, tierName){
+  const card = (dest && typeof dest === 'object') ? dest : null;
+  const destName = (typeof dest === 'string') ? dest : (dest && dest.name) || '';
   const v = hitVisited(destName);
-  if(!v) return { ok:true, policy:"new" };
-  if(v.policy === "block")
-    return { ok:false, policy:"block", reason:(v.blockReason||"已去过且明确不再推荐"), matched:v.name };
-  if(v.policy === "exclude")
-    return { ok:false, policy:"exclude", reason:"已去过，默认不再推为目的地（可作顺路点）", matched:v.name };
-  const r = v.revisit || {};
-  const m = new Date().getMonth() + 1;
-  const seasonOK = monthInSeason(r.season, m);
-  if(seasonOK === false)
-    return { ok:false, policy:"revisit", reason:"复访窗口未到（适合 "+r.season+"，现在 "+m+" 月）", matched:v.name };
-  if(tierName && r.tier && r.tier !== tierName)
-    return { ok:false, policy:"revisit", reason:"复访档位不符（需 "+r.tier+"，本次 "+tierName+"）", matched:v.name };
-  return {
-    ok:true, policy:"revisit", matched:v.name,
-    badge:"🔁 复访 · " + (r.activity||"新玩法"),
-    hint:(r.why||"") + "｜适合 " + (r.season||"不限季节") + "｜天气要求：" + (r.weather||"不限") +
-         (seasonOK===null ? "（季节需人工确认）" : "")
-  };
+  let base;
+  if(!v){ base = { ok:true, policy:"new" }; }
+  else if(v.policy === "block")
+    base = { ok:false, policy:"block", reason:(v.blockReason||"已去过且明确不再推荐"), matched:v.name };
+  else if(v.policy === "exclude")
+    base = { ok:false, policy:"exclude", reason:"已去过，默认不再推为目的地（可作顺路点）", matched:v.name };
+  else {
+    const r = v.revisit || {};
+    const m = new Date().getMonth() + 1;
+    const seasonOK = monthInSeason(r.season, m);
+    if(seasonOK === false)
+      base = { ok:false, policy:"revisit", reason:"复访窗口未到（适合 "+r.season+"，现在 "+m+" 月）", matched:v.name };
+    else if(tierName && r.tier && r.tier !== tierName)
+      base = { ok:false, policy:"revisit", reason:"复访档位不符（需 "+r.tier+"，本次 "+tierName+"）", matched:v.name };
+    else
+      base = { ok:true, policy:"revisit", matched:v.name,
+        badge:"🔁 复访 · " + (r.activity||"新玩法"),
+        hint:(r.why||"") + "｜适合 " + (r.season||"不限季节") + "｜天气要求：" + (r.weather||"不限") +
+             (seasonOK===null ? "（季节需人工确认）" : "") };
+  }
+  // —— 新逻辑：按核心景点（spots）叠加判定 ——
+  // 一个目的地要看「具体玩什么」：核心玩法(core)全部去过 → 不再推荐；部分去过 → 保留并明确标注
+  if(card && Array.isArray(card.spots)){
+    const coreSpots = card.spots.filter(s=>s.core);
+    if(coreSpots.length){
+      const hits = coreSpots
+        .map(s=>({ spot:s.name, hit:matchVisitedName(s.name) }))
+        .filter(x=>x.hit);
+      if(hits.length === coreSpots.length){
+        // 所有核心玩法都去过 → 不推（即使大地名没拦住，具体玩法也拦住）
+        return { ok:false, policy:"exclude", reason:"核心玩法都已去过：" + hits.map(h=>h.spot).join("、"),
+                 matched:hits.map(h=>h.spot).join("、"), bySpots:true };
+      } else if(hits.length){
+        // 部分核心玩法去过 → 保留，但标注「部分去过」，让洁梅自己决定
+        base.partial = true;
+        base.partialHit = hits.map(h=>h.spot);
+      }
+    }
+  }
+  return base;
 }
 // 过滤一批候选，返回 {pass:[], blocked:[{name,reason}]}
 function applyVisitFilter(list, tierName){
   const pass = [], blocked = [];
   list.forEach(d=>{
-    const c = visitCheck(d.name, tierName);
+    const c = visitCheck(d, tierName);
     if(c.ok){ d._visit = c; pass.push(d); }
     else blocked.push({ name:d.name, reason:c.reason, matched:c.matched });
   });
@@ -1179,6 +1233,9 @@ function cardHTML(d, i, isBonus, withConfirm){
   const rv = (d._visit && d._visit.policy==="revisit")
     ? `<div class="why" style="color:#0f7b5f;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:6px 10px;"><b>${d._visit.badge}</b><br>${d._visit.hint}</div>`
     : '';
+  const partial = (d._visit && d._visit.partial)
+    ? `<div class="why" style="color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;">⚠️ 部分去过（已去过：${d._visit.partialHit.join("、")}）· 核心玩法还有新的可玩</div>`
+    : '';
   const wishState = WISH.find(w=>w.name===d.name);
   const wishBtn = wishState ? `<button class="did" onclick="toast('已在心愿单：${d.name}')">⭐ 已收心愿</button>`
                             : `<button onclick="addWish(${d.id})">⭐ 收心愿</button>`;
@@ -1193,7 +1250,7 @@ function cardHTML(d, i, isBonus, withConfirm){
       <div class="meta"><span>🚗 <b>${d.drive}</b></span><span class="src">📡 ${d.src} <span class="hot">🔥 ${d.hot}</span></span></div>
       ${matchBar}
       <div class="why">${d.why}</div>
-      ${rv}${best}${safe}
+      ${rv}${partial}${best}${safe}
       <div class="kidline">🧒 ${d.kid}</div>
       ${d.warn?`<div class="warn">⚠️ ${d.warn}</div>`:''}
       ${postsHTML}
@@ -1220,7 +1277,7 @@ function renderHotChips(items, bonus){
     return;
   }
   const hotFilter = applyVisitFilter(items.slice(), null);
-  const bonusCheck = bonus ? visitCheck(bonus.name, null) : null;
+  const bonusCheck = bonus ? visitCheck(bonus, null) : null;
   if(bonus && bonusCheck.ok) bonus._visit = bonusCheck;
   const cardsHTML = hotFilter.pass.map((d,i)=>cardHTML(d,i,false,false)).join('') +
     ((bonus && bonusCheck.ok) ? cardHTML(bonus,0,true,false) : '');
@@ -1358,14 +1415,14 @@ function submitDislike(){
   saveFb({id:cur, name:get(cur).name, type:'dislike', reason});
   learnFromFeedback(cur,'dislike');
   rerenderHot();
-  toast('已记录 ✍️ 点右下角按钮同步给雪花');
+  toast('✍️ 已记录没兴趣 · 将自动同步到云端');
 }
 function like(id){
   cur=id;
   const nm=(get(id)||getRec(id)||{}).name||'';
   saveFb({id, name:nm, type:'like'});
   learnFromFeedback(id,'like');
-  toast('已记录 ❤️ 想去的都会越推越贴合你们');
+  toast('❤️ 已记录想去 · 将自动同步到云端');
 }
 function been(id){cur=id;stars=0;paintStars();document.querySelectorAll('#bChips .chip').forEach(c=>c.classList.remove('sel'));
   document.getElementById('beenNote').value='';
@@ -1390,7 +1447,7 @@ function submitBeen(){
     save(LS.visitedAdd, VISIT_ADD);
   }
   rerenderHot();   // 立即把该地移出当前屏并进「已过滤」；下次换批也会因 VISIT_ADD 而屏蔽
-  toast('已记录 📈 已加入「已去过」，下次不再推荐');
+  toast('📈 已记录去过 · 将自动同步到云端，下次不再推荐');
 }
 function closeMask(id){document.getElementById(id).classList.remove('show');}
 function openMask(id){const el=document.getElementById(id); if(el) el.classList.add('show');}
@@ -1901,5 +1958,6 @@ if(confirmed) showConfirmed();
 renderRoute(); initSync();
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} }); }
 </script>
+<div id="syncStat" class="syncstat"></div>
 </body>
 </html>

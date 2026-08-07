@@ -1592,6 +1592,20 @@
         "like": "1000",
         "view": "4.5w"
       }
+    ],
+    "spots": [
+      {
+        "name": "通灵大峡谷",
+        "core": true
+      },
+      {
+        "name": "德天瀑布",
+        "core": true
+      },
+      {
+        "name": "鹅泉",
+        "core": false
+      }
     ]
   },
   {
@@ -1661,6 +1675,20 @@
         "like": "1700",
         "view": "8.4w"
       }
+    ],
+    "spots": [
+      {
+        "name": "德天瀑布",
+        "core": true
+      },
+      {
+        "name": "明仕田园",
+        "core": true
+      },
+      {
+        "name": "友谊关",
+        "core": false
+      }
     ]
   },
   {
@@ -1729,6 +1757,16 @@
         "fav": "2900",
         "like": "1200",
         "view": "6.0w"
+      }
+    ],
+    "spots": [
+      {
+        "name": "圣堂山",
+        "core": true
+      },
+      {
+        "name": "莲花山",
+        "core": false
       }
     ]
   },
@@ -2074,6 +2112,16 @@
         "fav": "2100",
         "like": "900",
         "view": "4.2w"
+      }
+    ],
+    "spots": [
+      {
+        "name": "中渡古镇",
+        "core": true
+      },
+      {
+        "name": "香桥岩溶",
+        "core": true
       }
     ]
   },
