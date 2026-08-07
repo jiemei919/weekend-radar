@@ -291,7 +291,10 @@
   <!-- 心愿单 -->
   <div class="page" id="p-wish">
     <div class="hintbar">⭐ 这里收集你想去的所有地方，<b>跨假期保存</b>。下次规划「下一个假期」时，雪花会<b>优先匹配</b>这里适合当前档位的心愿地。可在本周最热 / 下一个假期卡片点「⭐ 收心愿」加入，或在对话里说"我想去 XX"。</div>
-    <div style="margin-bottom:16px;"><button class="syncbtn" onclick="syncWish()">☁️ 导出同步给雪花（落库 data/wishlist.json）</button></div>
+    <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="syncbtn" onclick="openAddWish()">＋ 手动添加心愿</button>
+      <button class="syncbtn" onclick="syncWish()">☁️ 导出同步给雪花（落库 data/wishlist.json）</button>
+    </div>
     <div class="grid" id="wishCards"></div>
   </div>
 
@@ -408,17 +411,52 @@
   <div class="mbtns"><button onclick="copyBook()">📋 复制成文本</button><button class="ok" onclick="closeMask('mBook')">✕ 关闭</button></div>
 </div></div>
 
-<button class="fab" id="fab" onclick="copyFeedback()">📋 复制反馈同步给雪花（<span id="fbN">0</span> 条）</button>
+<!-- 手动添加心愿 -->
+<div class="mask" id="mAddWish"><div class="modal">
+  <h4>⭐ 添加心愿目的地</h4>
+  <div class="hint">填你想去的地方，保存后跨假期保留。</div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px;">
+    <label style="font-size:13px;color:var(--sub);">目的地名称 <span style="color:var(--rose);">*</span>
+      <input id="awName" class="rinp" style="margin-top:4px;" placeholder="如：云南 · 大理洱海">
+    </label>
+    <div style="display:flex;gap:10px;">
+      <label style="font-size:13px;color:var(--sub);flex:0 0 80px;">emoji
+        <input id="awEmoji" class="rinp" style="margin-top:4px;text-align:center;" value="🌟" maxlength="2">
+      </label>
+      <label style="font-size:13px;color:var(--sub);flex:1;">想去程度
+        <select id="awLevel" class="rinp" style="margin-top:4px;">
+          <option value="强">🔥 强——近期很想去</option>
+          <option value="中" selected>🌤 中——有机会就去</option>
+          <option value="弱">🌫 弱——先记着</option>
+        </select>
+      </label>
+    </div>
+    <label style="font-size:13px;color:var(--sub);">适合档位
+      <select id="awTier" class="rinp" style="margin-top:4px;">
+        <option value="1-2天">1-2天 · 珠三角圈（自驾≤3h）</option>
+        <option value="3-4天" selected>3-4天 · 广东+邻省（自驾≤6h）</option>
+        <option value="5-7天">5-7天 · 跨省中长途</option>
+        <option value="8天+">8天+ · 远途（需飞）</option>
+      </select>
+    </label>
+    <label style="font-size:13px;color:var(--sub);">备注（为什么想去 / 想玩什么）
+      <textarea id="awNote" class="rinp rtarea" style="margin-top:4px;height:60px;" placeholder="如：洱海骑行+苍山索道，铄铄想看熊猫"></textarea>
+    </label>
+  </div>
+  <div class="mbtns"><button onclick="closeMask('mAddWish')">取消</button><button class="ok" onclick="submitAddWish()">⭐ 加入心愿单</button></div>
+</div></div>
+
+<!-- 反馈已改为自动同步云端（点按钮即落库），手动复制按钮已移除 -->
 <div id="toast"></div>
 
-<script src="data.js?v=1.2.1"></script>
-<script src="holidays.js?v=1.2.1"></script>
-<script src="visited.js?v=1.2.1"></script>
-<script src="config.js?v=1.2.1"></script>
-<script src="taste-profile.js?v=1.2.1"></script>
-<script src="candidates.js?v=1.2.1"></script>
-<script src="match-engine.js?v=1.2.1"></script>
-<script src="hot-pool.js?v=1.2.1"></script>
+<script src="data.js?v=1.2.2"></script>
+<script src="holidays.js?v=1.2.2"></script>
+<script src="visited.js?v=1.2.2"></script>
+<script src="config.js?v=1.2.2"></script>
+<script src="taste-profile.js?v=1.2.2"></script>
+<script src="candidates.js?v=1.2.2"></script>
+<script src="match-engine.js?v=1.2.2"></script>
+<script src="hot-pool.js?v=1.2.2"></script>
 <script>
 /* ===================== 数据层 ===================== */
 const R = window.RADAR;
@@ -1174,11 +1212,7 @@ function learnFromFeedback(id, type){
 }
 
 /* ===================== 反馈（没兴趣 / 去过 / 同步） ===================== */
-function refreshFab(){
-  const n=feedback.length;
-  document.getElementById('fbN').textContent=n;
-  document.getElementById('fab').classList.toggle('show', n>0);
-}
+function refreshFab(){}   // FAB 已移除：反馈改为自动同步云端，不再需要手动复制按钮
 function restoreState(){
   [...R.items, R.bonus].forEach(d=>{
     const card=document.getElementById('card'+d.id); if(!card)return;
@@ -1407,7 +1441,7 @@ function genPlan(name,days){
 /* ===================== 心愿单 ===================== */
 function renderWish(){
   const box=document.getElementById('wishCards');
-  if(!WISH.length){box.innerHTML='<div class="empty">还没有心愿目的地。在本周最热 / 下一个假期卡片点「⭐ 收心愿」，或在对话里告诉雪花"我想去 XX"。</div>';return;}
+  if(!WISH.length){box.innerHTML='<div class="empty">还没有心愿目的地。<br>点上方「＋ 手动添加心愿」直接加，或在本周最热 / 下一个假期卡片点「⭐ 收心愿」。</div>';return;}
   const lvMap={'强':'🔥 强','中':'🌤 中','弱':'🌫 弱'};
   const stMap={'want':['想去中','var(--brand)'],'scheduled':['已安排','var(--amber)'],'done':['已去过','#9ca3af']};
   box.innerHTML=WISH.map(w=>{
@@ -1437,6 +1471,31 @@ function editNote(id){const w=WISH.find(x=>x.id===id);if(!w)return;const t=promp
 function markDone(id){const w=WISH.find(x=>x.id===id);if(!w)return;if(w.status==='done'){w.status='want';toast('已改回：'+w.name+' → 想去中');}else{w.status='done';toast('已标记为去过：'+w.name);}save(LS.wish,WISH);renderWish();}
 function delWish(id){const i=WISH.findIndex(x=>x.id===id);if(i<0)return;WISH.splice(i,1);save(LS.wish,WISH);renderWish();toast('已从心愿单删除');}
 function syncWish(){ copy('【周末雷达·心愿单同步】\n'+JSON.stringify(WISH)); }
+
+/* ---------- 手动添加心愿 ---------- */
+function openAddWish(){
+  document.getElementById('awName').value='';
+  document.getElementById('awEmoji').value='🌟';
+  document.getElementById('awLevel').value='中';
+  document.getElementById('awTier').value='3-4天';
+  document.getElementById('awNote').value='';
+  openMask('mAddWish');
+  setTimeout(()=>document.getElementById('awName').focus(),100);
+}
+function submitAddWish(){
+  const name=document.getElementById('awName').value.trim();
+  if(!name){ toast('先填目的地名称'); return; }
+  if(WISH.find(w=>w.name===name)){ toast('已在心愿单：'+name); return; }
+  const emoji=document.getElementById('awEmoji').value.trim()||'🌟';
+  const level=document.getElementById('awLevel').value;
+  const tier=document.getElementById('awTier').value;
+  const note=document.getElementById('awNote').value.trim();
+  WISH.unshift({id:Date.now(), name, emoji, level, tier, source:'手动添加', addedAt:ymd(new Date()), note, status:'want'});
+  save(LS.wish, WISH);
+  closeMask('mAddWish');
+  renderWish();
+  toast('⭐ 已加入心愿单');
+}
 
 /* ===================== 路线库 ===================== */
 function esc(s){ return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,'&quot;'); }
