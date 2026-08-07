@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-06",
+  "updatedAt": "2026-08-07",
   "source": "飞书《已经去过的旅行目的地统计》 wiki BmzFwoDJzi217okf4iicjh1vnTe",
   "policyDef": {
     "block": "永不推荐。洁梅点名不要推、避雷、或明确说过不会再去。任何情况下都不出现在推荐榜。",
@@ -1635,6 +1635,14 @@
       "review": "荒漠，看巨石，露营，在沙漠中看到的星星在其他地方就再也没有见过了",
       "scope": "abroad",
       "policy": "exclude"
+    },
+    {
+      "name": "罗浮山",
+      "region": "广东",
+      "city": "惠州",
+      "scope": "cn",
+      "policy": "exclude",
+      "review": "洁梅在「本周最热」点「✅去过了」；2026-08-07 兜底落库云端真值源"
     }
   ]
 }

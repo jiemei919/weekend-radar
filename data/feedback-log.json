@@ -1,4 +1,25 @@
 {
   "note": "洁梅反馈流水。雪花收到反馈后追加于此，并同步更新 taste-model.json / channel-trust.json。",
-  "entries": []
+  "feedback": [
+    {
+      "name": "罗浮山",
+      "type": "been",
+      "stars": 3,
+      "tags": [],
+      "note": "本周最热「✅去过了」；兜底落库",
+      "date": "2026-08-07"
+    }
+  ],
+  "visited": [
+    {
+      "name": "罗浮山",
+      "policy": "exclude",
+      "review": "本周最热「✅去过了」；兜底落库",
+      "addedAt": "2026-08-07"
+    }
+  ],
+  "learn": {
+    "log": [],
+    "deltas": {}
+  }
 }
