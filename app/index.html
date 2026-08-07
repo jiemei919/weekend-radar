@@ -449,14 +449,14 @@
 <!-- 统一同步器：所有用户操作经 save() 自动标记脏，debounce 后自动 PUT 到 data/*.json（radar-sync）；打开页面 pullAll 合并云端 -->
 <div id="toast"></div>
 
-<script src="data.js?v=1.3.0"></script>
-<script src="holidays.js?v=1.3.0"></script>
-<script src="visited.js?v=1.3.0"></script>
-<script src="config.js?v=1.3.0"></script>
-<script src="taste-profile.js?v=1.3.0"></script>
-<script src="candidates.js?v=1.3.0"></script>
-<script src="match-engine.js?v=1.3.0"></script>
-<script src="hot-pool.js?v=1.3.0"></script>
+<script src="data.js?v=1.3.1"></script>
+<script src="holidays.js?v=1.3.1"></script>
+<script src="visited.js?v=1.3.1"></script>
+<script src="config.js?v=1.3.1"></script>
+<script src="taste-profile.js?v=1.3.1"></script>
+<script src="candidates.js?v=1.3.1"></script>
+<script src="match-engine.js?v=1.3.1"></script>
+<script src="hot-pool.js?v=1.3.1"></script>
 <script>
 /* ===================== 数据层 ===================== */
 const R = window.RADAR;
@@ -933,15 +933,25 @@ function domainPayload(domain){
   return null;
 }
 // 把 pull 下来的内容写回内存 + localStorage（用原始 setItem，不走 save 以免回环 markDirty）
+// 兼容旧格式：leaves 旧结构 {updatedAt,note,leaves:[{date,half}]} / feedback 旧结构 {entries:[]}
 function applyPull(domain, data){
   if(domain==='wish' && Array.isArray(data)){ WISH = mergeArr(WISH, data, x=>x.name); localStorage.setItem(LS.wish, JSON.stringify(WISH)); }
   else if(domain==='routes' && Array.isArray(data)){ ROUTE_DB = mergeArr(ROUTE_DB, data, x=>x.id); localStorage.setItem(LS.routes, JSON.stringify(ROUTE_DB)); }
-  else if(domain==='confirmed'){ confirmed = data; localStorage.setItem(LS.confirmed, JSON.stringify(confirmed)); }
-  else if(domain==='leaves' && data && typeof data==='object'){ leaveMap = Object.assign({}, data); localStorage.setItem(LS.leave, JSON.stringify(leaveMap)); }
+  else if(domain==='confirmed'){ if(data) { confirmed = data; localStorage.setItem(LS.confirmed, JSON.stringify(confirmed)); } }
+  else if(domain==='leaves' && data && typeof data==='object'){
+    let map = {};
+    if(Array.isArray(data.leaves)) data.leaves.forEach(l=>{ if(l&&l.date) map[l.date]=l.half||'full'; });
+    else { map = data; }   // 新格式：直接是 {日期: 半天}
+    map = Object.fromEntries(Object.entries(map).filter(([k])=>/^\d{4}-\d{2}-\d{2}$/.test(k)));  // 丢弃 updatedAt/note 等非日期键
+    leaveMap = Object.assign({}, map); localStorage.setItem(LS.leave, JSON.stringify(leaveMap));
+  }
   else if(domain==='feedback' && data && typeof data==='object'){
-    if(Array.isArray(data.feedback)){ feedback = mergeArr(feedback, data.feedback, x=>x.name+'|'+(x.type||'x')); localStorage.setItem(LS.fb, JSON.stringify(feedback)); }
-    if(Array.isArray(data.visited)){ VISIT_ADD = mergeArr(VISIT_ADD, data.visited, x=>x.name); localStorage.setItem(LS.visitedAdd, JSON.stringify(VISIT_ADD)); }
-    if(data.learn){ const log = mergeArr((LEARN&&LEARN.log)||[], data.learn.log||[], x=>(x.date||'')+'|'+x.name+'|'+(x.type||'x')); LEARN = { log, deltas: Object.assign({}, data.learn.deltas||{}, (LEARN&&LEARN.deltas)||{}) }; localStorage.setItem(LS.learn, JSON.stringify(LEARN)); }
+    const fbArr = Array.isArray(data.feedback) ? data.feedback : (Array.isArray(data.entries) ? data.entries : []);
+    const visArr = Array.isArray(data.visited) ? data.visited : [];
+    const learnObj = data.learn && typeof data.learn==='object' ? data.learn : {};
+    if(fbArr.length){ feedback = mergeArr(feedback, fbArr, x=>x.name+'|'+(x.type||'x')); localStorage.setItem(LS.fb, JSON.stringify(feedback)); }
+    if(visArr.length){ VISIT_ADD = mergeArr(VISIT_ADD, visArr, x=>x.name); localStorage.setItem(LS.visitedAdd, JSON.stringify(VISIT_ADD)); }
+    if(Object.keys(learnObj).length){ const log = mergeArr((LEARN&&LEARN.log)||[], learnObj.log||[], x=>(x.date||'')+'|'+x.name+'|'+(x.type||'x')); LEARN = { log, deltas: Object.assign({}, learnObj.deltas||{}, (LEARN&&LEARN.deltas)||{}) }; localStorage.setItem(LS.learn, JSON.stringify(LEARN)); }
   }
 }
 async function pushDomain(domain){
@@ -1838,7 +1848,7 @@ function copyBook(){
   copy(lines.join('\n')); toast('已复制成文本');
 }
 function openSettings(){ document.getElementById('ghToken').value=load(LS.ghToken,''); openMask('mSettings'); }
-function saveGhToken(){ const v=document.getElementById('ghToken').value.trim(); save(LS.ghToken,v); closeMask('mSettings'); toast(v?'✅ 令牌已保存（仅存本机）':'已清空令牌'); if(v){ flushSync(); } }
+function saveGhToken(){ const v=document.getElementById('ghToken').value.trim(); save(LS.ghToken,v); closeMask('mSettings'); toast(v?'✅ 令牌已保存（仅存本机）':'已清空令牌'); if(v){ ['wish','routes','confirmed','leaves','feedback'].forEach(d=>markDirty(d)); flushSync(); } }
 function clearLocalMarks(){
   if(!confirm('确定清除本机的“去过了/没兴趣/想去”本地标记？已同步给雪花的反馈记录不会被删除。')) return;
   try{
