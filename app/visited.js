@@ -327,11 +327,18 @@ window.VISITED = {
    }
   },
   {
-   "name": "双月湾、絮寮湾",
+   "name": "双月湾",
    "region": "广东",
    "city": "惠州",
    "policy": "block",
    "blockReason": "太老、沙滩吵，不如小径湾"
+  },
+  {
+   "name": "絮寮湾",
+   "region": "广东",
+   "city": "惠州",
+   "policy": "block",
+   "blockReason": "和双月湾相连，沙滩吵、太老，不如小径湾"
   },
   {
    "name": "吉钓沙",
