@@ -149,6 +149,31 @@ dom.window.addEventListener('load', () => {
     await new Promise(r => setTimeout(r, 80));   // saveGhToken 内 flushSync 为异步，等其完成
     ok('补 token 后自动追上云端（leaves 含 2026-12-01）', PUTS['data/leaves.json'] && PUTS['data/leaves.json']['2026-12-01']);
 
+    // —— 验收标准 9：推荐去重（组合名拦截，修复「双月湾」类组合名永远拦不住的 bug）——
+    // 9.1 双月湾数据修复：拆成独立 block 条目后，卡片含「双月湾/絮寮湾」即拦截
+    // 用与 HOT_ALTS 真实卡片完全一致的名字（"惠州 · 双月湾（亲子海边）"）
+    const sh = w.hitVisited('惠州 · 双月湾（亲子海边）');
+    ok('双月湾卡片被 hitVisited 拦截（policy=block）', sh && sh.policy === 'block', sh && sh.name);
+    ok('双月湾卡片 visitCheck 判定不推荐', w.visitCheck('惠州 · 双月湾（亲子海边）').ok === false);
+    const sh2 = w.hitVisited('惠州 · 双月湾');
+    ok('双月湾（无后缀）仍被拦截', sh2 && sh2.policy === 'block');
+    const xl = w.hitVisited('絮寮湾');
+    ok('絮寮湾独立条目也被拦截', xl && xl.policy === 'block' && xl.city === '惠州');
+
+    // 9.2 组合名 token 化逻辑修复：库里仍是组合名（如「东涌、西涌、较场尾」）也应能拦单卡
+    const dc = w.hitVisited('东涌');
+    ok('组合名 token 命中（东涌→东涌、西涌、较场尾，revisit）', dc && dc.policy === 'revisit', dc && dc.name);
+    const sk = w.hitVisited('世客围');
+    ok('组合名 token 命中（世客围→世客围、关西新围…）', sk && sk.policy === 'block', sk && sk.name);
+
+    // 9.3 applyVisitFilter 整体过滤：双月湾被移入 blocked，未去过的新地放行
+    const fr = w.applyVisitFilter([{ name: '惠州 · 双月湾（亲子海边）' }, { name: '测试新地·火星基地' }], '1-2天');
+    ok('applyVisitFilter 拦截双月湾', fr.blocked.some(b => /双月湾/.test(b.name)));
+    ok('applyVisitFilter 保留未去过的新地', fr.pass.some(p => p.name === '测试新地·火星基地'));
+    // 9.4 复访窗口（季节）仍正确：小径湾 10月-次年4月，8月应拦截（窗口未到）
+    const xb = w.visitCheck('小径湾', '1-2天');
+    ok('小径湾（8月）复访窗口未到→拦截', xb.ok === false && xb.policy === 'revisit');
+
     console.log('\n同步集成：' + pass + ' 通过 / ' + fail + ' 失败');
     process.exit(fail ? 1 : 0);
   }, 500);
