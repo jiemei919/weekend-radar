@@ -293,7 +293,7 @@
     <div class="hintbar">⭐ 这里收集你想去的所有地方，<b>跨假期保存</b>。下次规划「下一个假期」时，雪花会<b>优先匹配</b>这里适合当前档位的心愿地。可在本周最热 / 下一个假期卡片点「⭐ 收心愿」加入，或在对话里说"我想去 XX"。</div>
     <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
       <button class="syncbtn" onclick="openAddWish()">＋ 手动添加心愿</button>
-      <button class="syncbtn" onclick="syncWish()">☁️ 导出同步给雪花（落库 data/wishlist.json）</button>
+      <button class="syncbtn" onclick="syncNow()">☁️ 立即同步（写回 GitHub）</button>
     </div>
     <div class="grid" id="wishCards"></div>
   </div>
@@ -302,7 +302,7 @@
   <div class="page" id="p-route">
     <div class="hintbar">🗺️ 这里记录你<b>所有走过的路线</b>和<b>正在规划的路线</b>。点击任意一条展开看完整 Day-by-Day 行程卡（对齐你飞书手工表格式）。规划中路线可点「✏️ 编辑模式」随手改、再「📤 导出改动」发雪花落库。确认新目的地后，雪花会自动新增一条「规划中」路线。（iPhone 日历导入功能后续版本再加）</div>
     <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="syncbtn" onclick="syncRoutes()">☁️ 保存并同步（写回 GitHub）</button>
+      <button class="syncbtn" onclick="syncNow()">☁️ 立即同步（写回 GitHub）</button>
       <button class="syncbtn" style="background:var(--brand);color:#fff;border-color:var(--brand);" onclick="openNewRoute()">＋ 新建行程</button>
       <button class="syncbtn" onclick="openSettings()">⚙️ GitHub 设置</button>
       <button class="syncbtn" onclick="openBook()">📊 花费汇总</button>
@@ -446,17 +446,17 @@
   <div class="mbtns"><button onclick="closeMask('mAddWish')">取消</button><button class="ok" onclick="submitAddWish()">⭐ 加入心愿单</button></div>
 </div></div>
 
-<!-- 反馈已改为自动同步云端（点按钮即落库），手动复制按钮已移除 -->
+<!-- 统一同步器：所有用户操作经 save() 自动标记脏，debounce 后自动 PUT 到 data/*.json（radar-sync）；打开页面 pullAll 合并云端 -->
 <div id="toast"></div>
 
-<script src="data.js?v=1.2.2"></script>
-<script src="holidays.js?v=1.2.2"></script>
-<script src="visited.js?v=1.2.2"></script>
-<script src="config.js?v=1.2.2"></script>
-<script src="taste-profile.js?v=1.2.2"></script>
-<script src="candidates.js?v=1.2.2"></script>
-<script src="match-engine.js?v=1.2.2"></script>
-<script src="hot-pool.js?v=1.2.2"></script>
+<script src="data.js?v=1.3.0"></script>
+<script src="holidays.js?v=1.3.0"></script>
+<script src="visited.js?v=1.3.0"></script>
+<script src="config.js?v=1.3.0"></script>
+<script src="taste-profile.js?v=1.3.0"></script>
+<script src="candidates.js?v=1.3.0"></script>
+<script src="match-engine.js?v=1.3.0"></script>
+<script src="hot-pool.js?v=1.3.0"></script>
 <script>
 /* ===================== 数据层 ===================== */
 const R = window.RADAR;
@@ -887,7 +887,113 @@ const LS = {
   routeEdit: "radar-route-edit-v1", ghToken: "radar-gh-token-v1", learn: "radar-learn-v1"
 };
 function load(key, seed){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):seed; }catch(e){ return seed; } }
-function save(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+function save(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+  const d = LS_DOMAIN[key];                 // 用户数据写入 → 标记该域脏，触发自动同步
+  if(d) markDirty(d);
+}
+
+/* ===================== 统一同步器 radar-sync（V1.3.0） =====================
+ * 每次用户操作先写 localStorage（save 内自动 markDirty），再 debounce 自动 PUT 到对应 data/*.json。
+ * 打开页面时 pullAll 把云端数据并回本地，跨设备一致。复用 syncRoutes 已验证的 GitHub PUT 链路。
+ */
+const LS_DOMAIN = {
+  [LS.wish]: 'wish',
+  [LS.routes]: 'routes',
+  [LS.routeEdit]: 'routes',          // 路线编辑叠层随 routes 一并落库
+  [LS.confirmed]: 'confirmed',
+  [LS.leave]: 'leaves',
+  [LS.fb]: 'feedback',
+  [LS.visitedAdd]: 'feedback',
+  [LS.learn]: 'feedback'
+};
+const SYNC_FILES = { wish:'wishlist.json', routes:'routes.json', confirmed:'confirmed-trip.json', leaves:'leaves.json', feedback:'feedback-log.json' };
+const SYNC = { dirty:{}, timer:null };
+function ghToken(){ return load(LS.ghToken, ''); }
+function ghCfg(){ return window.APP_CONFIG || {}; }
+
+// 本地优先并集：cloud 先放，local 后放覆盖同 key（local 是最新操作）
+function mergeArr(local, cloud, keyFn){
+  const m = new Map();
+  (cloud||[]).forEach(x=>{ if(x) m.set(keyFn(x), x); });
+  (local||[]).forEach(x=>{ if(x) m.set(keyFn(x), x); });
+  return [...m.values()];
+}
+function domainPayload(domain){
+  if(domain==='wish') return WISH;
+  if(domain==='routes') return ROUTE_DB.map(r=>{ const m=mergedDaily(r); const dc=mergedCosts(r); return Object.assign({}, r, {daily:m, dayCosts:dc, pax:mergedPax(r)}); });
+  if(domain==='confirmed') return confirmed;
+  if(domain==='leaves') return leaveMap;
+  if(domain==='feedback') return {
+    note: "洁梅反馈流水（想去/没兴趣/去过了/偏好学习）。雪花自动落库，并据 learn 更新 taste-profile.json。",
+    feedback: feedback || [],
+    visited: VISIT_ADD || [],
+    learn: LEARN || {log:[], deltas:{}}
+  };
+  return null;
+}
+// 把 pull 下来的内容写回内存 + localStorage（用原始 setItem，不走 save 以免回环 markDirty）
+function applyPull(domain, data){
+  if(domain==='wish' && Array.isArray(data)){ WISH = mergeArr(WISH, data, x=>x.name); localStorage.setItem(LS.wish, JSON.stringify(WISH)); }
+  else if(domain==='routes' && Array.isArray(data)){ ROUTE_DB = mergeArr(ROUTE_DB, data, x=>x.id); localStorage.setItem(LS.routes, JSON.stringify(ROUTE_DB)); }
+  else if(domain==='confirmed'){ confirmed = data; localStorage.setItem(LS.confirmed, JSON.stringify(confirmed)); }
+  else if(domain==='leaves' && data && typeof data==='object'){ leaveMap = Object.assign({}, data); localStorage.setItem(LS.leave, JSON.stringify(leaveMap)); }
+  else if(domain==='feedback' && data && typeof data==='object'){
+    if(Array.isArray(data.feedback)){ feedback = mergeArr(feedback, data.feedback, x=>x.name+'|'+(x.type||'x')); localStorage.setItem(LS.fb, JSON.stringify(feedback)); }
+    if(Array.isArray(data.visited)){ VISIT_ADD = mergeArr(VISIT_ADD, data.visited, x=>x.name); localStorage.setItem(LS.visitedAdd, JSON.stringify(VISIT_ADD)); }
+    if(data.learn){ const log = mergeArr((LEARN&&LEARN.log)||[], data.learn.log||[], x=>(x.date||'')+'|'+x.name+'|'+(x.type||'x')); LEARN = { log, deltas: Object.assign({}, data.learn.deltas||{}, (LEARN&&LEARN.deltas)||{}) }; localStorage.setItem(LS.learn, JSON.stringify(LEARN)); }
+  }
+}
+async function pushDomain(domain){
+  const token = ghToken(); if(!token) return false;
+  const cfg = ghCfg(); if(!cfg.owner || !cfg.repo) return false;
+  const path = (cfg.dataPath||'data/') + SYNC_FILES[domain];
+  const payload = domainPayload(domain);
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload, null, 2))));
+  let sha=null;
+  try{ const g=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{headers:{Authorization:'Bearer '+token}}); if(g.ok){ const j=await g.json(); sha=j.sha; } }catch(e){}
+  const body={message:"chore: 自动同步周末雷达用户数据 "+new Date().toISOString().slice(0,16).replace('T',' '), content, branch:cfg.branch||'main'};
+  if(sha) body.sha=sha;
+  try{
+    const res=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{
+      method:'PUT', headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+      body: JSON.stringify(body)
+    });
+    return res.ok;
+  }catch(e){ return false; }
+}
+function markDirty(domain){
+  SYNC.dirty[domain]=true;
+  if(SYNC.timer) clearTimeout(SYNC.timer);
+  SYNC.timer=setTimeout(flushSync, 15000);   // 15s debounce，批量推送避免 commit 刷屏
+}
+async function flushSync(){
+  const domains=Object.keys(SYNC.dirty);
+  if(!domains.length) return;
+  SYNC.dirty={};
+  if(!ghToken()) return;                      // 无 token 仅本地，等补令牌
+  let allOk=true;
+  for(const d of domains){ const ok=await pushDomain(d); if(!ok){ SYNC.dirty[d]=true; allOk=false; } }
+  if(allOk) toast('☁️ 已自动同步到云端');
+}
+async function pullAll(){
+  if(!ghToken()) return;
+  const cfg=ghCfg(); if(!cfg.owner || !cfg.repo) return;
+  const base=`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch||'main'}/${(cfg.dataPath||'data/')}`;
+  for(const domain of Object.keys(SYNC_FILES)){
+    try{
+      const res=await fetch(base + SYNC_FILES[domain]);
+      if(res.ok){ const data=await res.json(); applyPull(domain, data); }
+    }catch(e){}
+  }
+  renderWish(); renderRoute(); try{ renderHoliday(); }catch(e){}
+}
+function initSync(){
+  pullAll();                                  // 异步合并云端（不阻塞首屏）
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') flushSync(); });
+  window.addEventListener('pagehide', ()=>{ flushSync(); });
+}
+function syncNow(){ flushSync(); }            // 手动「立即同步」按钮
 
 let WISH = load(LS.wish, WISH_SEED);
 // 迁移：清掉早期 demo 残留的示例心愿单（洁梅从未手动添加过）
@@ -1270,26 +1376,6 @@ function submitBeen(){
   rerenderHot();   // 立即把该地移出当前屏并进「已过滤」；下次换批也会因 VISIT_ADD 而屏蔽
   toast('已记录 📈 已加入「已去过」，下次不再推荐');
 }
-function fbText(){
-  const lines=feedback.map(f=>{
-    if(f.type==='like') return `- ${f.name}：👍想去`;
-    if(f.type==='dislike') return `- ${f.name}：👎没兴趣（${f.reason}）`;
-    return `- ${f.name}：✅去过 ${f.stars}星${f.tags.length?'（'+f.tags.join('、')+'）':''}${f.note?'｜'+f.note:''}`;
-  });
-  let t = `【周末雷达反馈 · ${R.week}】\n${lines.join('\n')}`;
-  if(VISIT_ADD.length){
-    t += `\n\n【待落库 data/visited.json 的新增已去过】\n` + JSON.stringify(VISIT_ADD);
-  }
-  if(LEARN && LEARN.log && LEARN.log.length){
-    const changed = (PROFILE.dimensions||[]).filter(d=>Math.abs((LEARN.deltas[d.key]||0))>0.0001)
-      .map(d=>`${d.label} ${BASE_WEIGHTS[d.key].toFixed(2)}→${d.weight.toFixed(2)}`);
-    t += `\n\n【偏好学习记录（已本地生效，待落库 data/taste-profile.json）】\n`
-       + LEARN.log.map(l=>`- ${l.date} ${l.type==='like'?'👍想去':'👎没兴趣'}·${l.name}（命中：${l.dims.join('/')}）`).join('\n')
-       + (changed.length? `\n当前权重相对基线已调整：${changed.join('、')}` : '');
-  }
-  return t;
-}
-function copyFeedback(){ copy(fbText()); }
 function closeMask(id){document.getElementById(id).classList.remove('show');}
 function openMask(id){const el=document.getElementById(id); if(el) el.classList.add('show');}
 function swapBatch(){
@@ -1470,7 +1556,7 @@ function cycleLevel(id){const w=WISH.find(x=>x.id===id);if(!w)return;w.level={'�
 function editNote(id){const w=WISH.find(x=>x.id===id);if(!w)return;const t=prompt('编辑备注（'+w.name+'）',w.note||'');if(t!==null){w.note=t;save(LS.wish,WISH);renderWish();toast('备注已更新');}}
 function markDone(id){const w=WISH.find(x=>x.id===id);if(!w)return;if(w.status==='done'){w.status='want';toast('已改回：'+w.name+' → 想去中');}else{w.status='done';toast('已标记为去过：'+w.name);}save(LS.wish,WISH);renderWish();}
 function delWish(id){const i=WISH.findIndex(x=>x.id===id);if(i<0)return;WISH.splice(i,1);save(LS.wish,WISH);renderWish();toast('已从心愿单删除');}
-function syncWish(){ copy('【周末雷达·心愿单同步】\n'+JSON.stringify(WISH)); }
+function syncWish(){ /* 已由统一同步器取代：按钮改用 syncNow() 立即落库 */ }
 
 /* ---------- 手动添加心愿 ---------- */
 function openAddWish(){
@@ -1711,36 +1797,6 @@ function renderRoute(){
 }
 function toggleRoute(id){const b=document.getElementById('body-'+id);const c=document.getElementById('caret-'+id);if(b.style.display==='none'){b.style.display='block';c.textContent='▾';}else{b.style.display='none';c.textContent='▸';}}
 function tlText(d){ const t=(d.timeline||[]).map(x=>(x.time?x.time+' ':'')+x.action).filter(Boolean).join('；'); return t||(d.plan||''); }
-function syncRoutes(){
-  const token = load(LS.ghToken, "");
-  if(!token){ toast('请先在「⚙️ GitHub 设置」里粘贴令牌'); openSettings(); return; }
-  const cfg = window.APP_CONFIG || {};
-  const path = (cfg.dataPath||"data/") + "routes.json";
-  const payload = ROUTE_DB.map(r=>{ const m=mergedDaily(r); const dc=mergedCosts(r); return Object.assign({}, r, {daily:m, dayCosts:dc, pax:mergedPax(r)}); });
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(payload,null,2))));
-  (async()=>{
-    let sha=null;
-    try{ const g=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{headers:{Authorization:'Bearer '+token}}); if(g.ok){ const j=await g.json(); sha=j.sha; } }catch(e){}
-    const body={message:"chore: 同步周末雷达路线库 "+new Date().toISOString().slice(0,10),content, branch:cfg.branch||"main"};
-    if(sha) body.sha=sha;
-    try{
-      const res=await fetch(`https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${path}`,{
-        method:'PUT', headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
-        body: JSON.stringify(body)
-      });
-      if(res.ok){ save(LS.routes, ROUTE_DB); toast('✅ 已同步到 GitHub（关机 / 换设备都能看）'); }
-      else { const e=await res.json().catch(()=>({})); toast('❌ 同步失败：'+(e.message||res.status)); }
-    }catch(e){ toast('❌ 网络错误：'+e.message); }
-  })();
-}
-async function pullRoutesIfEmpty(){
-  if(localStorage.getItem(LS.routes)) return;
-  const cfg=window.APP_CONFIG||{};
-  try{
-    const res=await fetch(`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch||'main'}/${cfg.dataPath||'data/'}routes.json`);
-    if(res.ok){ const arr=await res.json(); if(Array.isArray(arr)&&arr.length){ ROUTE_DB=arr; save(LS.routes,ROUTE_DB); renderRoute(); } }
-  }catch(e){}
-}
 function openBook(){
   let gf=0,ge=0,dn=0,dc=0,pn=0,pc=0;
   ROUTE_DB.forEach(r=>{ const s=sums(mergedCosts(r)); gf+=s.f; ge+=s.e; if(r.status==='done'){dn++;dc+=s.t;}else{pn++;pc+=s.t;} });
@@ -1782,7 +1838,7 @@ function copyBook(){
   copy(lines.join('\n')); toast('已复制成文本');
 }
 function openSettings(){ document.getElementById('ghToken').value=load(LS.ghToken,''); openMask('mSettings'); }
-function saveGhToken(){ const v=document.getElementById('ghToken').value.trim(); save(LS.ghToken,v); closeMask('mSettings'); toast(v?'✅ 令牌已保存（仅存本机）':'已清空令牌'); }
+function saveGhToken(){ const v=document.getElementById('ghToken').value.trim(); save(LS.ghToken,v); closeMask('mSettings'); toast(v?'✅ 令牌已保存（仅存本机）':'已清空令牌'); if(v){ flushSync(); } }
 function clearLocalMarks(){
   if(!confirm('确定清除本机的“去过了/没兴趣/想去”本地标记？已同步给雪花的反馈记录不会被删除。')) return;
   try{
@@ -1826,7 +1882,7 @@ function submitPlan(){
 refreshFab(); restoreState();
 nextHolidayInfo(); renderHoliday(); renderLeaveList(); renderHotWishState();
 if(confirmed) showConfirmed();
-renderRoute(); pullRoutesIfEmpty();
+renderRoute(); initSync();
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} }); }
 </script>
 </body>

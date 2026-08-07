@@ -67,7 +67,8 @@ JSDOM.fromFile(ROOT+"/index.html", {
       window.submitBeen();
       ok("提交去过后无运行时错误", errs.length===0 && jsdomErrors.length===0);
       ok("提交去过后该卡被移出当前屏", !document.getElementById('card'+altId));
-      ok("fbText 含该地(已记入反馈)", window.fbText().includes(altName));
+      const visitedNow = JSON.parse(window.localStorage.getItem('radar-visited-add-v1')||'[]');
+      ok("去过了已写入本地(待自动同步)", visitedNow.some(v=>v.name===altName));
       ok("该地进入「已过滤」区", /已去过/.test(document.getElementById('filteredBox').innerHTML));
 
       // —— 没兴趣·仅自由填写（无选中芯片）——
@@ -82,7 +83,8 @@ JSDOM.fromFile(ROOT+"/index.html", {
       const c2el = document.getElementById('card'+id2);
       ok("没兴趣后卡片置灰", c2el.classList.contains('dimmed'));
       ok("没兴趣后显示「已标记」标签", !!c2el.querySelector('.marked-badge.dislike'));
-      ok("fbText 含自由填写原因", window.fbText().includes('带老人不方便'));
+      const fbNow = JSON.parse(window.localStorage.getItem('radar-fb-v1')||'[]');
+      ok("没兴趣原因已写入本地(待自动同步)", fbNow.some(f=>f.name===name2 && (f.reason||'').includes('带老人不方便')));
 
       // —— 换到备选批次1，测「没兴趣·选芯片」与「已经去过了」路由 ——
       window.swapBatch(); // → 备选批次1（id 911~915）
@@ -96,7 +98,8 @@ JSDOM.fromFile(ROOT+"/index.html", {
       chip.click();
       window.submitDislike();
       ok("选芯片提交没兴趣无错误", errs.length===0 && jsdomErrors.length===0);
-      ok("选芯片的不感兴趣被记录", window.fbText().includes(name3) && window.fbText().includes('太远了'));
+      const fbNow3 = JSON.parse(window.localStorage.getItem('radar-fb-v1')||'[]');
+      ok("选芯片的不感兴趣被记录", fbNow3.some(f=>f.name===name3 && (f.reason||'').includes('太远了')));
       ok("该卡显示已标记标签", !!document.getElementById('card'+id3).querySelector('.marked-badge.dislike'));
 
       // —— 「已经去过了」芯片应路由到去评分弹层 ——
