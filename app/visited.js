@@ -1287,6 +1287,12 @@ window.VISITED = {
    "blockReason": "洁梅口述已去过（2026-08-03 补充），明确不再推荐"
   },
   {
+   "name": "靖西",
+   "region": "广西",
+   "city": "",
+   "policy": "exclude"
+  },
+  {
    "name": "阿德莱德",
    "region": "澳大利亚",
    "city": "",
