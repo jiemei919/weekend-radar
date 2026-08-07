@@ -505,6 +505,13 @@ window.VISITED = {
    "policy": "exclude"
   },
   {
+   "name": "天露山 梅溪古镇 溯溪",
+   "region": "广东",
+   "city": "云浮",
+   "policy": "block",
+   "blockReason": "修路难走、溯溪水脏（2星差评，明确不再推）"
+  },
+  {
    "name": "金町湾",
    "region": "广东",
    "city": "汕尾",
