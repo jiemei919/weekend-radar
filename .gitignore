@@ -7,3 +7,6 @@
 # 系统文件
 .DS_Store
 *.log
+
+# 本地依赖（jsdom 测试依赖走 managed workspace，不入库）
+node_modules/

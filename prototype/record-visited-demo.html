@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>周末雷达 · 记录去过（demo）</title>
+<style>
+  :root{
+    --brand:#2563eb; --brand-soft:#eff4ff; --amber:#d97706; --rose:#e11d48;
+    --ink:#1f2937; --muted:#6b7280; --line:#e8eaee; --bg:#f6f8fb; --card:#fff;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);}
+  .app{max-width:760px;margin:0 auto;padding:0 14px 40px;}
+  header{padding:18px 0 10px;}
+  header h1{font-size:20px;margin:0 0 2px;}
+  header p{margin:0;color:var(--muted);font-size:13px;}
+  /* 顶栏 tab */
+  #nav{display:flex;gap:8px;margin:14px 0 18px;flex-wrap:wrap;}
+  #nav button{flex:1;min-width:120px;padding:11px 6px;border:1px solid var(--line);background:#fff;border-radius:12px;font-size:14px;color:var(--muted);cursor:pointer;}
+  #nav button.on{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:700;}
+  /* 心愿单内子分区切换 */
+  .sub{display:flex;gap:8px;margin-bottom:14px;}
+  .sub button{padding:8px 16px;border:1px solid var(--line);background:#fff;border-radius:999px;font-size:14px;color:var(--muted);cursor:pointer;}
+  .sub button.on{background:var(--brand-soft);color:var(--brand);border-color:#c7d7ff;font-weight:700;}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;margin:6px 0 12px;}
+  .sec-head h2{font-size:16px;margin:0;}
+  .sec-head .cnt{color:var(--muted);font-size:13px;font-weight:400;}
+  .btn-add{background:var(--brand);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:14px;font-weight:600;cursor:pointer;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;}
+  .vt-name{font-size:16px;font-weight:700;}
+  .stars{color:#f59e0b;font-size:15px;letter-spacing:2px;margin:4px 0;}
+  .vt-note{color:#374151;font-size:14px;line-height:1.5;background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin:6px 0;}
+  .vt-meta{color:var(--muted);font-size:12px;margin-bottom:8px;}
+  .acts{display:flex;gap:8px;flex-wrap:wrap;}
+  .acts button{padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:13px;color:var(--ink);cursor:pointer;}
+  .acts button.del{color:var(--rose);border-color:#f3c0d6;}
+  .policy{display:inline-block;font-size:12px;padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;}
+  .p-exclude{background:#fffbeb;color:#b45309;border:1px solid #fde68a;}
+  .p-block{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
+  .empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:14px;}
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:50;}
+  .mask.show{display:flex;}
+  .modal{background:#fff;border-radius:16px;width:100%;max-width:420px;padding:20px;}
+  .modal h3{margin:0 0 14px;font-size:17px;}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px;}
+  .field input[type=text],.field textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font-size:14px;font-family:inherit;resize:vertical;}
+  .star-pick{font-size:26px;color:#d1d5db;cursor:pointer;user-select:none;}
+  .star-pick .on{color:#f59e0b;}
+  .modal-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:6px;}
+  .modal-acts button{padding:9px 16px;border-radius:10px;font-size:14px;cursor:pointer;border:1px solid var(--line);background:#fff;}
+  .modal-acts .primary{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600;}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#111827;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:60;}
+  .toast.show{opacity:1;}
+  .note{font-size:12px;color:var(--muted);margin-top:4px;}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>周末雷达</h1>
+    <p>demo · 「记录去过的地方」入口（放在「心愿单」tab 内）</p>
+  </header>
+
+  <div id="nav">
+    <button>🔥 本周最热</button>
+    <button>🗓️ 下一个假期</button>
+    <button class="on">⭐ 心愿单</button>
+    <button>🗺️ 旅行路线</button>
+  </div>
+
+  <div class="sub">
+    <button id="tabWish" onclick="switchSub('wish')">⭐ 心愿单</button>
+    <button id="tabVisited" class="on" onclick="switchSub('visited')">📍 去过的地方</button>
+  </div>
+
+  <!-- 心愿单视图（占位） -->
+  <div id="viewWish" style="display:none">
+    <div class="empty">心愿单内容（现有功能，本 demo 略）</div>
+  </div>
+
+  <!-- 去过的地方视图 -->
+  <div id="viewVisited">
+    <div class="sec-head">
+      <h2>去过的地方 <span class="cnt" id="vtCnt"></span></h2>
+      <button class="btn-add" onclick="openAdd()">＋ 添加去过</button>
+    </div>
+    <div id="vtList"></div>
+    <p class="note">说明：记录后会立即从推荐里过滤掉（默认"去过不推"，可作顺路点）；评分≤2星标记为"永不再推"。数据同步云端，换设备也在。</p>
+  </div>
+</div>
+
+<!-- 添加去过 弹窗 -->
+<div class="mask" id="mAdd">
+  <div class="modal">
+    <h3>记录一个去过的地方</h3>
+    <div class="field">
+      <label>地名（自由输入，不用从候选里选）</label>
+      <input type="text" id="vName" placeholder="例如：广州 · 增城白水寨">
+    </div>
+    <div class="field">
+      <label>评分</label>
+      <div class="star-pick" id="starPick">
+        <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>备注（你那天写的说明）</label>
+      <textarea id="vNote" rows="3" placeholder="例如：瀑布一般，台阶多，带小孩累……"></textarea>
+    </div>
+    <div class="modal-acts">
+      <button onclick="closeAdd()">取消</button>
+      <button class="primary" onclick="submitAdd()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let VISITED = [
+  {id:1, name:"江门 · 台山 上下川岛", stars:3, note:"去过上川岛还是下川岛，还可以，但是不如直接去惠州好了。", addedAt:"2026-08-06", policy:"exclude"},
+  {id:2, name:"深圳 · 大鹏所城 + 杨梅坑", stars:5, note:"去过了，杨梅坑水很好。", addedAt:"2026-08-06", policy:"exclude"},
+  {id:3, name:"广州 · 增城白水寨（瀑布）", stars:4, note:"洁梅口述已去过（2026-08-11 补充）；具体说明待补", addedAt:"2026-08-11", policy:"exclude"},
+];
+let curStars = 0;
+
+function switchSub(s){
+  document.getElementById('tabWish').classList.toggle('on', s==='wish');
+  document.getElementById('tabVisited').classList.toggle('on', s==='visited');
+  document.getElementById('viewWish').style.display = s==='wish'?'block':'none';
+  document.getElementById('viewVisited').style.display = s==='visited'?'block':'none';
+}
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1600); }
+function renderVisited(){
+  const box=document.getElementById('vtList');
+  document.getElementById('vtCnt').textContent = '（'+VISITED.length+'）';
+  if(!VISITED.length){ box.innerHTML='<div class="empty">还没有记录。<br>点右上「＋ 添加去过」，随手记一个地名就行。</div>'; return; }
+  box.innerHTML = VISITED.map(v=>{
+    const st = '★'.repeat(v.stars)+'☆'.repeat(5-v.stars);
+    const pol = v.policy==='block'
+      ? '<span class="policy p-block">永不再推</span>'
+      : '<span class="policy p-exclude">去过不推</span>';
+    return `<div class="card">
+      <div class="vt-name">${v.name}${pol}</div>
+      <div class="stars">${st}</div>
+      <div class="vt-note">📝 ${v.note||'（无备注）'}</div>
+      <div class="vt-meta">📅 记录于 ${v.addedAt}</div>
+      <div class="acts">
+        <button onclick="editV(${v.id})">编辑</button>
+        <button class="del" onclick="delV(${v.id})">删除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openAdd(){
+  document.getElementById('vName').value='';
+  document.getElementById('vNote').value='';
+  curStars=0; paintStars();
+  document.getElementById('mAdd').classList.add('show');
+  setTimeout(()=>document.getElementById('vName').focus(),80);
+}
+function closeAdd(){ document.getElementById('mAdd').classList.remove('show'); }
+function paintStars(){ document.querySelectorAll('#starPick span').forEach(s=>s.classList.toggle('on', +s.dataset.v<=curStars)); }
+document.querySelectorAll('#starPick span').forEach(s=>{
+  s.onclick=()=>{ curStars=+s.dataset.v; paintStars(); };
+});
+function submitAdd(){
+  const name=document.getElementById('vName').value.trim();
+  if(!name){ toast('先填地名'); return; }
+  if(!curStars){ toast('给个评分吧'); return; }
+  const note=document.getElementById('vNote').value.trim();
+  VISITED.unshift({id:Date.now(), name, stars:curStars, note, addedAt:new Date().toISOString().slice(0,10), policy: curStars<=2?'block':'exclude'});
+  closeAdd(); renderVisited();
+  toast('📍 已记录去过 · 将自动从推荐里过滤');
+}
+function editV(id){
+  const v=VISITED.find(x=>x.id===id); if(!v) return;
+  const note=prompt('编辑备注（'+v.name+'）', v.note||'');
+  if(note!==null){ v.note=note; renderVisited(); toast('备注已更新'); }
+}
+function delV(id){
+  const i=VISITED.findIndex(x=>x.id===id); if(i<0) return;
+  VISITED.splice(i,1); renderVisited(); toast('已删除该记录');
+}
+renderVisited();
+</script>
+</body>
+</html>

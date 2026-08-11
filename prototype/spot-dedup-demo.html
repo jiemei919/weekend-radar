@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>推荐去重 · 核心景点维度（方案 Demo）</title>
+<style>
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#f5f6f8;margin:0;padding:24px;color:#1f2937;}
+  h2{margin:0 0 4px;font-size:20px;}
+  .sub{color:#6b7280;font-size:13px;margin-bottom:16px;}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-bottom:16px;color:#4b5563;}
+  .legend b{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px;}
+  .toggle{margin-bottom:18px;}
+  .toggle button{font-size:13px;padding:8px 14px;border:1px solid #d1d5db;background:#fff;border-radius:8px;cursor:pointer;margin-right:8px;}
+  .toggle button.on{background:#2563eb;color:#fff;border-color:#2563eb;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+  .card{border-radius:14px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow:hidden;border:1px solid #eee;}
+  .card.blocked{opacity:.55;filter:grayscale(.6);}
+  .cover{height:64px;display:flex;align-items:center;padding:0 14px;color:#fff;font-weight:700;font-size:16px;}
+  .cbody{padding:12px 14px;}
+  .tags{margin:0 0 8px;}
+  .tag{font-size:11px;background:#eef2ff;color:#4338ca;padding:2px 8px;border-radius:6px;margin-right:5px;}
+  .spots{font-size:12px;color:#374151;line-height:1.7;margin:6px 0;}
+  .spots .v{color:#059669;font-weight:600;}
+  .spots .nv{color:#dc2626;font-weight:600;}
+  .spots .op{color:#9ca3af;}
+  .badge{font-size:12px;padding:6px 10px;border-radius:8px;margin-top:8px;line-height:1.5;}
+  .b-block{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;}
+  .b-partial{background:#fffbeb;color:#92400e;border:1px solid #fde68a;}
+  .b-keep{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;}
+  .why{font-size:12px;color:#6b7280;margin-top:6px;}
+</style>
+</head>
+<body>
+<h2>推荐去重 · 核心景点维度（方案 Demo）</h2>
+<div class="sub">雪花 · 测试「看具体玩什么」再决定推不推。切换逻辑看差别。</div>
+<div class="legend">
+  <span><b style="background:#059669"></b>已去过</span>
+  <span><b style="background:#dc2626"></b>没去过</span>
+  <span><b style="background:#9ca3af"></b>顺路点（不参与拦截）</span>
+</div>
+<div class="toggle">
+  <button id="btnOld" onclick="setMode('old')">旧逻辑：按地名匹配</button>
+  <button id="btnNew" class="on" onclick="setMode('new')">新逻辑：按核心景点匹配</button>
+</div>
+<div class="grid" id="grid"></div>
+
+<script>
+// 已去过库（广西相关，取自 data/visited.json）
+const VISITED = ["钦州","明仕田园","德天瀑布","最美高速","通灵大峡谷","漓江","遇龙河","千里江山图","相公山","贺州","黄姚古镇","姑婆山","玉石林","阳朔","桂林"];
+function hit(name){
+  const tokens = name.split(/[、，,／/\-—（）()]+/).map(t=>t.replace(/[等及其以与]+.*$/,'')).filter(t=>t.length>=2);
+  for(const v of VISITED){
+    const vt = v.split(/[、，,／/\-—（）()]+/).map(t=>t.replace(/[等及其以与]+.*$/,'')).filter(t=>t.length>=2);
+    if(vt.some(t=>tokens.includes(t)||name.includes(t))) return v;
+  }
+  return null;
+}
+// 4 张广西卡片 + 它们的核心玩法
+const CARDS = [
+  {name:"广西 · 靖西", grad:"linear-gradient(135deg,#db2777,#f9a8d4)",
+   spots:[{n:"通灵大峡谷",core:true},{n:"德天瀑布",core:true},{n:"鹅泉",core:false}]},
+  {name:"广西 · 崇左（明仕田园周边）", grad:"linear-gradient(135deg,#0f7b5f,#3bb08f)",
+   spots:[{n:"德天瀑布",core:true},{n:"明仕田园",core:true}]},
+  {name:"广西 · 金秀 圣堂山", grad:"linear-gradient(135deg,#7c3aed,#a78bfa)",
+   spots:[{n:"圣堂山",core:true}]},
+  {name:"广西 · 鹿寨 中渡古镇+香桥岩溶", grad:"linear-gradient(135deg,#b45309,#fbbf24)",
+   spots:[{n:"中渡古镇",core:true},{n:"香桥岩溶",core:true}]},
+];
+function render(mode){
+  const g=document.getElementById('grid'); g.innerHTML='';
+  CARDS.forEach(c=>{
+    let coreVisited=0, coreTotal=0, partial=[];
+    c.spots.forEach(s=>{
+      const v = s.core? hit(s.n): null;
+      if(s.core){ coreTotal++; if(v) coreVisited++; else partial.push(s.n); }
+    });
+    let blocked=false, badge='', why='';
+    if(mode==='new'){
+      if(coreTotal>0 && coreVisited===coreTotal){ blocked=true;
+        badge='<div class="badge b-block">🚫 核心景点都去过了 · 不推荐</div>';
+        why='主要玩法（'+c.spots.filter(s=>s.core).map(s=>s.n).join('、')+'）均已去过';
+      } else if(coreVisited>0){
+        badge='<div class="badge b-partial">⚠️ 部分去过：'+partial.join('、')+' 还没玩</div>';
+        why='仍推荐——核心里还有没去过的';
+      } else {
+        badge='<div class="badge b-keep">✅ 核心景点未去过 · 可推荐</div>';
+        why='主要玩法都没去过';
+      }
+    } else {
+      // 旧逻辑：只看卡片大地名
+      const v = hit(c.name);
+      if(v){ blocked=true; badge='<div class="badge b-block">🚫 地名命中「'+v+'」· 不推荐</div>'; why='按地名拦'; }
+      else { badge='<div class="badge b-keep">✅ 地名未命中 · 可推荐</div>'; why='按地名放行'; }
+    }
+    const spotsHtml = c.spots.map(s=>{
+      if(!s.core) return '<span class="op">'+s.n+'（顺路）</span>';
+      const v=hit(s.n); return (v?'<span class="v">'+s.n+' ✓</span>':'<span class="nv">'+s.n+' ✗</span>');
+    }).join('　');
+    g.insertAdjacentHTML('beforeend',
+      '<div class="card'+(blocked?' blocked':'')+'">'+
+        '<div class="cover" style="background:'+c.grad+'">'+c.name+'</div>'+
+        '<div class="cbody">'+
+          '<div class="spots">'+spotsHtml+'</div>'+
+          badge+'<div class="why">'+why+'</div>'+
+        '</div></div>');
+  });
+}
+function setMode(m){ document.getElementById('btnOld').classList.toggle('on',m==='old');
+  document.getElementById('btnNew').classList.toggle('on',m==='new'); render(m); }
+render('new');
+</script>
+</body>
+</html>

@@ -130,6 +130,9 @@
   .mbtns{display:flex;gap:10px;justify-content:flex-end;}
   .mbtns button{border-radius:9px;padding:9px 20px;font-size:13.5px;cursor:pointer;border:1px solid var(--line);background:#fff;}
   .mbtns .ok{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600;}
+  .subtabs{display:flex;gap:8px;margin-bottom:14px;}
+  .subtab{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 16px;font-size:14px;cursor:pointer;color:var(--sub);font-weight:600;transition:.15s;}
+  .subtab.sel{background:var(--brand);border-color:var(--brand);color:#fff;}
   .fab{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:90;background:#1f2937;color:#fff;border:none;border-radius:24px;padding:12px 26px;font-size:14px;cursor:pointer;box-shadow:0 6px 20px rgba(31,41,55,.35);display:none;}
   .fab.show{display:block;}
   .fab:hover{background:#111827;}
@@ -296,12 +299,30 @@
 
   <!-- 心愿单 -->
   <div class="page" id="p-wish">
-    <div class="hintbar">⭐ 这里收集你想去的所有地方，<b>跨假期保存</b>。下次规划「下一个假期」时，雪花会<b>优先匹配</b>这里适合当前档位的心愿地。可在本周最热 / 下一个假期卡片点「⭐ 收心愿」加入，或在对话里说"我想去 XX"。</div>
-    <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="syncbtn" onclick="openAddWish()">＋ 手动添加心愿</button>
-      <button class="syncbtn" onclick="syncNow()">☁️ 立即同步（写回 GitHub）</button>
+    <div class="subtabs">
+      <button class="subtab sel" data-sub="wish" onclick="wishSub('wish')">⭐ 心愿单</button>
+      <button class="subtab" data-sub="visited" onclick="wishSub('visited')">📍 去过的地方</button>
     </div>
-    <div class="grid" id="wishCards"></div>
+
+    <!-- ⭐ 心愿单 -->
+    <div id="wishPanel">
+      <div class="hintbar">⭐ 这里收集你想去的所有地方，<b>跨假期保存</b>。下次规划「下一个假期」时，雪花会<b>优先匹配</b>这里适合当前档位的心愿地。可在本周最热 / 下一个假期卡片点「⭐ 收心愿」加入，或在对话里说"我想去 XX"。</div>
+      <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="syncbtn" onclick="openAddWish()">＋ 手动添加心愿</button>
+        <button class="syncbtn" onclick="syncNow()">☁️ 立即同步（写回 GitHub）</button>
+      </div>
+      <div class="grid" id="wishCards"></div>
+    </div>
+
+    <!-- 📍 去过的地方 -->
+    <div id="visitedPanel" style="display:none;">
+      <div class="hintbar">📍 随手记「已经去过的地方」——<b>任意地名</b>都行（不限于推荐卡片）。记录后该地会<b>立即从本周最热 / 下一个假期的推荐里过滤掉</b>；评分 ≤2 星还会<b>永久不再推</b>。评分与备注同步云端，跨设备保留。</div>
+      <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="syncbtn" onclick="openAddVisited()">＋ 添加去过</button>
+        <button class="syncbtn" onclick="syncNow()">☁️ 立即同步（写回 GitHub）</button>
+      </div>
+      <div class="grid" id="visitedCards"></div>
+    </div>
   </div>
 
   <!-- 旅行路线 -->
@@ -450,6 +471,25 @@
     </label>
   </div>
   <div class="mbtns"><button onclick="closeMask('mAddWish')">取消</button><button class="ok" onclick="submitAddWish()">⭐ 加入心愿单</button></div>
+</div></div>
+
+<!-- 添加去过的地方 -->
+<div class="mask" id="mAddVisited"><div class="modal">
+  <h4>📍 记录去过的地方</h4>
+  <div class="hint">任意地名都行（不限于推荐卡片）。评分 ≤2 星 → 永久不再推；≥3 星 → 默认不推（可作顺路点）。</div>
+  <div style="display:flex;flex-direction:column;gap:10px;margin-top:6px;">
+    <label style="font-size:13px;color:var(--sub);">地名 <span style="color:var(--rose);">*</span>
+      <input id="avName" class="rinp" style="margin-top:4px;" placeholder="如：广州 · 增城白水寨">
+    </label>
+    <div>
+      <div style="font-size:13px;color:var(--sub);margin-bottom:4px;">评分（必选） <span id="avStarHint" style="color:var(--sub);font-size:12px;"></span></div>
+      <div class="bigstars" id="vStars"><span data-s="1">★</span><span data-s="2">★</span><span data-s="3">★</span><span data-s="4">★</span><span data-s="5">★</span></div>
+    </div>
+    <label style="font-size:13px;color:var(--sub);">备注（感受 / 实际车程 / 适合谁）
+      <textarea id="avNote" class="rinp rtarea" style="margin-top:4px;height:60px;" placeholder="如：水干净，有平滩给小孩玩，门票一大一小90，可瀑降"></textarea>
+    </label>
+  </div>
+  <div class="mbtns"><button onclick="closeMask('mAddVisited')">取消</button><button class="ok" onclick="submitAddVisited()">📍 记录去过</button></div>
 </div></div>
 
 <!-- 统一同步器：所有用户操作经 save() 自动标记脏，debounce 后自动 PUT 到 data/*.json（radar-sync）；打开页面 pullAll 合并云端 -->
@@ -1003,16 +1043,19 @@ async function flushSync(){
   if(allOk) toast('☁️ 已自动同步到云端');
 }
 async function pullAll(){
-  if(!ghToken()) return;
   const cfg=ghCfg(); if(!cfg.owner || !cfg.repo) return;
-  const base=`https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch||'main'}/${(cfg.dataPath||'data/')}`;
+  const hasToken = !!ghToken();
+  // 无令牌时从 GitHub Pages 公开读取（跨设备也能拉到同一份数据）；有令牌时走 raw.githubusercontent 更实时
+  const base = hasToken
+    ? `https://raw.githubusercontent.com/${cfg.owner}/${cfg.repo}/${cfg.branch||'main'}/${(cfg.dataPath||'data/')}`
+    : `https://${cfg.owner}.github.io/${cfg.repo}/data/`;
   for(const domain of Object.keys(SYNC_FILES)){
     try{
       const res=await fetch(base + SYNC_FILES[domain]);
       if(res.ok){ const data=await res.json(); applyPull(domain, data); }
     }catch(e){}
   }
-  renderWish(); renderRoute(); try{ renderHoliday(); }catch(e){}
+  renderWish(); renderRoute(); try{ renderHoliday(); }catch(e){} try{ renderVisited(); }catch(e){}
 }
 function initSync(){
   pullAll();                                  // 异步合并云端（不阻塞首屏）
@@ -1027,7 +1070,7 @@ function syncNow(){ flushSync(); }            // 手动「立即同步」按钮
 function refreshSyncStat(){
   const el=document.getElementById('syncStat'); if(!el) return;
   const p=load(LS.syncDirty,{}); const pend=Object.keys(p).length;
-  if(!ghToken()){ el.textContent='⚠️ 未配置同步令牌 · 反馈仅存本机，去 ⚙️ 设置填令牌可自动上传'; el.className='syncstat warn'; return; }
+  if(!ghToken()){ el.textContent='⚠️ 未配置同步令牌 · 数据可读取云端，但修改/反馈暂不上传，去 ⚙️ 设置填令牌可全端同步'; el.className='syncstat warn'; return; }
   if(pend){ el.textContent='🔄 有 '+pend+' 类反馈待上传，正在自动同步…'; el.className='syncstat pending'; }
   else { el.textContent='☁️ 反馈已同步到云端 · 参与后续推荐优化'; el.className='syncstat ok'; }
 }
@@ -1094,6 +1137,31 @@ function markedType(id){
   return f?f.type:null;
 }
 function getRec(id){return RECS.find(x=>x.id===id);}
+
+/* ============ 推荐帖链接修复（移动端/失效平台）============ */
+function isMobileUA(){ return /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches); }
+function extractPostKeyword(url, fallback){
+  try{
+    const u = new URL(url);
+    const kw = u.searchParams.get('keyword') || u.searchParams.get('query') || u.searchParams.get('searchWord') || u.searchParams.get('q') || u.searchParams.get('wd');
+    if(kw) return kw;
+    const m = url.match(/\/search\/([^?#]+)/);
+    if(m) return decodeURIComponent(m[1]);
+  }catch(e){}
+  return fallback || '';
+}
+function makePostUrl(p, fallbackName){
+  const kw = extractPostKeyword(p.url, fallbackName);
+  const enc = encodeURIComponent;
+  const isM = isMobileUA();
+  const pf = p.platform;
+  if(pf==='小红书') return isM ? `https://m.xiaohongshu.com/search_result?keyword=${enc(kw)}` : `https://www.xiaohongshu.com/search_result?keyword=${enc(kw)}&source=web_search_result_notes&sort=general`;
+  if(pf==='抖音') return `https://www.douyin.com/search/${enc(kw)}?source=normal_search`;
+  if(pf==='携程') return `https://you.ctrip.com/globalsearch/?keyword=${enc(kw)}&tabType=travelnotes`;
+  if(pf==='马蜂窝') return `https://www.mafengwo.cn/search/q.php?q=${enc(kw)}`;
+  if(pf==='去哪儿') return `https://www.baidu.com/s?wd=${enc(kw+' 去哪儿')}`;
+  return p.url;
+}
 
 /* ============ 已去过去重：三档规则 ============
    block   永不推荐（点名不要推/避雷/明确不会再去）
@@ -1247,7 +1315,7 @@ function cardHTML(d, i, isBonus, withConfirm){
       <button class="posts-toggle" id="pt-btn-${d.id}" onclick="togglePosts(${d.id})">🔽 展开 ${list.length} 个推荐帖</button>
       <div class="posts-box" id="pt-box-${d.id}">
         <div class="posts-title">🔗 热门推荐帖（收藏最多 Top5）</div>
-        ${list.map(p=>`<a class="post" href="${p.url}" target="_blank"><span class="post-pf">${p.platform}</span><span class="post-t">${p.title}</span><span class="post-m">❤️${p.fav} · 👍${p.like} · 👁${p.view}</span></a>`).join('')}
+        ${list.map(p=>`<a class="post" href="${makePostUrl(p, d.name)}" target="_blank" rel="noopener noreferrer"><span class="post-pf">${p.platform}</span><span class="post-t">${p.title}</span><span class="post-m">❤️${p.fav} · 👍${p.like} · 👁${p.view}</span></a>`).join('')}
       </div>
     </div>`;
   }
@@ -1486,6 +1554,7 @@ function been(id){cur=id;stars=0;paintStars();document.querySelectorAll('#bChips
   document.getElementById('beenTitle').textContent='去过「'+get(id).name+'」？给个评分吧';
   document.getElementById('mBeen').classList.add('show');}
 document.querySelectorAll('#bigstars span').forEach((s,i)=>s.onclick=()=>{stars=i+1;paintStars();});
+document.querySelectorAll('#vStars span').forEach((s)=>s.onclick=()=>{ vStars=+s.dataset.s; paintVStars(); });
 function paintStars(){document.querySelectorAll('#bigstars span').forEach((s,i)=>s.classList.toggle('lit',i<stars));}
 document.querySelectorAll('#bChips .chip').forEach(c=>c.onclick=()=>c.classList.toggle('sel'));
 function submitBeen(){
@@ -1687,6 +1756,99 @@ function editNote(id){const w=WISH.find(x=>x.id===id);if(!w)return;const t=promp
 function markDone(id){const w=WISH.find(x=>x.id===id);if(!w)return;if(w.status==='done'){w.status='want';toast('已改回：'+w.name+' → 想去中');}else{w.status='done';toast('已标记为去过：'+w.name);}save(LS.wish,WISH);renderWish();}
 function delWish(id){const i=WISH.findIndex(x=>x.id===id);if(i<0)return;WISH.splice(i,1);save(LS.wish,WISH);renderWish();toast('已从心愿单删除');}
 function syncWish(){ /* 已由统一同步器取代：按钮改用 syncNow() 立即落库 */ }
+
+/* ===================== 记录去过的地方（V1.4.3） ===================== */
+let vStars = 0;
+let visitedList = [];
+function paintVStars(){
+  document.querySelectorAll('#vStars span').forEach((s,i)=>s.classList.toggle('lit', i<vStars));
+  const hint=document.getElementById('avStarHint');
+  if(hint) hint.textContent = vStars ? ('· '+(vStars<=2?'≤2星 永久不再推':'≥3星 默认不推（可作顺路点）')) : '';
+}
+function wishSub(sub){
+  document.querySelectorAll('.subtab').forEach(b=>b.classList.toggle('sel', b.dataset.sub===sub));
+  document.getElementById('wishPanel').style.display = sub==='wish' ? '' : 'none';
+  document.getElementById('visitedPanel').style.display = sub==='visited' ? '' : 'none';
+  if(sub==='visited') renderVisited();
+}
+function openAddVisited(){
+  document.getElementById('avName').value='';
+  document.getElementById('avNote').value='';
+  vStars=0; paintVStars();
+  openMask('mAddVisited');
+  setTimeout(()=>{const el=document.getElementById('avName'); if(el) el.focus();},100);
+}
+function submitAddVisited(){
+  const name=document.getElementById('avName').value.trim();
+  if(!name){ toast('先填地名'); return; }
+  if(!vStars){ toast('先点亮评分星星'); return; }
+  const note=document.getElementById('avNote').value.trim();
+  const policy = vStars<=2 ? 'block' : 'exclude';
+  // ① 本地即时去重（复用 VISIT_ADD 通道，不新建数据文件/同步通道）
+  if(!VISIT_ADD.find(v=>v.name===name)){
+    VISIT_ADD.push({ name, policy, stars:vStars,
+      blockReason: vStars<=2 ? ('记录去过评 '+vStars+' 星'+(note?'：'+note:'')) : undefined,
+      review: note, addedAt: ymd(new Date()) });
+    save(LS.visitedAdd, VISIT_ADD);
+  }
+  // ② 落云端反馈（saveFb + radar-sync）：评分/备注参与推荐逻辑，跨设备保留
+  saveFb({ id:'been-'+name, name, type:'been', stars:vStars, note,
+    tags: policy==='block' ? ['名不副实'] : [] });
+  // ③ 重渲染 + 立即去重生效
+  closeMask('mAddVisited');
+  renderVisited(); rerenderHot();
+  toast('📍 已记录去过 · 自动从推荐里过滤，并同步到云端');
+}
+function renderVisited(){
+  const box=document.getElementById('visitedCards'); if(!box) return;
+  // 数据源 = VISIT_ADD（本地）∪ 云端 feedback.visited；按 name 去重合并
+  const all = mergeArr([], VISIT_ADD, x=>x.name);
+  visitedList = all;
+  if(!all.length){ box.innerHTML='<div class="empty">还没有记录去过的地方。<br>点上方「＋ 添加去过」记下任意地名，记录后会自动从推荐里过滤掉。</div>'; return; }
+  const pMap={'block':['永不再推','#ef4444'],'exclude':['去过不推','#9ca3af']};
+  box.innerHTML = all.map((v,idx)=>{
+    const p=pMap[v.policy]||['去过不推','#9ca3af'];
+    const st = v.stars ? ('★'.repeat(v.stars)+'☆'.repeat(5-v.stars)) : (v.policy==='block'?'≤2★':'≥3★');
+    return `<div class="card"><div class="cbody">
+      <div style="font-size:16px;font-weight:700;line-height:1.4;">📍 ${esc(v.name)}</div>
+      <div class="tags">
+        <span class="tag" style="background:${p[1]}1a;color:${p[1]};border:1px solid ${p[1]}55;">${p[0]}</span>
+        <span class="tag t-best">${st}</span>
+        <span class="tag" style="background:#eef2ff;color:#4338ca;">${v.addedAt||''}</span>
+      </div>
+      <div class="why">📝 ${esc(v.review||v.note||'（无备注）')}</div>
+      <div class="acts" style="flex-wrap:wrap;">
+        <button onclick="editVisited(${idx})">编辑</button>
+        <button onclick="delVisited(${idx})" style="color:var(--rose);border-color:#f3c0d6;">删除</button>
+      </div>
+    </div></div>`;
+  }).join('');
+}
+function editVisited(idx){
+  const v=visitedList[idx]; if(!v) return; const name=v.name;
+  const ns=prompt('修改评分（1-5，≤2星永不再推）：', v.stars||(v.policy==='block'?2:3));
+  if(ns===null) return;
+  const s=Math.max(1,Math.min(5,parseInt(ns)||3));
+  const note=prompt('修改备注（'+name+'）', v.review||v.note||'');
+  if(note===null) return;
+  v.stars=s; v.policy = s<=2?'block':'exclude';
+  v.blockReason = s<=2 ? ('记录去过评 '+s+' 星'+(note?'：'+note:'')) : undefined;
+  v.review=note; v.addedAt=v.addedAt||ymd(new Date());
+  save(LS.visitedAdd, VISIT_ADD);
+  saveFb({ id:'been-'+name, name, type:'been', stars:s, note, tags: v.policy==='block'?['名不副实']:[] });
+  renderVisited(); rerenderHot();
+  toast('已更新：'+name);
+}
+function delVisited(idx){
+  const v=visitedList[idx]; if(!v) return; const name=v.name;
+  const i=VISIT_ADD.findIndex(x=>x.name===name);
+  if(i<0){ toast('本地未找到：'+name); return; }
+  // 若该地已晋升权威库（data/visited.json），不在本地硬删权威项——提示雪花调整
+  const auth = V.items.find(x=>x.name===name);
+  VISIT_ADD.splice(i,1); save(LS.visitedAdd, VISIT_ADD);
+  renderVisited(); rerenderHot();
+  toast(auth ? ('已从本地去重移除：'+name+'（若仍被拦，是因已进权威去过库，需雪花调整）') : ('已从去重移除：'+name));
+}
 
 /* ---------- 手动添加心愿 ---------- */
 function openAddWish(){
