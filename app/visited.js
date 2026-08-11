@@ -677,6 +677,12 @@ window.VISITED = {
    }
   },
   {
+   "name": "增城白水寨",
+   "region": "广东",
+   "city": "广州",
+   "policy": "exclude"
+  },
+  {
    "name": "南武当",
    "region": "江西",
    "city": "",
