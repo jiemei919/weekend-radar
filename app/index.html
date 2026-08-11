@@ -503,6 +503,9 @@
 <script src="candidates.js?v=1.3.2"></script>
 <script src="match-engine.js?v=1.3.2"></script>
 <script src="hot-pool.js?v=1.4.0"></script>
+<!-- 同步状态条：必须放在 <script> 之前，确保 initSync()->refreshSyncStat() 运行时 DOM 已就绪 -->
+<div id="syncStat" class="syncstat"></div>
+
 <script>
 /* ===================== 数据层 ===================== */
 const R = window.RADAR;
@@ -1303,8 +1306,9 @@ function nextHolidayInfo(){
   else { box.innerHTML = '💡 暂无已录入的下一个法定节假日（日历已录入至2027）。'; }
 }
 function cardHTML(d, i, isBonus, withConfirm){
-  const tags = d.tags.map(t=>`<span class="tag ${t[1]}">${t[0]}</span>`).join('');
-  const matchBar = (!isBonus && d.match)?`<div class="match"><span>匹配度</span><div class="bar"><i style="width:${d.match}%"></i></div><b>${d.match}%</b></div>`:'';
+  /* 依 UI 原则（08-04洁梅确认）：界面不展示打分数字与内部标签；仅展示自然语言理由 */
+  const tags = ''; /* 维度标签 chip 已隐藏 */
+  const matchBar = ''; /* 匹配度百分比已隐藏 */
   const best = d.best?`<div class="why" style="color:#92400e;background:#fffbeb;border-radius:8px;padding:6px 10px;">🌟 最佳时间：${d.best}</div>`:'';
   const safe = d.safe?`<div class="warn">${d.safe}</div>`:'';
   const confirm = withConfirm?`<button class="confirm" onclick="confirmDest(${d.id})">✅ 确认去这里</button>`:'';
@@ -2177,6 +2181,5 @@ if(confirmed) showConfirmed();
 renderRoute(); initSync();
 if('serviceWorker' in navigator){ window.addEventListener('load',()=>{ try{ navigator.serviceWorker.register('sw.js'); }catch(e){} }); }
 </script>
-<div id="syncStat" class="syncstat"></div>
 </body>
 </html>

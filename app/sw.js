@@ -1,7 +1,7 @@
 // 周末雷达 Service Worker
 // 策略（2026-08-06 修正）：所有资源统一 network-first，避免 HTML 与 JS 版本不一致导致页面白屏/卡片区消失。
 // 离线时回退缓存；每次部署后用户下一次访问即拿到全套新文件。
-const CACHE = 'radar-v25';
+const CACHE = 'radar-v26';
 const ASSETS = [
   './', './index.html', './config.js', './data.js', './holidays.js', './visited.js',
   './taste-profile.js', './candidates.js', './match-engine.js', './hot-pool.js',
