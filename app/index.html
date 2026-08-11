@@ -1134,6 +1134,27 @@ function monthInSeason(season, m){
 }
 // 综合判定：{ok, policy, reason, badge, hint, partial, partialHit}
 // dest 可为字符串（仅地名）或卡片对象（含 spots）；新逻辑按核心景点叠加判定
+// 档位归一化：'1-2天档 · 珠三角圈' / '1-2天' → '1-2天'（与 visited.revisit.tier、hot-pool.tier 统一口径）
+function tierCode(t){
+  if(!t) return '';
+  const m = String(t).match(/(1-2天|3-4天|5-7天|8天\+)/);
+  return m ? m[1] : '';
+}
+function tierRank(t){
+  const c = tierCode(t);
+  return c==='1-2天'?1 : c==='3-4天'?2 : c==='5-7天'?3 : c==='8天+'?4 : 0;
+}
+// 目的地所需档位：优先取数据里的 tier，否则按 drive 文案推断（兜底内联候选）
+function tierOfDest(d){
+  if(d && d.tier) return tierCode(d.tier) || '1-2天';
+  const dr = (d && d.drive) || '';
+  if(/飞机/.test(dr) || /≈\s*\d+\s*-?\s*\d*\s*天/.test(dr)) return '5-7天';
+  const s = dr.match(/自驾\s*≈?\s*([\d.]+)/);
+  if(s){ const h = parseFloat(s[1]); return h<=3 ? '1-2天' : (h<=6 ? '3-4天' : '5-7天'); }
+  const r = dr.match(/高铁\s*≈?\s*([\d.]+)/);
+  if(r){ const h = parseFloat(r[1]); return h<=4 ? '3-4天' : '5-7天'; }
+  return '1-2天';
+}
 function visitCheck(dest, tierName){
   const card = (dest && typeof dest === 'object') ? dest : null;
   const destName = (typeof dest === 'string') ? dest : (dest && dest.name) || '';
@@ -1150,8 +1171,8 @@ function visitCheck(dest, tierName){
     const seasonOK = monthInSeason(r.season, m);
     if(seasonOK === false)
       base = { ok:false, policy:"revisit", reason:"复访窗口未到（适合 "+r.season+"，现在 "+m+" 月）", matched:v.name };
-    else if(tierName && r.tier && r.tier !== tierName)
-      base = { ok:false, policy:"revisit", reason:"复访档位不符（需 "+r.tier+"，本次 "+tierName+"）", matched:v.name };
+    else if(tierName && r.tier && tierRank(r.tier) > tierRank(tierName))
+      base = { ok:false, policy:"revisit", reason:"复访档位不符（需 "+r.tier+" 窗口，本次 "+(tierCode(tierName)||tierName)+"）", matched:v.name };
     else
       base = { ok:true, policy:"revisit", matched:v.name,
         badge:"🔁 复访 · " + (r.activity||"新玩法"),
@@ -1276,8 +1297,8 @@ function renderHotChips(items, bonus){
     document.getElementById('hotCards').innerHTML = emptyHotState('数据加载异常，请刷新页面重试。');
     return;
   }
-  const hotFilter = applyVisitFilter(items.slice(), null);
-  const bonusCheck = bonus ? visitCheck(bonus, null) : null;
+  const hotFilter = applyVisitFilter(items.slice(), WEEK_TIER_CODE);
+  const bonusCheck = bonus ? visitCheck(bonus, WEEK_TIER_CODE) : null;
   if(bonus && bonusCheck.ok) bonus._visit = bonusCheck;
   const cardsHTML = hotFilter.pass.map((d,i)=>cardHTML(d,i,false,false)).join('') +
     ((bonus && bonusCheck.ok) ? cardHTML(bonus,0,true,false) : '');
@@ -1319,26 +1340,62 @@ const HOT_POOL_ALL = (window.HOT_POOL || []).concat(HOT_SEED);
 const _poolIds = new Set();
 const HOT_POOL_UNIQUE = HOT_POOL_ALL.filter(d => { if(_poolIds.has(d.id)) return false; _poolIds.add(d.id); return true; });
 
+/* ===== 本周实际可用窗口 → 档位（「本周最热」只出该档位内的目的地）=====
+   之前池子是全量随机抽，导致 2 天周末窗口也会抽到成都/婺源这类 5-7 天档长途。 */
+function currentWeekWindow(){
+  const wd = workdaySet();
+  const now = new Date();
+  const dow = now.getDay();                                  // 0=周日
+  const monday = addDays(now, dow === 0 ? -6 : 1 - dow);
+  const days = [];
+  for(let i=0;i<7;i++){
+    const ds = ymd(addDays(monday, i));
+    const info = dayInfo(ds, wd);
+    days.push({ ds, avail: info.avail, why: info.why });
+  }
+  let best = [], cur = [];
+  days.forEach(d => {
+    if(d.avail){ cur.push(d); if(cur.length > best.length) best = cur.slice(); }
+    else cur = [];
+  });
+  return { days, window: best, total: best.length,
+           range: best.length ? best[0].ds + ' ~ ' + best[best.length-1].ds : '—' };
+}
+const WEEK_WIN  = currentWeekWindow();
+const WEEK_TIER = tierName(WEEK_WIN.total || 2);             // {name, range}
+const WEEK_TIER_CODE = tierCode(WEEK_TIER.name);             // '1-2天' 等
+// 短档目的地在长窗口照样能玩，反之不行 → 只保留所需档位 <= 本周窗口档位的
+let HOT_POOL_TIERED = HOT_POOL_UNIQUE.filter(d => tierRank(tierOfDest(d)) <= tierRank(WEEK_TIER_CODE));
+if(HOT_POOL_TIERED.length < 6){                              // 兜底：档内太少就放宽一档，避免空屏
+  HOT_POOL_TIERED = HOT_POOL_UNIQUE.filter(d => tierRank(tierOfDest(d)) <= tierRank(WEEK_TIER_CODE) + 1);
+}
+
 function shuffle(arr){
   const a = arr.slice();
   for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; }
   return a;
 }
 let hotShown = [];          // 本会话已展示过的 id（换一批保证不重复）
-let hotQueue = shuffle(HOT_POOL_UNIQUE);
+let hotQueue = shuffle(HOT_POOL_TIERED);
 let hotCurrent = null;      // 当前批次（rerenderHot 用）
 
 function drawHotBatch(){
   const need = 6;
   const batch = [];
-  while(batch.length < need && hotQueue.length){ batch.push(hotQueue.shift()); }
-  if(batch.length < need){
-    const rest = HOT_POOL_UNIQUE.filter(d => !hotShown.includes(d.id) && !batch.includes(d));
-    hotQueue = shuffle(rest.length ? rest : HOT_POOL_UNIQUE);
-    while(batch.length < need && hotQueue.length){
-      const d = hotQueue.shift();
+  // 抽到「通过 visited 检查」满 6 张为止；途中遇到的已去过条目也带入批，
+  // 交给 renderHotChips 在「已替你过滤」区透明展示（不渲染成卡片，但说明为何没推）
+  const passN = () => batch.filter(d => visitCheck(d, WEEK_TIER_CODE).ok).length;
+  function pull(queue){
+    while(passN() < need && queue.length){
+      const d = queue.shift();
       if(!batch.includes(d)) batch.push(d);
     }
+  }
+  pull(hotQueue);
+  if(passN() < need){
+    const rest = HOT_POOL_TIERED.filter(d => !hotShown.includes(d.id) && !batch.some(b=>b.id===d.id));
+    hotQueue = shuffle(rest.length ? rest : HOT_POOL_TIERED);
+    pull(hotQueue);
   }
   hotShown = hotShown.concat(batch.map(d=>d.id));
   const bonus = batch.find(d => d.id === 99 || d.match === 0) || null;

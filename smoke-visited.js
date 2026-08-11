@@ -5,7 +5,7 @@ const { JSDOM } = require('jsdom');
 
 const idx = fs.readFileSync('app/index.html', 'utf8');
 let html = idx;
-for (const f of ['config.js', 'data.js', 'visited.js', 'taste-profile.js', 'candidates.js', 'match-engine.js', 'hot-pool.js']) {
+for (const f of ['config.js', 'data.js', 'holidays.js', 'visited.js', 'hot-pool.js', 'taste-profile.js', 'candidates.js', 'match-engine.js']) {
   const code = fs.readFileSync('app/' + f, 'utf8');
   const re = new RegExp('<script src="' + f.replace(/\./g, '\\.').replace(/\?/g, '\\?') + '(\\?v=[^"]*)?"></script>');
   html = html.replace(re, `<script>${code}</script>`);
@@ -40,8 +40,11 @@ w.addEventListener('load', () => setTimeout(() => {
 
     ok('本周最热卡片里从未出现已去过地(杨梅坑/川岛)', leakedCards.length === 0, leakedCards.join(','));
     ok('已去过地被自动过滤(过滤区出现"杨梅坑")', filteredEver.includes('杨梅坑'), 'filteredEver 含杨梅坑? ' + filteredEver.includes('杨梅坑'));
-    // 新逻辑：按核心景点拦截——崇左主玩法(德天瀑布+明仕田园)均去过，即使大地名"崇左"不在 visited 库也应被拦
-    ok('新逻辑·按核心景点拦截崇左(德天+明仕均去过)', filteredEver.includes('崇左'), 'filteredEver 含崇左? ' + filteredEver.includes('崇左'));
+    // 新逻辑：按核心景点/地名拦截崇左（德天+明仕均去过）。
+    // 注：本周 2 天档下崇左(3-4天)被档位过滤移出「本周最热」候选，故不会出现在过滤区；
+    // 改为直接验证拦截逻辑本身——无论当周档位，崇左名含已去过「明仕田园」都应被拦。
+    const cz = w.visitCheck('广西 · 崇左（明仕田园周边）', '3-4天');
+    ok('新逻辑·核心景点/地名拦截崇左(德天+明仕均去过)', cz && cz.ok === false, 'visitCheck=' + JSON.stringify(cz));
 
     // 下一个假期：RECS 来自 candidates(含 id 905 大鹏所城+杨梅坑)，同样应被拦
     const seenRECS = (w.RECS || []).map(r => r.name || '');

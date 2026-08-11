@@ -5,7 +5,7 @@ const { JSDOM } = require('jsdom');
 const idx = fs.readFileSync('app/index.html', 'utf8');
 // 把外部 <script src> 内联，确保 jsdom 能加载（file:// 与 https 都能跑的路径）
 let html = idx;
-for (const f of ['config.js', 'data.js', 'taste-profile.js', 'candidates.js', 'match-engine.js']) {
+for (const f of ['config.js', 'data.js', 'holidays.js', 'visited.js', 'hot-pool.js', 'taste-profile.js', 'candidates.js', 'match-engine.js']) {
   const code = fs.readFileSync('app/' + f, 'utf8');
   const re = new RegExp('<script src="' + f.replace(/\./g, '\\.').replace(/\?/g, '\\?') + '(\\?v=[^"]*)?"></script>');
   html = html.replace(re, `<script>${code}</script>`);
