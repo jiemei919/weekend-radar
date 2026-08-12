@@ -293,6 +293,13 @@ window.VISITED = {
    }
   },
   {
+   "name": "罗浮山",
+   "region": "广东",
+   "city": "惠州",
+   "policy": "block",
+   "blockReason": "去过一次不会再去"
+  },
+  {
    "name": "万绿湖",
    "region": "广东",
    "city": "河源",
@@ -392,6 +399,13 @@ window.VISITED = {
    "city": "深圳",
    "policy": "block",
    "blockReason": "就一个商城"
+  },
+  {
+   "name": "甘坑古镇",
+   "region": "广东",
+   "city": "深圳",
+   "policy": "block",
+   "blockReason": "去过一次不会再去"
   },
   {
    "name": "孙中山故居",
