@@ -1,9 +1,40 @@
 {
   "note": "洁梅反馈流水（想去/没兴趣/去过了/偏好学习）。雪花自动落库，并据 learn 更新 taste-profile.json。",
-  "feedback": [],
-  "visited": [],
+  "feedback": [
+    {
+      "id": 902,
+      "name": "深圳 · 甘坑古镇 + 二十四史书院",
+      "type": "been",
+      "stars": 2,
+      "tags": [],
+      "note": "太小了"
+    },
+    {
+      "id": 2,
+      "name": "清远 · 连州地下河",
+      "type": "been",
+      "stars": 4,
+      "tags": [],
+      "note": "去过了呀，还可以，价格划算"
+    }
+  ],
+  "visited": [
+    {
+      "name": "深圳 · 甘坑古镇 + 二十四史书院",
+      "policy": "block",
+      "blockReason": "工具内评 2 星：太小了",
+      "review": "太小了",
+      "addedAt": "2026-08-12"
+    },
+    {
+      "name": "清远 · 连州地下河",
+      "policy": "exclude",
+      "review": "去过了呀，还可以，价格划算",
+      "addedAt": "2026-08-12"
+    }
+  ],
   "learn": {
-    "deltas": {},
-    "log": []
+    "log": [],
+    "deltas": {}
   }
 }
