@@ -30,7 +30,13 @@ dom.window.addEventListener('load', () => {
     // t1: 初始渲染有卡片
     const init = ids();
     ok('初始渲染有卡片（>0）', init.length > 0, 'init=' + init.length);
-    ok('初始每批 ≤6 张', init.length <= 6, 'init=' + init.length);
+    // 初始展示 = 飞书本周榜单（R.items 主榜 + R.bonus 彩蛋），与飞书推送保持一致
+    const seedIds = (w.RADAR.items || []).map(d => String(d.id));
+    const bonusId = w.RADAR.bonus ? String(w.RADAR.bonus.id) : null;
+    const expectIds = seedIds.concat(bonusId ? [bonusId] : []);
+    const initSet = new Set(init);
+    const seedShown = expectIds.filter(id => initSet.has(id)).length;
+    ok('初始展示 = 飞书本周榜单（主榜+彩蛋全量）', seedShown === expectIds.length && expectIds.length > 0, 'init=' + init.length + ' seedShown=' + seedShown + '/' + expectIds.length);
     ok('HOT_POOL 已合并（≥30）', (w.HOT_POOL||[]).length >= 30, 'len=' + (w.HOT_POOL||[]).length);
 
     // t2: 换一批得到不同的一批

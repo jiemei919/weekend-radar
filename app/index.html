@@ -1445,8 +1445,11 @@ function shuffle(arr){
   for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; }
   return a;
 }
+// 本周最热初始展示 = 飞书推送的本周精选榜单（data.js 的 R.items + R.bonus），与飞书推送保持一致；
+// 「换一批」才从大池子随机抽，且排除已展示的精选榜单，避免重复。
+const SEED_IDS = new Set((R.items||[]).map(d=>d.id).concat(R.bonus ? [R.bonus.id] : []));
 let hotShown = [];          // 本会话已展示过的 id（换一批保证不重复）
-let hotQueue = shuffle(HOT_POOL_TIERED);
+let hotQueue = shuffle(HOT_POOL_TIERED.filter(d => !SEED_IDS.has(d.id)));
 let hotCurrent = null;      // 当前批次（rerenderHot 用）
 
 function drawHotBatch(){
@@ -1463,8 +1466,8 @@ function drawHotBatch(){
   }
   pull(hotQueue);
   if(passN() < need){
-    const rest = HOT_POOL_TIERED.filter(d => !hotShown.includes(d.id) && !batch.some(b=>b.id===d.id));
-    hotQueue = shuffle(rest.length ? rest : HOT_POOL_TIERED);
+    const rest = HOT_POOL_TIERED.filter(d => !SEED_IDS.has(d.id) && !hotShown.includes(d.id) && !batch.some(b=>b.id===d.id));
+    hotQueue = shuffle(rest.length ? rest : HOT_POOL_TIERED.filter(d => !SEED_IDS.has(d.id)));
     pull(hotQueue);
   }
   hotShown = hotShown.concat(batch.map(d=>d.id));
@@ -1473,7 +1476,10 @@ function drawHotBatch(){
   return { items, bonus };
 }
 
-let curBatch = drawHotBatch();
+// 初始展示飞书本周精选榜单（与飞书推送一致）；异常时（items 为空）才退回随机抽
+let curBatch = (R.items && R.items.length)
+  ? { items: R.items.slice(), bonus: R.bonus }
+  : drawHotBatch();
 renderHotChips(curBatch.items, curBatch.bonus);
 
 function togglePosts(id){
