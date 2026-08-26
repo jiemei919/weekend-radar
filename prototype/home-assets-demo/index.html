@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f6f7fb" />
+  <title>家当 · 家庭物品管理</title>
+  <style>
+/* ====== 基础 ====== */
+:root{
+  --bg:#f6f7fb; --card:#fff; --ink:#171922; --muted:#8a8f9d; --line:#eceef3;
+  --blue:#4967f2; --green:#39a87c; --orange:#f29a47; --red:#ee6b70;
+  --shadow:0 14px 38px rgba(26,35,68,.07); --warn:#f4b73e
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:#e9ecf3;color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Microsoft YaHei",sans-serif
+}
+.phone-shell{
+  width:min(100%,430px); min-height:100vh; margin:auto; background:var(--bg);
+  position:relative; overflow:hidden;
+  box-shadow:0 0 80px rgba(36,45,70,.12)
+}
+#app{ min-height:100vh; padding-bottom:80px }
+.page{ padding:25px 20px 0 }
+.topline{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.eyebrow{font-size:12px;color:var(--muted);letter-spacing:.04em;margin:0 0 6px}
+.title{font-size:28px;letter-spacing:-.04em;margin:0;font-weight:750;line-height:1.2}
+.title.sm{font-size:20px;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:14px;line-height:1.6}
+
+/* ====== 头像/图标/卡片 ====== */
+.avatar{width:39px;height:39px;border-radius:15px;background:linear-gradient(135deg,#f8d8cb,#e8b68c);display:grid;place-items:center;font-size:20px;border:3px solid white;box-shadow:var(--shadow)}
+button{font:inherit;border:0;cursor:pointer;color:inherit;background:none}
+.icon-btn{width:38px;height:38px;border-radius:13px;background:#fff;box-shadow:var(--shadow);font-size:20px;display:grid;place-items:center}
+.icon-btn.small{width:30px;height:30px;font-size:16px;border-radius:10px;box-shadow:none;background:var(--line)}
+.icon-btn.warn{background:#fff0ec;color:var(--red)}
+.card{background:var(--card);border-radius:20px;box-shadow:var(--shadow);padding:14px 16px}
+.hero{padding:20px;position:relative;overflow:hidden;background:linear-gradient(135deg,#252b4a,#424d89);color:white}
+.hero:after{content:"";width:165px;height:165px;border:30px solid rgba(255,255,255,.08);border-radius:50%;position:absolute;right:-38px;top:-55px}
+.hero .eyebrow{color:#b8c0e8}
+.hero-number{font-size:48px;font-weight:750;letter-spacing:-.07em;margin:2px 0 8px}
+.hero-bottom{display:flex;gap:22px;font-size:12px;color:#cdd2eb}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:18px 0 10px}
+.section-head h2{font-size:17px;letter-spacing:-.02em;margin:0;font-weight:700}
+.link{font-size:13px;color:var(--blue);background:none;border:0}
+
+/* ====== tabbar ====== */
+.tabbar{
+  display:flex; justify-content:space-around;
+  position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+  width:min(100%,430px); background:rgba(246,247,251,.95); backdrop-filter:blur(18px);
+  padding:10px 0 14px; border-top:1px solid rgba(0,0,0,.04); z-index:99
+}
+.tabbar button{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+  font-size:11px; color:var(--muted); padding:0
+}
+.tabbar button span{font-size:20px;line-height:1}
+.tabbar button.active{color:var(--blue)}
+/* 注：去掉了之前 .add-tab 的大黑圆突兀样式，与其他三个 icon 风格一致 */
+
+/* ====== 头像切换（私物页） ====== */
+.avatar-switch{display:flex;gap:10px;margin:6px 0 14px}
+.avatar-chip{display:flex;flex-direction:column;align-items:center;gap:4px}
+.avatar-chip .ava{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:20px;border:3px solid #fff;box-shadow:var(--shadow)}
+.avatar-chip.small .ava{width:38px;height:38px;font-size:18px}
+.avatar-chip.active .ava{outline:2.5px solid var(--blue);outline-offset:2px}
+.avatar-chip.all .ava{background:#e9ecf3}
+
+/* ====== chip ====== */
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip{
+  padding:8px 14px; border-radius:999px; background:#fff; font-size:13.5px;
+  box-shadow:var(--shadow); color:var(--ink)
+}
+.chip.active{background:var(--ink);color:#fff}
+.chip.add-cat{
+  display:inline-flex; align-items:center; gap:4px;
+  border:1.5px dashed var(--line); box-shadow:none; background:transparent; color:var(--muted)
+}
+.chip-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.chip-wrap > * {flex:0 0 auto}
+
+/* ====== 分类格子（衣物/护理入口） ====== */
+.category-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin:0 0 12px}
+.category{
+  background:var(--card); border-radius:17px; box-shadow:var(--shadow);
+  padding:14px; display:flex; flex-direction:column; gap:2px; cursor:pointer
+}
+.category:active{transform:scale(.98)}
+.cat-emoji{font-size:24px}
+.category strong{font-size:15px;font-weight:700}
+.category small{font-size:12px;color:var(--muted)}
+
+/* ====== 物品卡 ====== */
+.asset-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.asset-card{
+  background:var(--card); border-radius:17px; box-shadow:var(--shadow);
+  padding:14px; display:flex; flex-direction:column; gap:10px; min-height:128px;
+  cursor:pointer
+}
+.asset-card:active{transform:scale(.98)}
+.asset-art{
+  width:60px;height:60px;border-radius:14px;background:#f4f6fb;
+  display:grid;place-items:center;font-size:32px
+}
+.asset-meta strong{font-size:13.5px;display:block;margin-bottom:2px}
+.asset-meta small{color:var(--muted);font-size:12px;line-height:1.5}
+
+/* ====== 留意 + 快捷操作 ====== */
+.list{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.alert{
+  display:flex; align-items:center; gap:12px;
+  background:#fff5f3; border-radius:14px; padding:11px 14px; cursor:pointer;
+  box-shadow:var(--shadow)
+}
+.alert .dot{width:8px;height:8px;border-radius:50%;background:var(--orange);flex:none}
+.alert p{font-size:13.5px;line-height:1.5;margin:0;color:var(--ink)}
+.alert p .sub{color:var(--muted);font-size:12px}
+.alert .chev{margin-left:auto;color:var(--muted)}
+.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+.quick{
+  background:var(--card); border-radius:17px; box-shadow:var(--shadow);
+  padding:14px; text-align:left; display:flex; flex-direction:column; gap:6px
+}
+.q-icon{
+  width:36px;height:36px;border-radius:12px;
+  background:linear-gradient(135deg,#eaf0ff,#dde6ff);display:grid;place-items:center;font-size:18px
+}
+.quick strong{font-size:14px}
+.quick small{font-size:12px;color:var(--muted);line-height:1.4}
+
+/* ====== 护理品卡 ====== */
+.skincare-card{
+  background:var(--card); border-radius:18px; box-shadow:var(--shadow);
+  padding:14px 16px; cursor:pointer; margin-bottom:10px
+}
+.skincare-card:active{transform:scale(.99)}
+.skincare-head{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.skincare-head .emoji-box{
+  width:40px;height:40px;border-radius:12px;background:#f4f6fb;
+  display:grid;place-items:center;font-size:22px
+}
+.skincare-head strong{font-size:15px;display:block}
+.skincare-head small{font-size:12.5px;color:var(--muted)}
+.skincare-head .total-pill{
+  margin-left:auto; font-size:12.5px; color:var(--muted);
+  padding:4px 10px; background:#f4f6fb; border-radius:999px
+}
+.skincare-head .sk-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
+.sk-finish-btn{
+  padding:6px 10px; font-size:12.5px; border-radius:999px;
+  background:#fff0ec; color:var(--red)
+}
+.stat-row{display:flex;border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+.stat-cell{flex:1;text-align:center;font-size:12.5px;color:var(--muted)}
+.stat-cell strong{display:block;font-size:18px;color:var(--ink);font-weight:700}
+
+.pill{padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:600}
+.pill.ok{background:#e9f7f1;color:var(--green)}
+.pill.alert{background:#fff0ec;color:var(--red)}
+
+/* ====== 家当 row（耐用单排 / 洗护分层） ====== */
+.row{
+  display:flex; align-items:center; gap:12px;
+  background:var(--card); border-radius:18px; box-shadow:var(--shadow);
+  padding:14px 16px; cursor:pointer; margin-bottom:11px;
+  border:1px solid rgba(0,0,0,.02)
+}
+.row-emoji{
+  width:46px;height:46px;border-radius:13px;background:#f4f6fb;
+  display:grid;place-items:center;font-size:24px; flex:none
+}
+.row-main{flex:1;min-width:0}
+.row-main strong{display:block;font-size:14.5px;margin-bottom:2px}
+.row-main small{font-size:12.5px;color:var(--muted);line-height:1.5;display:block}
+.row .chev{color:var(--muted);font-size:18px}
+
+/* 改 v2：洗护用品 — 顶部信息 + 细分隔线 + 底部三按钮等分（柔和分层） */
+.row.liquid{
+  display:flex; flex-direction:column; align-items:stretch;
+  padding:14px 16px 14px; overflow:hidden; cursor:default
+}
+.row.liquid .row-top{display:flex; gap:12px; align-items:flex-start}
+.row.liquid .row-main{flex:1; min-width:0}
+.row.liquid .total-pill{
+  font-size:12.5px; color:var(--muted); padding:4px 10px;
+  background:#f4f6fb; border-radius:999px; align-self:flex-start; flex:none
+}
+.row.liquid .row-actions{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+  margin-top:12px; padding-top:12px; border-top:1px solid var(--line)
+}
+.row.liquid .row-actions button{
+  padding:9px 0; font-size:12.5px; border-radius:11px;
+  background:#eef0f7; color:var(--ink); font-weight:600;
+  border:0; cursor:pointer; transition:opacity .15s
+}
+.row.liquid .row-actions button:active{transform:scale(.97)}
+.row.liquid .row-actions .primary{background:var(--blue); color:#fff}
+.row.liquid .row-actions .warn{background:#fff0ec; color:var(--red)}
+.row.liquid .row-actions button:disabled{opacity:.35; pointer-events:none}
+
+/* ====== 衣物归档折叠区 ====== */
+.archive-fold{margin-top:14px}
+.archive-toggle{
+  display:flex; align-items:center; gap:6px;
+  font-size:13px; color:var(--muted); background:none; border:0;
+  padding:6px 0; font-weight:600; cursor:pointer
+}
+.archive-toggle .chev{font-size:12px; color:var(--muted)}
+.archive-fold .asset-grid{margin-top:8px}
+.asset-card.archived{position:relative; opacity:.85}
+.asset-card.archived::after{
+  content:""; position:absolute; inset:0; border-radius:17px;
+  border:1.5px dashed var(--red); pointer-events:none
+}
+.asset-card .stamp{
+  position:absolute; right:8px; top:8px;
+  padding:2px 8px; border-radius:999px; font-size:10.5px; font-weight:700
+}
+.asset-card .stamp.sold{background:#fff0ec; color:var(--red)}
+.asset-card .stamp.discarded{background:#f0f1f6; color:var(--muted)}
+.asset-card .stamp-restore{
+  position:absolute; bottom:8px; right:8px;
+  padding:3px 9px; border-radius:999px; font-size:11px; font-weight:600;
+  background:#e9f0ff; color:var(--blue); border:0; cursor:pointer
+}
+
+/* ====== 衣物详情弹层 ====== */
+.detail-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 0; border-top:1px solid var(--line); font-size:13.5px
+}
+.detail-row:first-of-type{border-top:none}
+.detail-row .k{color:var(--muted); font-size:12.5px}
+.detail-row .v{color:var(--ink); font-weight:600}
+.detail-actions{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:14px
+}
+.detail-actions button{
+  padding:10px 6px; border-radius:12px; font-size:13px; font-weight:600;
+  background:#eef0f7; color:var(--ink); border:0; cursor:pointer
+}
+.detail-actions .primary{background:var(--blue); color:#fff}
+.detail-actions .warn{background:#fff0ec; color:var(--red)}
+.detail-status{
+  display:flex; align-items:center; gap:8px;
+  padding:10px 12px; border-radius:12px;
+  background:#fff5f3; color:var(--ink); font-size:13px;
+  margin:10px 0 0
+}
+.detail-status.ok{background:#e9f7f1; color:var(--green)}
+.detail-status.discarded{background:#f0f1f6; color:var(--muted)}
+.detail-restore{
+  display:flex; gap:10px; margin-top:8px
+}
+.detail-restore button{
+  flex:1; padding:11px; border-radius:12px; font-size:13.5px; font-weight:600;
+  background:#e9f0ff; color:var(--blue); border:0; cursor:pointer
+}
+
+/* ====== 手动添加：AI 抠图预览 ====== */
+.ai-preview{
+  position:relative; border-radius:18px; overflow:hidden;
+  margin-bottom:14px; min-height:220px;
+  box-shadow:var(--shadow)
+}
+.ai-preview .bg{
+  position:absolute; inset:0;
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.04) 60%),
+    linear-gradient(135deg,#3a4480,#424d89 55%,#2a3060);
+  backdrop-filter:blur(18px);
+}
+.ai-preview .bg::before{
+  content:""; position:absolute; width:140px; height:140px;
+  border:24px solid rgba(255,255,255,.08); border-radius:50%;
+  right:-40px; top:-50px
+}
+.ai-preview img.cutout, .ai-preview img.raw{
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  max-width:80%; max-height:200px; object-fit:contain; z-index:2
+}
+.ai-preview.processing img{opacity:.35; filter:blur(3px)}
+.ai-overlay{
+  position:absolute; inset:0; z-index:3; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:8px;
+  color:#fff; text-align:center; padding:0 20px
+}
+.ai-overlay .spinner{
+  width:24px; height:24px; border:3px solid rgba(255,255,255,.3);
+  border-top-color:#fff; border-radius:50%;
+  animation:_spin .8s linear infinite
+}
+@keyframes _spin{to{transform:rotate(360deg)}}
+.ai-overlay strong{font-size:14px; font-weight:600; letter-spacing:.02em}
+.ai-overlay small{font-size:12px; opacity:.85}
+.ai-tag{
+  position:absolute; top:12px; left:12px; z-index:4;
+  padding:5px 10px; border-radius:999px;
+  background:rgba(255,255,255,.18); backdrop-filter:blur(10px);
+  color:#fff; font-size:11.5px; font-weight:600; letter-spacing:.02em
+}
+.ai-tag .dot{display:inline-block; width:6px; height:6px; border-radius:50%; background:#5cd99c; margin-right:5px; vertical-align:middle}
+.ai-tips{
+  position:absolute; right:12px; top:12px; z-index:4;
+  background:rgba(255,255,255,.92); backdrop-filter:blur(12px);
+  border-radius:12px; padding:8px 10px; font-size:11.5px;
+  color:var(--ink); min-width:124px;
+  box-shadow:0 6px 18px rgba(0,0,0,.14)
+}
+.ai-tips .row-item{display:flex; align-items:center; gap:6px; padding:3px 0}
+.ai-tips .row-item + .row-item{border-top:1px solid rgba(0,0,0,.05)}
+.ai-tips .row-item .k{color:var(--muted); font-size:11.5px}
+.ai-tips .row-item .v{color:var(--ink); font-weight:600; margin-left:auto}
+
+.manual-retry{
+  display:flex; align-items:center; gap:6px;
+  font-size:12.5px; color:var(--blue); background:none; border:0;
+  padding:2px 4px; margin:-6px 0 14px; cursor:pointer
+}
+
+/* ====== 弹层 ====== */
+.modal-back{
+  position:fixed; inset:0; background:rgba(20,25,40,.45);
+  display:grid; place-items:center; z-index:200; padding:20px
+}
+.modal{
+  background:#fff; border-radius:22px; padding:20px; width:min(100%,380px);
+  box-shadow:0 30px 80px rgba(20,25,40,.25)
+}
+.modal h3{margin:0 0 4px;font-size:18px;letter-spacing:-.02em}
+.modal p.sub{margin:0 0 14px;font-size:13px}
+.modal .field{margin:8px 0}
+.modal .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.modal .field input{
+  width:100%; padding:11px 12px; border-radius:12px; border:1.5px solid var(--line);
+  font-size:14px; font-family:inherit
+}
+.modal-actions{display:flex;gap:10px;margin-top:14px}
+.modal-actions button{
+  flex:1; padding:11px; border-radius:13px; font-size:14px; font-weight:600
+}
+.modal-actions .cancel{background:#f0f1f6;color:var(--ink)}
+.modal-actions .ok{background:var(--blue);color:#fff}
+
+/* ====== 护理详情：瓶列表 ====== */
+.bottle-row{
+  display:flex; align-items:center; gap:10px;
+  padding:10px 0; border-top:1px solid var(--line); font-size:13.5px
+}
+.bottle-row:first-of-type{border-top:none}
+.bottle-tag{padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:600}
+.bottle-tag.sealed{background:#f4f6fb;color:var(--muted)}
+.bottle-tag.inuse{background:#e9f0ff;color:var(--blue)}
+.bottle-tag.finished{background:#f0f1f6;color:var(--muted)}
+.bottle-action{margin-left:auto;font-size:12.5px;padding:5px 10px;border-radius:10px;background:#fff0ec;color:var(--red)}
+.bottle-action.start{background:#e9f0ff;color:var(--blue)}
+
+/* ====== 添加页 / 模态表单 ====== */
+.mode-tabs{display:flex;gap:8px;margin-bottom:18px}
+.mode-tabs .chip{flex:1;text-align:center}
+.dropzone{
+  background:var(--card); border-radius:18px; box-shadow:var(--shadow);
+  padding:30px 20px; text-align:center; cursor:pointer; margin-bottom:14px
+}
+.dropzone span{font-size:32px;display:block;margin-bottom:8px}
+.dropzone strong{font-size:15px;display:block;margin-bottom:4px}
+.dropzone small{font-size:12.5px;color:var(--muted)}
+.form-card{padding:18px}
+.form-card .field{margin:10px 0}
+.form-card .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.form-card input,.form-card select{
+  width:100%; padding:12px 14px; border-radius:13px; border:1.5px solid var(--line);
+  font-size:14px; font-family:inherit; background:#fafbfd
+}
+.form-card .primary{
+  width:100%; padding:13px; border-radius:14px; background:var(--blue); color:#fff;
+  font-size:15px; font-weight:600; margin-top:8px
+}
+
+/* ====== 提醒 toast ====== */
+.toast{
+  position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px);
+  background:rgba(23,25,34,.92); color:#fff; padding:11px 18px; border-radius:12px;
+  font-size:13.5px; opacity:0; transition:all .25s; z-index:300; pointer-events:none
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+
+.empty{
+  background:var(--card); border-radius:18px; box-shadow:var(--shadow);
+  padding:30px 20px; text-align:center; color:var(--muted); font-size:14px
+}
+.empty span{font-size:32px;display:block;margin-bottom:6px}
+  </style>
+</head>
+<body>
+  <main class="phone-shell">
+    <div id="app"></div>
+    <nav class="tabbar" aria-label="主导航">
+      <button data-route="home"><span class="tab-icon">⌂</span><small>首页</small></button>
+      <button data-route="assets"><span class="tab-icon">▦</span><small>私物</small></button>
+      <button data-route="add"><span class="tab-icon">＋</span><small>添加</small></button>
+      <button data-route="family-store"><span class="tab-icon">🏷</span><small>家当</small></button>
+    </nav>
+  </main>
+  <div id="toast" class="toast"></div>
+
+  <script>
+// ============ 数据 ============
+const members=[
+  {id:'me',name:'我',emoji:'🧑🏻',color:'#f8d8cb'},
+  {id:'son',name:'儿子',emoji:'👦🏻',color:'#dceafa'},
+  {id:'grandma',name:'奶奶',emoji:'👵🏻',color:'#f5edc9'},
+  {id:'grandpa',name:'爷爷',emoji:'👴🏻',color:'#e0d4f0'}
+];
+
+// 每个 owner 独立的“一级分类”清单
+// 衣物/护理 lock=true（不可删），家电/装备 lock=false（可删）
+// 排序对每个人固定（衣物在护理前）
+const ownerCategories={
+  me:[
+    {id:'clothes',name:'衣物',emoji:'👕',lock:true},
+    {id:'appliance',name:'家电',emoji:'🔌',lock:false},
+    {id:'gear',name:'装备',emoji:'🎒',lock:false},
+    {id:'skincare',name:'护理',emoji:'🧴',lock:true}
+  ],
+  son:[
+    {id:'clothes',name:'衣物',emoji:'👕',lock:true},
+    {id:'appliance',name:'家电',emoji:'🔌',lock:false},
+    {id:'gear',name:'装备',emoji:'🎒',lock:false},
+    {id:'skincare',name:'护理',emoji:'🧴',lock:true}
+  ],
+  grandma:[
+    {id:'clothes',name:'衣物',emoji:'👕',lock:true},
+    {id:'appliance',name:'家电',emoji:'🔌',lock:false},
+    {id:'gear',name:'装备',emoji:'🎒',lock:false},
+    {id:'skincare',name:'护理',emoji:'🧴',lock:true}
+  ],
+  grandpa:[
+    {id:'clothes',name:'衣物',emoji:'👕',lock:true},
+    {id:'gear',name:'装备',emoji:'🎒',lock:false},
+    {id:'appliance',name:'家电',emoji:'🔌',lock:false},
+    {id:'skincare',name:'护理',emoji:'🧴',lock:true}
+  ]
+};
+
+// 个人护理品（多瓶管理）
+const skincare=[
+  {id:'sk1',sku:'雅诗兰黛小棕瓶',spec:'50ml',owner:'me',emoji:'🧴',paoMonths:12,instances:[
+    {idx:1,status:'sealed'},{idx:2,status:'sealed'},{idx:3,status:'in_use',openedAt:'2026-08-01',remaining:60},
+    {idx:4,status:'finished',finishedAt:'2026-06-15'}
+  ]},
+  {id:'sk2',sku:'SK-II 神仙水',spec:'100ml',owner:'me',emoji:'✨',paoMonths:12,instances:[
+    {idx:1,status:'sealed'},{idx:2,status:'sealed'}
+  ]},
+  {id:'sk3',sku:'La Mer 面霜',spec:'30ml',owner:'me',emoji:'🫙',paoMonths:12,instances:[
+    {idx:1,status:'in_use',openedAt:'2026-03-01',remaining:10}
+  ]},
+  {id:'sk4',sku:'凡士林润肤露',spec:'400ml',owner:'grandma',emoji:'🧴',paoMonths:24,instances:[
+    {idx:1,status:'sealed'},{idx:2,status:'in_use',openedAt:'2026-08-15',remaining:80}
+  ]}
+];
+
+// 个人物品 —— 按 PRD §6.2 耐用品用单品；带 status: active|sold|discarded
+const assets=[
+  // 我的衣物
+  {id:'a1',sku:'Patagonia 冲锋衣',owner:'me',cat:'clothes',season:'冬',subtype:'上装',emoji:'🧥',place:'主卧衣柜',wears:42,price:2900,buyDate:'2023-09-12',status:'active'},
+  {id:'a2',sku:'Uniqlo 亚麻衬衫',owner:'me',cat:'clothes',season:'夏',subtype:'上装',emoji:'👔',place:'主卧衣柜',wears:30,price:199,buyDate:'2024-05-12',status:'active'},
+  {id:'a3',sku:"Levi's 501 牛仔裤",owner:'me',cat:'clothes',season:'春',subtype:'下装',emoji:'👖',place:'主卧衣柜',wears:18,price:599,buyDate:'2024-02-12',status:'active'},
+  {id:'a4',sku:'碎花连衣裙',owner:'me',cat:'clothes',season:'夏',subtype:'裙子',emoji:'👗',place:'主卧衣柜',wears:12,price:499,buyDate:'2024-07-12',status:'active'},
+  {id:'a5',sku:'羊毛大衣',owner:'me',cat:'clothes',season:'冬',subtype:'上装',emoji:'🧥',place:'换季收纳箱',wears:9,price:1800,buyDate:'2022-11-12',status:'active'},
+  // 我的衣物 · 已处理（demo 演示用，正常列表不显示，折叠区可看）
+  {id:'a9',sku:'旧羊毛围巾',owner:'me',cat:'clothes',season:'冬',subtype:'上装',emoji:'🧣',place:'已处理',wears:60,price:380,buyDate:'2020-12-12',status:'discarded',statusDate:'2026-06-12'},
+  {id:'a10',sku:'Zara 旧西装',owner:'me',cat:'clothes',season:'冬',subtype:'上装',emoji:'🤵',place:'已处理',wears:30,price:1200,buyDate:'2021-10-01',status:'sold',statusDate:'2025-12-01'},
+  // 我的家电
+  {id:'a6',sku:'Dyson 吹风机',owner:'me',cat:'appliance',emoji:'💨',place:'浴室柜',price:2399,buyDate:'2024-03-12',status:'active'},
+  {id:'a7',sku:'Kindle',owner:'me',cat:'appliance',emoji:'📖',place:'书房',price:999,buyDate:'2023-10-01',status:'active'},
+  // 我的装备
+  {id:'a8',sku:'Patagonia 双肩包',owner:'me',cat:'gear',emoji:'🎒',place:'玄关',price:1299,buyDate:'2023-08-12',status:'active'},
+
+  // 儿子
+  {id:'s1',sku:'Nike 卫衣',owner:'son',cat:'clothes',season:'冬',subtype:'上装',emoji:'🧥',place:'儿子衣柜',wears:25,price:599,buyDate:'2023-11-12',status:'active'},
+  {id:'s2',sku:'Switch',owner:'son',cat:'appliance',emoji:'🎮',place:'客厅',price:2399,buyDate:'2023-12-25',status:'active'},
+  {id:'s3',sku:'电话手表',owner:'son',cat:'appliance',emoji:'⌚',place:'儿子书桌',price:999,buyDate:'2024-09-01',status:'active'},
+
+  // 奶奶
+  {id:'gm1',sku:'羊毛开衫',owner:'grandma',cat:'clothes',season:'冬',subtype:'上装',emoji:'🧶',place:'奶奶衣柜',wears:50,price:800,buyDate:'2022-10-12',status:'active'},
+  {id:'gm2',sku:'助听器',owner:'grandma',cat:'appliance',emoji:'👂',place:'床头柜',price:3500,buyDate:'2023-05-12',status:'active'},
+
+  // 爷爷
+  {id:'gp1',sku:'Snow Peak 焚火台',owner:'grandpa',cat:'gear',emoji:'🏕️',place:'储藏室',wears:8,price:1280,buyDate:'2023-04-12',status:'active'},
+  {id:'gp2',sku:'海钓鱼竿',owner:'grandpa',cat:'gear',emoji:'🎣',place:'阳台',price:1999,buyDate:'2023-07-08',status:'active'},
+  {id:'gp3',sku:'德生收音机',owner:'grandpa',cat:'appliance',emoji:'📻',place:'客厅',price:299,buyDate:'2024-01-12',status:'active'}
+];
+
+// ============ 全家共用「家当」==========
+const familyStore=[
+  {id:'f1',sku:'海飞丝洗发水',cat:'洗护',spec:'750ml',emoji:'🧴',paoMonths:12,instances:[
+    {idx:1,status:'sealed'},{idx:2,status:'sealed'},{idx:3,status:'sealed'},{idx:4,status:'in_use',openedAt:'2026-07-01',remaining:50}
+  ]},
+  {id:'f2',sku:'舒肤佳沐浴露',cat:'洗护',spec:'720ml',emoji:'🧼',paoMonths:12,instances:[
+    {idx:1,status:'sealed'},{idx:2,status:'sealed'},{idx:3,status:'in_use',openedAt:'2026-08-10',remaining:70}
+  ]},
+  {id:'f3',sku:'高露洁牙膏',cat:'洗护',spec:'120g',emoji:'🦷',paoMonths:12,instances:[
+    {idx:1,status:'sealed'},{idx:2,status:'in_use',openedAt:'2026-06-01',remaining:30}
+  ]},
+  {id:'f4',sku:'海天生抽',cat:'厨房',spec:'500ml',emoji:'🫙',paoMonths:24,instances:[
+    {idx:1,status:'sealed'},{idx:2,status:'sealed'},{idx:3,status:'sealed'},{idx:4,status:'sealed'},{idx:5,status:'sealed'},{idx:6,status:'sealed'},{idx:7,status:'sealed'}
+  ]},
+  {id:'f5',sku:'橄榄油',cat:'厨房',spec:'500ml',emoji:'🫒',paoMonths:18,instances:[
+    {idx:1,status:'in_use',openedAt:'2026-04-01',remaining:15}
+  ]},
+  {id:'f6',sku:'瓷碗套装',cat:'厨房',spec:'6 件',emoji:'🍲',isDurable:true,place:'橱柜',instances:[{idx:1,status:'in_use'}]},
+  {id:'f7',sku:'保鲜盒',cat:'厨房',spec:'4 件',emoji:'🗃️',isDurable:true,place:'橱柜',instances:[{idx:1,status:'in_use'}]},
+  {id:'f8',sku:'冰箱',cat:'家电',emoji:'🧊',isDurable:true,place:'厨房',price:5999,instances:[{idx:1,status:'in_use'}]},
+  {id:'f9',sku:'洗衣机',cat:'家电',emoji:'🫧',isDurable:true,place:'阳台',price:4299,instances:[{idx:1,status:'in_use'}]},
+  {id:'f10',sku:'加湿器',cat:'家电',emoji:'💧',isDurable:true,place:'主卧',price:599,instances:[{idx:1,status:'in_use'}]},
+  {id:'f11',sku:'空气净化器',cat:'家电',emoji:'🌀',isDurable:true,place:'客厅',price:1099,instances:[{idx:1,status:'in_use'}]}
+];
+const familyStoreCats=['全部','洗护','厨房','家电'];
+
+// ============ 状态 ============
+// 私物仅 4 个家人；不再有"全家"汇总视角
+let currentOwner='me';
+let activeCat='全部';        // 私物一级 chip
+let activeSeason='全部';     // 衣物下二级 chip：全部/春/夏/秋/冬
+let activeSubtype='全部';    // 衣物下三级 chip：全部/上装/下装/裙子
+let currentRoute='home';
+let activeSkItem=null;
+let activeFsItem=null;
+let activeAsset=null;        // 衣物/家电/装备 详情弹层
+let activeFsCat='全部';
+let showArchived=false;      // 衣物列表底部"已处理"折叠开关
+
+// ============ helper ============
+const ownerName=id=>(members.find(m=>m.id===id)||{name:id}).name;
+const TODAY=new Date('2026-08-26T11:30:00+08:00');
+function daysSince(iso){return (TODAY-new Date(iso))/86400000;}
+function monthsSince(iso){return daysSince(iso)/30;}
+function sealed(item){return item.instances.filter(x=>x.status==='sealed').length;}
+function inUse(item){return item.instances.find(x=>x.status==='in_use');}
+function inUseCount(item){return item.instances.filter(x=>x.status==='in_use').length;}
+function finishedCount(item){return item.instances.filter(x=>x.status==='finished').length;}
+function totalBottles(item){return item.instances.length;}
+function usageInfo(item){
+  const u=inUse(item); if(!u||!item.paoMonths) return null;
+  const opened=monthsSince(u.openedAt);
+  const remMonths=Math.max(0,item.paoMonths-opened);
+  return {opened:u.openedAt, pct:u.remaining, monthsLeft:remMonths, isExpiring:remMonths<3||u.remaining<20};
+}
+
+// ============ 渲染调度 ============
+const app=document.querySelector('#app');
+function setTabbar(){
+  document.querySelectorAll('[data-route]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.route===currentRoute);
+    b.onclick=()=>go(b.dataset.route);
+  });
+}
+function go(route){ currentRoute=route; activeSkItem=null; activeFsItem=null; activeAsset=null; render(); }
+function setAddMode(m){ addMode=m; render(); }
+let addMode='order';
+function headerLine(text, actionBtn){
+  if(text==='' && !actionBtn) return '';
+  const right=actionBtn||'';
+  if(text==='') return `<div class="topline"><div></div>${right}</div>`;
+  return `<div class="topline"><div><h1 class="title">${text}</h1></div>${right}</div>`;
+}
+
+// ============ 首页 ============
+function home(){
+  const todayReminders=[
+    ...skincare.filter(s=>usageInfo(s)?.isExpiring).map(s=>{return {type:'sk',sku:s.sku,owner:s.owner,msg:s.sku+' 快过期了'};}),
+    ...familyStore.filter(s=>usageInfo(s)?.isExpiring).map(s=>{return {type:'fs',sku:s.sku,owner:null,msg:s.sku+'（全家）快过期了'};})
+  ];
+  let alertHtml;
+  if(todayReminders.length){
+    const listHtml=todayReminders.slice(0,2).map(r=>{
+      let onclick;
+      if(r.type==='sk'){
+        const o=r.owner;
+        onclick="setOwner('"+o+"');setCat('skincare');go('assets')";
+      }else{
+        onclick="setFsCat('全部');go('family-store')";
+      }
+      return `<div class="alert" onclick="${onclick}"><span class="dot"></span><p><b>${r.msg}</b><br><span class="sub">点击查看并处理</span></p><span class="chev">›</span></div>`;
+    }).join('');
+    alertHtml=listHtml;
+  }else{
+    alertHtml='<div class="alert"><span class="dot" style="background:var(--green)"></span><p><b>家里一切正常</b><br><span class="sub">暂无补货或过期提醒</span></p></div>';
+  }
+  app.innerHTML='<section class="page">'+headerLine('你好，洁梅')+
+'<div class="card hero"><p class="eyebrow">广州 · 番禺</p><div class="hero-number">28<span style="font-size:18px;font-weight:500">°C</span></div><div class="hero-bottom"><div>☀️ 晴</div><div>湿度 65%</div><div>适宜出游</div></div></div>'+
+'<div class="section-head"><h2>今日穿搭推荐</h2><span class="link" onclick="toast(\'今日穿搭推荐即将上线\')">即将上线</span></div>'+
+'<div class="card" style="padding:18px;text-align:center;color:var(--muted);font-size:14px;line-height:1.7">✨ 根据天气、场合和你的穿着记录<br>智能推荐今日穿搭 · 敬请期待</div>'+
+'<div class="section-head"><h2>需要留意</h2><button class="link" onclick="setFsCat(\'全部\');go(\'family-store\')">查看全部</button></div>'+
+'<div class="list">'+alertHtml+'</div>'+
+'<div class="section-head"><h2>快捷操作</h2></div>'+
+'<div class="quick-grid">'+
+'  <button class="quick" onclick="go(\'add\',\'order\')"><span class="q-icon">🧾</span><strong>拍订单</strong><small>自动识别并入库</small></button>'+
+'  <button class="quick" onclick="go(\'add\',\'photo\')"><span class="q-icon">📦</span><strong>拍包装</strong><small>识别物品信息</small></button>'+
+'  <button class="quick" onclick="go(\'add\',\'manual\')"><span class="q-icon">＋</span><strong>手动添加</strong><small>记录一件物品</small></button>'+
+'  <button class="quick" onclick="toast(\'今日穿搭推荐即将上线\')"><span class="q-icon">✨</span><strong>今日穿搭</strong><small>即将上线</small></button>'+
+'</div>'+
+'</section>'+modal();
+  setTabbar();
+}
+
+function assetCard(a){
+  const costStr=a.wears?`¥${Math.round(a.price/Math.max(a.wears,1))}/次`:'-';
+  const isArchived=a.status&&a.status!=='active';
+  // 已处理：stamp + 撤销按钮（在卡片内一闪而过的入口，主要操作在折叠区列表）
+  let stamp='';
+  if(a.status==='sold') stamp='<span class="stamp sold">已卖出</span>';
+  else if(a.status==='discarded') stamp='<span class="stamp discarded">已丢弃</span>';
+  const onclick=isArchived?`restoreAsset('${a.id}')`:`openAsset('${a.id}')`;
+  const cls=isArchived?'asset-card archived':'asset-card';
+  return `<div class="${cls}" onclick="${onclick}"><div class="asset-art">${a.emoji}</div><div class="asset-meta"><strong>${a.sku}</strong><small>${a.place||''} · ${ownerName(a.owner)}${a.wears?`<br>${a.wears}次 · ${costStr}`:''}</small></div>${stamp}</div>`;
+}
+
+// ============ 私物页 ============
+function setOwner(id){ currentOwner=id; activeCat='全部'; activeSeason='全部'; activeSubtype='全部'; render(); }
+function setCat(c){ activeCat=c; activeSeason='全部'; activeSubtype='全部'; showArchived=false; render(); }
+function setSeason(s){ activeSeason=s; render(); }
+function setSubtype(s){ activeSubtype=s; render(); }
+
+function ownerCats(owner){
+  // 每位家人各自的清单（衣物 → 家电 → 装备 → 护理）
+  return ownerCategories[owner]||[];
+}
+function ownerAssets(owner, cat){
+  // 主网格始终只显示 status==='active' 的物品；已处理物品走 archive-fold 区独立查看
+  const isActive=a=>!a.status||a.status==='active';
+  if(cat==='全部') return assets.filter(a=>a.owner===owner && isActive(a));
+  if(cat==='skincare') return [];
+  return assets.filter(a=>a.owner===owner && a.cat===cat && isActive(a));
+}
+function ownerSkincare(owner){
+  return skincare.filter(s=>s.owner===owner);
+}
+
+function assetsPage(){
+  const owner=currentOwner;
+  const cats=ownerCats(owner);
+  const ownerLbl=ownerName(owner);
+
+  // 头像：只渲染 4 个家人，不再有"全家"
+  const avatars=members.map(m=>`<button class="avatar-chip ${owner===m.id?'active':''}" onclick="setOwner('${m.id}')"><span class="ava" style="background:${m.color}">${m.emoji}</span></button>`).join('');
+
+  // 一级 chip：固定顺序 = 全部 / 衣物 / 家电 / 装备 / 护理（"全部"不可删）
+  const allChip=`<button class="chip ${activeCat==='全部'?'active':''}" onclick="setCat('全部')">全部</button>`;
+  const catChips=cats.map(c=>`<button class="chip ${activeCat===c.id?'active':''}" onclick="setCat('${c.id}')">${c.name}</button>`).join('');
+  const chipHtml=allChip+catChips;
+  // + 新分类（仅选了具体某人才出现）
+  const addCatChip='<button class="chip add-cat" onclick="askAddCat()">＋ 新分类</button>';
+
+  // header：大标题"${XX}的私人物品"，右侧 +（添加物品）
+  const addBtn='<button class="icon-btn" onclick="go(\'add\',\'manual\')">＋</button>';
+  const headerHtml=`<div class="topline"><div><h1 class="title sm">${ownerLbl}的私人物品</h1></div>${addBtn}</div>`;
+
+  // body
+  let body='';
+  if(activeCat==='clothes'){
+    body=seasonView(owner);
+  }else if(activeCat==='skincare'){
+    body=skincareView(owner);
+  }else if(activeCat==='全部'){
+    const list=ownerAssets(owner,'全部');
+    if(list.length){
+      body='<div class="asset-grid">'+list.map(assetCard).join('')+'</div>';
+    }else{
+      body='<div class="empty"><span>▦</span>还没有记录任何物品，点右上 ＋ 添加</div>';
+    }
+  }else{
+    const cat=cats.find(c=>c.id===activeCat);
+    const title=cat?.name||activeCat;
+    const list=ownerAssets(owner,activeCat);
+    const emoji=cat?.emoji||'📦';
+    if(list.length){
+      body='<div class="asset-grid">'+list.map(assetCard).join('')+'</div>';
+    }else{
+      body='<div class="empty"><span>'+emoji+'</span>'+ownerLbl+'还没有'+title+'</div>';
+    }
+  }
+
+  app.innerHTML='<section class="page">'+headerHtml+
+'<div class="avatar-switch">'+avatars+'</div>'+
+'<div class="chip-wrap">'+chipHtml+addCatChip+'</div>'+
+body+
+'</section>'+modal();
+  setTabbar();
+}
+
+// 衣物一级下：固定二级 chip（春/夏/秋/冬，可切换不消失） + 三级 chip（上装/下装/裙子） + 物品
+function seasonView(owner){
+  const seasonList=['全部','春','夏','秋','冬'];
+  const seasonChip=seasonList.map(s=>`<button class="chip ${activeSeason===s?'active':''}" onclick="setSeason('${s}')">${s}</button>`).join('');
+
+  // 先按季节过滤
+  let list=ownerAssets(owner,'clothes');
+  if(activeSeason!=='全部') list=list.filter(a=>a.season===activeSeason);
+
+  // 三级 chip（全部/上装/下装/裙子）
+  const subtypeList=['全部','上装','下装','裙子'];
+  const subtypeChip=subtypeList.map(s=>`<button class="chip ${activeSubtype===s?'active':''}" onclick="setSubtype('${s}')">${s}</button>`).join('');
+
+  // 再按上装/下装过滤
+  if(activeSubtype!=='全部') list=list.filter(a=>a.subtype===activeSubtype);
+
+  const inside='<div class="chips">'+seasonChip+'</div><div class="chips">'+subtypeChip+'</div>';
+
+  // 折叠区：当前 owner 的已处理衣物
+  const allArchived=assets.filter(a=>a.owner===owner && a.cat==='clothes' && a.status && a.status!=='active');
+  let archiveHtml='';
+  if(allArchived.length){
+    const expandedHtml=showArchived
+      ? '<div class="asset-grid">'+allArchived.map(assetCard).join('')+'</div>'
+      : '';
+    const chev=showArchived?'▾':'▸';
+    archiveHtml='<div class="archive-fold">'+
+      `<button class="archive-toggle" onclick="toggleArchived()"><span class="chev">${chev}</span> 已处理 ${allArchived.length} 件</button>`+
+      expandedHtml+'</div>';
+  }
+
+  if(!list.length){
+    let msg='衣物';
+    if(activeSeason!=='全部' && activeSubtype!=='全部') msg=`${activeSeason}季${activeSubtype}`;
+    else if(activeSeason!=='全部') msg=`${activeSeason}季`;
+    else if(activeSubtype!=='全部') msg=`${activeSubtype}`;
+    return inside+'<div class="empty"><span>👕</span>还没有'+msg+'物品</div>'+archiveHtml;
+  }
+  return inside+'<div class="asset-grid">'+list.map(assetCard).join('')+'</div>'+archiveHtml;
+}
+function toggleArchived(){ showArchived=!showArchived; render(); }
+
+function skincareView(owner){
+  const list=ownerSkincare(owner);
+  if(!list.length){
+    const ownerLbl=ownerName(owner==='all'?'null':owner);
+    return '<div class="empty"><span>🧴</span>'+ownerLbl+'还没有护理品</div>';
+  }
+  return '<div class="list">'+list.map(skCard).join('')+'</div>';
+}
+
+// 护理卡：去掉"剩 X%" + 加"标记在用这瓶用完"入口
+function skCard(item){
+  const total=totalBottles(item);
+  const stk=sealed(item);
+  const u=inUse(item);
+  const used=finishedCount(item);
+  const inUseN=inUseCount(item);
+  const info=u?usageInfo(item):null;
+  let inUseText='';
+  if(u&&info){
+    const cls=info.isExpiring?'pill alert':'pill ok';
+    inUseText=`<div style="margin:6px 0 0"><span class="${cls}">在用</span> <span style="color:var(--muted);font-size:12.5px">开瓶 ${info.opened.slice(5)} · PAO 还剩 ${info.monthsLeft.toFixed(1)} 个月</span></div>`;
+  }
+  // 标记用完按钮（仅在有 in_use 时显示）
+  const finishBtn=inUseN?`<button class="sk-finish-btn" onclick="event.stopPropagation();skFinishCurrent('${item.id}')">标记这瓶用完</button>`:'';
+  return `<div class="skincare-card" onclick="openSk('${item.id}')">
+    <div class="skincare-head">
+      <div class="emoji-box">${item.emoji}</div>
+      <div style="flex:1;min-width:0"><strong>${item.sku}</strong><small>${item.spec||''}</small></div>
+      <div class="sk-actions">
+        ${finishBtn}
+        <span class="total-pill">${total} 瓶</span>
+      </div>
+    </div>
+    ${inUseText}
+    <div class="stat-row">
+      <div class="stat-cell"><strong>${stk}</strong>未开封</div>
+      <div class="stat-cell"><strong>${inUseN}</strong>在用</div>
+      <div class="stat-cell"><strong>${used}</strong>用完</div>
+    </div>
+  </div>`;
+}
+
+function openSk(id){
+  const item=skincare.find(s=>s.id===id);
+  if(!item) return;
+  activeSkItem=item; render();
+}
+function closeSk(){ activeSkItem=null; render(); }
+function skAddBottle(id){
+  const item=skincare.find(s=>s.id===id); if(!item) return;
+  const nextIdx=item.instances.reduce((m,x)=>Math.max(m,x.idx),0)+1;
+  item.instances.push({idx:nextIdx,status:'sealed'});
+  toast('已新增 1 瓶 '+item.sku); render();
+}
+function skOpenNew(id){
+  const item=skincare.find(s=>s.id===id); if(!item) return;
+  const sealedInst=item.instances.find(x=>x.status==='sealed');
+  if(!sealedInst){toast('库存已空，请先新增一瓶');return;}
+  sealedInst.status='in_use';
+  sealedInst.openedAt='2026-08-26';
+  sealedInst.remaining=100;
+  toast('已开启新 1 瓶 '+item.sku); render();
+}
+function skFinishCurrent(id){
+  const item=skincare.find(s=>s.id===id); if(!item) return;
+  const u=inUse(item);
+  if(!u){toast('当前没有在用的瓶子');return;}
+  u.status='finished'; u.finishedAt='2026-08-26';
+  toast('已通知系统：'+item.sku+' 1 瓶用完'); render();
+}
+function skFinishBottle(id, bottleIdx){
+  const item=skincare.find(s=>s.id===id); if(!item) return;
+  const b=item.instances.find(x=>x.idx===bottleIdx); if(!b) return;
+  if(b.status==='sealed'){ toast('这瓶还没开，不能标记用完'); return; }
+  if(b.status==='finished'){ toast('这瓶已是「已用完」状态'); return; }
+  b.status='finished'; b.finishedAt='2026-08-26';
+  toast('已通知系统：'+item.sku+' 第 '+bottleIdx+' 瓶用完'); render();
+}
+function skStartBottle(id, bottleIdx){
+  const item=skincare.find(s=>s.id===id); if(!item) return;
+  const b=item.instances.find(x=>x.idx===bottleIdx); if(!b) return;
+  if(b.status!=='sealed'){ toast('只能开启「未开封」的瓶子'); return; }
+  b.status='in_use'; b.openedAt='2026-08-26'; b.remaining=100;
+  toast('已开启第 '+bottleIdx+' 瓶 '+item.sku); render();
+}
+
+function askAddCat(){
+  if(currentOwner==='all'){toast('请先选一位具体的家人');return;}
+  showModal('新建分类','为 '+ownerName(currentOwner)+' 添加一个一级分类',[
+    {label:'名称', type:'text', placeholder:'例如：药品', id:'newCatName'}
+  ],()=>{
+    const v=document.querySelector('#newCatName')?.value?.trim();
+    if(!v){toast('请输入分类名');return;}
+    if(ownerCategories[currentOwner].some(c=>c.name===v)){toast('已存在同名分类');return;}
+    ownerCategories[currentOwner].push({id:'cat_'+Date.now(), name:v, emoji:'📦', lock:false});
+    activeCat='cat_'+Date.now();
+    toast('已添加：'+v); closeModal(); render();
+  });
+}
+
+// ============ 家当页（全家共用） ============
+function setFsCat(c){ activeFsCat=c; render(); }
+
+function familyStorePage(){
+  // 过滤 + 全用完不显示（耐用家电永远保留）
+  const filtered0=activeFsCat==='全部'?familyStore:familyStore.filter(x=>x.cat===activeFsCat);
+  const visibleFS=filtered0.filter(item=>{
+    if(item.isDurable) return true;
+    const s=sealed(item), iu=inUseCount(item);
+    return !(s===0 && iu===0); // 全部 finished 才隐藏
+  });
+
+  const chips=familyStoreCats.map(c=>`<button class="chip ${activeFsCat===c?'active':''}" onclick="setFsCat('${c}')">${c}</button>`).join('');
+  const listHtml=visibleFS.map(fsRow).join('');
+  const fsAddBtn='<button class="icon-btn" onclick="toast(\'全家共用物品可由任一家人添加\')">＋</button>';
+  app.innerHTML='<section class="page">'+
+    headerLine('全家共用', fsAddBtn).replace('<h1 class="title">全家共用</h1>','<h1 class="title">家当</h1>')+
+'<div class="chips">'+chips+'</div>'+
+'<div class="sub" style="font-size:12.5px;margin:-4px 0 10px;color:var(--muted)">洗发膏、沐浴露、锅碗瓢勺、大家电等</div>'+
+'<div class="list">'+listHtml+'</div>'+
+'</section>'+modal();
+  setTabbar();
+}
+
+function fsRow(item){
+  if(item.isDurable){
+    const pricePart=item.price?' · ¥'+item.price:'';
+    return '<div class="row"><div class="row-emoji">'+item.emoji+'</div><div class="row-main"><strong>'+item.sku+'</strong><small>'+(item.spec||'')+' · '+(item.place||'')+pricePart+'</small></div><span class="chev">›</span></div>';
+  }
+  // 洗护/厨房消耗品：上下两块（顶部主体 + 三按钮等分一排）
+  const stk=sealed(item), u=inUse(item), used=finishedCount(item), total=totalBottles(item);
+  const info=u?usageInfo(item):null;
+  let inUseText='';
+  if(u&&info){
+    const cls=info.isExpiring?'pill alert':'pill ok';
+    inUseText='<div style="margin-top:4px"><span class="'+cls+'">在用</span> <span style="color:var(--muted);font-size:12.5px">开瓶 '+info.opened.slice(5)+' · PAO 剩 '+info.monthsLeft.toFixed(1)+' 个月</span></div>';
+  }
+  const row='<div class="row liquid">'+
+    '<div class="row-top">'+
+      '<div class="row-emoji">'+item.emoji+'</div>'+
+      '<div class="row-main"><strong>'+item.sku+'</strong><small>'+(item.spec||'')+' · '+item.cat+'</small>'+inUseText+'</div>'+
+      '<span class="total-pill">'+total+' 瓶</span>'+
+    '</div>'+
+    '<div class="row-actions">'+
+      '<button class="primary" onclick="fsAddBottle(\''+item.id+'\')">＋ 加一瓶</button>'+
+      '<button onclick="fsOpenNew(\''+item.id+'\')" '+(stk?'':'disabled')+'>新开一瓶</button>'+
+      '<button class="warn" onclick="fsFinishCurrent(\''+item.id+'\')" '+(u?'':'disabled')+'>用完</button>'+
+    '</div>'+
+  '</div>';
+  return row;
+}
+function fsAddBottle(id){
+  const item=familyStore.find(s=>s.id===id); if(!item) return;
+  const nextIdx=item.instances.reduce((m,x)=>Math.max(m,x.idx),0)+1;
+  item.instances.push({idx:nextIdx,status:'sealed'});
+  toast('已新增 1 瓶 '+item.sku); render();
+}
+function fsOpenNew(id){
+  const item=familyStore.find(s=>s.id===id); if(!item) return;
+  const sealedInst=item.instances.find(x=>x.status==='sealed');
+  if(!sealedInst){toast('库存已空，请先新增一瓶');return;}
+  sealedInst.status='in_use'; sealedInst.openedAt='2026-08-26'; sealedInst.remaining=100;
+  toast('已开启新 1 瓶 '+item.sku); render();
+}
+function fsFinishCurrent(id){
+  const item=familyStore.find(s=>s.id===id); if(!item) return;
+  const u=inUse(item); if(!u){toast('当前没有在用的瓶子');return;}
+  u.status='finished'; u.finishedAt='2026-08-26';
+  toast('已通知系统：'+item.sku+' 1 瓶用完'); render();
+}
+
+// ============ 添加页 ============
+function addPage(){
+  const modes=[['order','拍订单'],['photo','拍包装'],['manual','手动添加']];
+  const mode=addMode;
+  let body;
+  if(mode==='manual'){
+    const ownerDefault=currentOwner;
+    body=renderManualForm(ownerDefault);
+  }else{
+    const icon=mode==='order'?'🧾':'📦';
+    const title=mode==='order'?'上传订单截图':'拍摄或上传包装照片';
+    body='<div class="dropzone" onclick="toast(\'演示模式：已打开相册选择器\')"><span>'+icon+'</span><strong>'+title+'</strong><small>支持 JPG、PNG · AI 会自动识别物品信息</small></div>'+
+      '<div class="section-head"><h2>AI 会识别</h2></div>'+
+      '<div class="list">'+
+        '<div class="row"><div class="row-emoji">✦</div><div class="row-main"><strong>品牌与品名</strong><small>自动提取商品核心信息</small></div><span class="chev">✓</span></div>'+
+        '<div class="row"><div class="row-emoji">⌁</div><div class="row-main"><strong>分类与位置建议</strong><small>根据家庭习惯智能归类</small></div><span class="chev">✓</span></div>'+
+        '<div class="row"><div class="row-emoji">👤</div><div class="row-main"><strong>所有人建议</strong><small>默认给当前选中的家庭成员</small></div><span class="chev">✓</span></div>'+
+      '</div>';
+  }
+  app.innerHTML='<section class="page">'+headerLine('添加物品').replace('<h1 class="title">添加物品</h1>','<h1 class="title sm">添加物品</h1>')+
+'<div class="mode-tabs">'+(modes.map(m=>`<button class="chip ${mode===m[0]?'active':''}" onclick="setAddMode('${m[0]}')" style="flex:1;text-align:center">${m[1]}</button>`).join(''))+'</div>'+
+body+
+'</section>'+modal();
+  setTabbar();
+}
+
+// 手动添加：上传拍照 → AI 抠图 → 毛玻璃预览 → 自动识别字段 → 表单提交
+window._photoState={src:null,processing:false,processed:false,identifiedName:'',identifiedCat:'',identifiedPlace:''};
+
+function renderManualForm(owner){
+  const ps=window._photoState;
+  const ownerOpts=members.map(m=>`<option value="${m.id}" ${m.id===owner?'selected':''}>${m.name}（${m.emoji}）</option>`).join('');
+
+  // 上传 dropzone 或 AI 抠图预览
+  let photoBlock;
+  if(!ps.src){
+    photoBlock=`
+      <div class="dropzone" onclick="document.querySelector('#manualPhoto').click()">
+        <span>📷</span>
+        <strong>拍照或上传物品照片</strong>
+        <small>支持 JPG、PNG · AI 会自动抠图去背景 · 毛玻璃风格展示</small>
+      </div>
+      <input type="file" id="manualPhoto" accept="image/*" capture="environment" style="display:none" onchange="onManualPhoto(this)" />
+    `;
+  }else if(ps.processing){
+    photoBlock=`
+      <div class="ai-preview processing">
+        <div class="bg"></div>
+        <img class="raw" src="${ps.src}" alt="" />
+        <div class="ai-overlay">
+          <div class="spinner"></div>
+          <strong>AI 抠图处理中</strong>
+          <small>正在去除背景 · 识别品牌与品类</small>
+        </div>
+      </div>
+    `;
+  }else{
+    photoBlock=`
+      <div class="ai-preview done">
+        <div class="bg"></div>
+        <img class="cutout" src="${ps.src}" alt="" />
+        <div class="ai-tag"><span class="dot"></span>已自动抠图 · 毛玻璃背景</div>
+        <div class="ai-tips">
+          <div class="row-item"><span class="k">🏷 品牌</span><span class="v">${ps.identifiedBrand||'AI 推断'}</span></div>
+          <div class="row-item"><span class="k">📦 品名</span><span class="v">${ps.identifiedName||'识别中'}</span></div>
+          <div class="row-item"><span class="k">📂 建议归入</span><span class="v">${ps.identifiedCat||'衣物'}</span></div>
+          <div class="row-item"><span class="k">📍 位置建议</span><span class="v">${ps.identifiedPlace||'主卧衣柜'}</span></div>
+        </div>
+      </div>
+      <button class="manual-retry" onclick="resetManualPhoto()">↺ 重新拍照</button>
+    `;
+  }
+
+  // 表单（已识别后名称/分类/位置会被自动填）
+  const form=`
+    <div class="card form-card">
+      <div class="field"><label>物品名称</label><input id="itemName" placeholder="例如：Uniqlo 羽绒服" value="${ps.processed?(ps.identifiedName||''):''}" /></div>
+      <div class="field"><label>所属分类</label>
+        <select id="itemCat">
+          ${['衣物','家电','装备','护理'].map(c=>`<option ${(ps.processed && ps.identifiedCat===c)?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>存放位置</label><input id="itemPlace" placeholder="例如：主卧衣柜" value="${ps.processed?(ps.identifiedPlace||''):''}" /></div>
+      <div class="field"><label>所有人</label>
+        <select id="itemOwner">${ownerOpts}</select>
+        <small style="color:var(--muted);font-size:12px;display:block;margin-top:4px">当前选中的是「${ownerName(owner)}」，保存后将进入他的私物</small>
+      </div>
+      <button class="primary" onclick="saveItem()">保存到${ownerName(owner)}的私物</button>
+    </div>
+  `;
+  return photoBlock + form;
+}
+
+function onManualPhoto(input){
+  const file=input.files&&input.files[0];
+  if(!file) return;
+  // demo：FileReader 读为 dataURL；非浏览器环境（jsdom）下 dataURL 也安全
+  const reader=new FileReader();
+  reader.onload=e=>{
+    window._photoState.src=e.target.result;
+    window._photoState.processing=true;
+    render();
+    // 模拟 AI 抠图 + 识别 1.5s
+    setTimeout(()=>{
+      window._photoState.processing=false;
+      window._photoState.processed=true;
+      window._photoState.identifiedBrand='AI 推断';
+      window._photoState.identifiedName='AI 识别：'+ (['冲锋衣','连衣裙','卫衣','双肩包','护手霜'][Math.floor(Math.random()*5)]);
+      window._photoState.identifiedCat='衣物';
+      window._photoState.identifiedPlace='主卧衣柜';
+      toast('AI 已完成抠图 · 自动识别已就绪');
+      render();
+    },1500);
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetManualPhoto(){
+  window._photoState={src:null,processing:false,processed:false,identifiedName:'',identifiedCat:'',identifiedPlace:''};
+  const fi=document.querySelector('#manualPhoto'); if(fi) fi.value='';
+  render();
+}
+
+function saveItem(){
+  const n=document.querySelector('#itemName')?.value?.trim();
+  if(!n){toast('请先填写物品名称');return;}
+  const o=document.querySelector('#itemOwner')?.value||'me';
+  toast('已添加「'+n+'」到 '+ownerName(o)+' 的私物');
+  // 清理照片态，回到私物页
+  window._photoState={src:null,processing:false,processed:false,identifiedName:'',identifiedCat:'',identifiedPlace:''};
+  setTimeout(()=>{setOwner(o); go('assets');}, 500);
+}
+
+// ============ 衣物/资产详情 ============
+function openAsset(id){
+  const item=assets.find(a=>a.id===id);
+  if(!item) return;
+  activeAsset=item; render();
+}
+function closeAsset(){ activeAsset=null; render(); }
+function markSold(id){
+  const a=assets.find(x=>x.id===id); if(!a) return;
+  a.status='sold'; a.statusDate='2026-08-26';
+  toast('已标记「卖出」：'+a.sku);
+  closeAsset();
+}
+function markDiscarded(id){
+  const a=assets.find(x=>x.id===id); if(!a) return;
+  a.status='discarded'; a.statusDate='2026-08-26';
+  toast('已标记「丢弃」：'+a.sku);
+  closeAsset();
+}
+function restoreAsset(id){
+  const a=assets.find(x=>x.id===id); if(!a) return;
+  a.status='active'; delete a.statusDate;
+  toast('已恢复为在用：'+a.sku);
+  render();
+}
+function toggleArchived(){ showArchived=!showArchived; render(); }
+
+// ============ 模态弹层 ============
+let modalState=null;
+function modal(){
+  // 1) 衣物 / 资产详情（含"卖掉了 / 丢掉了"）
+  if(activeAsset){
+    const a=activeAsset;
+    const archived=a.status&&a.status!=='active';
+    let statusHtml='';
+    if(archived){
+      const label=a.status==='sold'?'已卖出':'已丢弃';
+      const date=a.statusDate?a.statusDate.slice(5):'';
+      const cls=a.status==='discarded'?'detail-status discarded':'detail-status ok';
+      statusHtml='<div class="'+cls+'">'+label+(date?' · '+date:'')+'</div>'+
+        '<div class="detail-restore"><button onclick="restoreAsset(\''+a.id+'\')">↺ 撤销处理，恢复为在用</button></div>';
+    }else{
+      statusHtml='<div class="detail-status ok">● 在用</div>';
+    }
+    const seasonLine=a.season?('<div class="detail-row"><span class="k">季节</span><span class="v">'+a.season+'</span></div>'):'';
+    const subtypeLine=a.subtype?('<div class="detail-row"><span class="k">款式</span><span class="v">'+a.subtype+'</span></div>'):'';
+    const wearsLine=a.wears?('<div class="detail-row"><span class="k">穿着次数</span><span class="v">'+a.wears+' 次</span></div>'):'';
+    const priceLine=a.price?('<div class="detail-row"><span class="k">买入价</span><span class="v">¥'+a.price+'</span></div>'):'';
+    const buyDateLine=a.buyDate?('<div class="detail-row"><span class="k">购入日期</span><span class="v">'+a.buyDate+'</span></div>'):'';
+    const costLine=(a.wears&&a.price)?('<div class="detail-row"><span class="k">单次成本</span><span class="v">¥'+Math.round(a.price/Math.max(a.wears,1))+'/次</span></div>'):'';
+    const isClothes=a.cat==='clothes';
+    const actionRow=archived
+      ? ''
+      : '<div class="detail-actions">'+
+          '<button onclick="toast(\'修改信息 — Demo 暂未实装\')">✏ 修改</button>'+
+          '<button class="warn" onclick="markDiscarded(\''+a.id+'\')">🗑 丢掉了</button>'+
+          '<button class="primary" onclick="markSold(\''+a.id+'\')">💰 卖掉了</button>'+
+        '</div>';
+    return '<div class="modal-back" onclick="closeAsset()"><div class="modal" onclick="event.stopPropagation()">'+
+      '<h3>'+a.emoji+' '+a.sku+'</h3>'+
+      '<p class="sub">'+ownerName(a.owner)+'的'+(isClothes?'衣物':'物品')+'</p>'+
+      seasonLine+subtypeLine+
+      '<div class="detail-row"><span class="k">所属分类</span><span class="v">'+(isClothes?'衣物':a.cat)+'</span></div>'+
+      '<div class="detail-row"><span class="k">存放位置</span><span class="v">'+(a.place||'-')+'</span></div>'+
+      priceLine+buyDateLine+wearsLine+costLine+
+      statusHtml+actionRow+
+      '<div class="modal-actions"><button class="cancel" onclick="closeAsset()">关闭</button></div>'+
+    '</div></div>';
+  }
+  // 2) 护肤详情（每瓶带"标记用完/启用"入口）
+  if(activeSkItem){
+    const item=activeSkItem;
+    const bottleList=item.instances.map(b=>{
+      let tag='<span class="bottle-tag sealed">未开封</span>';
+      let extra='';
+      let action='';
+      if(b.status==='in_use'){
+        tag='<span class="bottle-tag inuse">在用</span>';
+        extra=' · 开瓶 '+b.openedAt.slice(5);
+        action='<button class="bottle-action" onclick="skFinishBottle(\''+item.id+'\','+b.idx+')">标记用完</button>';
+      } else if(b.status==='finished'){
+        tag='<span class="bottle-tag finished">已用完</span>';
+        extra=b.finishedAt?' · 用完于 '+b.finishedAt.slice(5):'';
+      } else if(b.status==='sealed'){
+        action='<button class="bottle-action start" onclick="skStartBottle(\''+item.id+'\','+b.idx+')">启用此瓶</button>';
+      }
+      return '<div class="bottle-row">'+tag+'<span>第 '+b.idx+' 瓶'+extra+'</span>'+action+'</div>';
+    }).join('');
+    return '<div class="modal-back" onclick="closeSk()"><div class="modal" onclick="event.stopPropagation()"><h3>'+item.sku+'</h3><p class="sub">'+(item.spec||'')+' · PAO '+(item.paoMonths||'?')+' 个月 · 所有人 '+ownerName(item.owner)+'</p>'+bottleList+'<div class="modal-actions"><button class="cancel" onclick="closeSk()">关闭</button><button class="ok" onclick="skAddBottle(\''+item.id+'\')">＋ 加一瓶</button></div></div></div>';
+  }
+  // 3) 通用 modal
+  if(modalState){
+    const fields=modalState.fields.map(f=>'<div class="field"><label>'+f.label+'</label><input id="'+f.id+'" placeholder="'+(f.placeholder||'')+'" /></div>').join('');
+    const okLabel=modalState.okLabel||'确定';
+    return '<div class="modal-back" onclick="closeModal()"><div class="modal" onclick="event.stopPropagation()"><h3>'+modalState.title+'</h3><p class="sub">'+modalState.sub+'</p>'+fields+'<div class="modal-actions"><button class="cancel" onclick="closeModal()">取消</button><button class="ok" onclick="('+modalState.onOk.toString()+')()">'+okLabel+'</button></div></div></div>';
+  }
+  return '';
+}
+function showModal(title,sub,fields,onOk,okLabel){
+  modalState={title:title,sub:sub,fields:fields,onOk:onOk,okLabel:okLabel};
+  render();
+}
+function closeModal(){ modalState=null; render(); }
+
+// ============ render ============
+function render(){
+  const fn={home,assets:assetsPage,add:addPage,'family-store':familyStorePage}[currentRoute]||home;
+  fn();
+}
+
+// ============ toast ============
+function toast(msg){
+  const t=document.querySelector('#toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// 暴露给 onclick
+window.go=go;window.setOwner=setOwner;window.setCat=setCat;window.setSeason=setSeason;window.setSubtype=setSubtype;window.setFsCat=setFsCat;
+window.openSk=openSk;window.closeSk=closeSk;
+window.openAsset=openAsset;window.closeAsset=closeAsset;
+window.markSold=markSold;window.markDiscarded=markDiscarded;window.restoreAsset=restoreAsset;
+window.toggleArchived=toggleArchived;
+window.skAddBottle=skAddBottle;window.skOpenNew=skOpenNew;window.skFinishCurrent=skFinishCurrent;
+window.skFinishBottle=skFinishBottle;window.skStartBottle=skStartBottle;
+window.fsAddBottle=fsAddBottle;window.fsOpenNew=fsOpenNew;window.fsFinishCurrent=fsFinishCurrent;
+window.askAddCat=askAddCat;
+window.showModal=showModal;window.closeModal=closeModal;
+window.toast=toast;window.saveItem=saveItem;
+window.onManualPhoto=onManualPhoto;window.resetManualPhoto=resetManualPhoto;
+window._data={skincare,assets,familyStore,ownerCategories};
+
+render();
+  </script>
+</body>
+</html>
