@@ -26,6 +26,7 @@ node server.js
 | DELETE | `/api/items/:id` | 删除 |
 | POST | `/api/inbox/process` | 处理 `inbox/` 下所有 `.json`，逐条写入 `items.json`；成功移 `done/`、失败移 `failed/` |
 | GET/POST | `/api/snapshot` | 生成只读 `snapshot.html`（按 owner 分组渲染全部物品） |
+| POST | `/api/recognize` | 智谱视觉识别：body `{image: base64, mime?}` → 返回结构化字段 `{name,brand,category,season,subtype,qty,place}`；需环境变量 `ZHIPU_API_KEY` |
 
 `season` 过滤为精确匹配。真实数据取值为 `四季/夏/春秋/冬`（共 4 档，历史数据含 `四季`）；新增物品按需求文档采用 `春秋/夏/冬` 三档，旧 `四季` 数据原样保留、向后兼容。
 
@@ -45,6 +46,22 @@ node server.js
 
 `GET/POST /api/snapshot` 把全部物品按 owner 分组渲染成静态 HTML 写到 `DATA_DIR/snapshot.html`，任意浏览器/设备打开即看，不依赖服务运行。兼容现有字段、不重塑。
 
+### 智谱视觉识别（拍照识物入库）
+
+`POST /api/recognize` 接收图片 base64（`{image, mime?}`），调用智谱 `glm-4v-plus` 视觉模型，返回结构化物品字段：
+
+```bash
+# 启动服务时需带 key（不写进代码）
+export ZHIPU_API_KEY='你的key'
+node server.js
+# 调用
+curl -X POST localhost:8787/api/recognize -H 'Content-Type: application/json' \
+  -d '{"image":"<base64>","mime":"image/png"}'
+# 返回 { "ok": true, "model": "glm-4v-plus", "result": {name,brand,category,season,subtype,qty,place} }
+```
+
+返回的字段可直接作为「拍订单/拍包装」流程的预填值，进入手动添加页确认入库。
+
 ## 数据零丢失
 
 写入采用「临时文件 + `rename`」原子操作，避免半写损坏。兼容现有 299 件真实 schema（`owner/category/name/status/subType/attrs/price/season/keep/brand`），新增字段直接原样落库。
@@ -55,4 +72,4 @@ node server.js
 node test/smoke.js
 ```
 
-使用临时副本、不触碰真实数据，覆盖 health / 列表 / owner·season·q 过滤 / 新增 / 读取 / 编辑 / 删除 / inbox 直写（含 qty 拆分与坏文件进 failed）/ snapshot 生成 / 原子写入无残留，22 项全过。
+使用临时副本、不触碰真实数据，覆盖 health / 列表 / owner·season·q 过滤 / 新增 / 读取 / 编辑 / 删除 / inbox 直写（含 qty 拆分与坏文件进 failed）/ snapshot 生成 / 原子写入无残留 / 智谱识图（纯函数 + 有 `ZHIPU_API_KEY` 时 live 真调），25 项全过。

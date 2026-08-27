@@ -6,6 +6,7 @@ const { PORT, ITEMS_FILE, DATA_DIR, INBOX_DIR, SNAPSHOT_FILE } = require('./conf
 const data = require('./closet-data');
 const inbox = require('./inbox');
 const snapshot = require('./snapshot');
+const recognize = require('./recognize');
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -62,6 +63,19 @@ const server = http.createServer(async (req, res) => {
       const items = data.loadItems();
       const file = snapshot.generateSnapshot(items, SNAPSHOT_FILE);
       return send(res, 200, { ok: true, file, count: items.length });
+    } catch (e) {
+      return send(res, 500, { error: e.message });
+    }
+  }
+
+  // 智谱视觉识别：输入图片(base64) => 结构化物品字段
+  if (p === '/api/recognize') {
+    if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' });
+    try {
+      const payload = await readBody(req);
+      if (!payload.image) return send(res, 400, { error: 'image base64 required' });
+      const result = await recognize.recognizeImage(payload.image, payload.mime || 'image/jpeg');
+      return send(res, 200, { ok: true, model: recognize.MODEL, result });
     } catch (e) {
       return send(res, 500, { error: e.message });
     }

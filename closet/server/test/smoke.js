@@ -7,6 +7,7 @@ const path = require('path');
 const SRC = '/Users/gongjiemei/WorkBuddy/travelling/closet/items.json';
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'closet-test-'));
 fs.copyFileSync(SRC, path.join(tmp, 'items.json'));
+const baseCount = JSON.parse(fs.readFileSync(path.join(tmp, 'items.json'), 'utf8')).length;
 process.env.CLOSET_DATA_DIR = tmp;
 process.env.CLOSET_INBOX_DIR = path.join(tmp, 'inbox');
 process.env.CLOSET_PORT = '8799';
@@ -35,7 +36,7 @@ async function main() {
 
   r = await fetch(base + '/api/items');
   let items = await r.json();
-  ok(Array.isArray(items) && items.length === 299, '列表返回 299 条');
+  ok(Array.isArray(items) && items.length === baseCount, '列表返回 ' + baseCount + ' 条');
 
   r = await fetch(base + '/api/items?owner=' + encodeURIComponent('铄铄'));
   let s = await r.json();
@@ -106,13 +107,30 @@ async function main() {
   // ===== snapshot 只读快照 =====
   r = await fetch(base + '/api/snapshot', { method: 'POST' });
   let sn = await r.json();
-  ok(r.ok && sn.count === 299, 'snapshot 生成，count=299');
+  ok(r.ok && sn.count === baseCount, 'snapshot 生成，count=' + baseCount);
   ok(fs.existsSync(sn.file), 'snapshot.html 已写出');
   const snapHtml = fs.readFileSync(sn.file, 'utf8');
   ok(snapHtml.includes('nike') && snapHtml.includes('洁梅'), 'snapshot 含真实物品(按 owner 分组渲染)');
 
   const after = JSON.parse(fs.readFileSync(path.join(tmp, 'items.json'), 'utf8'));
-  ok(after.length === 299, '文件在 新增+删除+inbox+清理 后回到 299 条（原子写入无残留）');
+  ok(after.length === baseCount, '文件在 新增+删除+inbox+清理 后回到 ' + baseCount + ' 条（原子写入无残留）');
+
+  // ===== 智谱识图（纯函数 + 有 key 才真调）=====
+  const recognize = require('../recognize');
+  const pj = recognize.parseJson('```json\n{"name":"X","qty":2}\n```');
+  ok(pj.name === 'X' && pj.qty === 2, 'parseJson 容错解析 markdown 围栏');
+  const pj2 = recognize.parseJson('前面巴拉巴拉 {"brand":"Y"} 后面');
+  ok(pj2.brand === 'Y', 'parseJson 从混杂文本截取 JSON');
+  if (process.env.ZHIPU_API_KEY && process.env.ZHIPU_TEST_IMG) {
+    const b64 = fs.readFileSync(process.env.ZHIPU_TEST_IMG).toString('base64');
+    const ext = path.extname(process.env.ZHIPU_TEST_IMG).slice(1).toLowerCase();
+    const mime = ext === 'png' ? 'image/png' : 'image/jpeg';
+    const rec = await recognize.recognizeImage(b64, mime);
+    ok(rec && rec.name, '智谱识图返回 name 字段 (live)');
+    console.log('   智谱 live 识别:', JSON.stringify(rec));
+  } else {
+    console.log('   (跳过智谱 live 识别：未设置 ZHIPU_API_KEY / ZHIPU_TEST_IMG)');
+  }
 
   server.close();
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);
