@@ -23,5 +23,9 @@ function resolveDataDir() {
 const PORT = parseInt(process.env.CLOSET_PORT || '8787', 10);
 const DATA_DIR = resolveDataDir();
 const ITEMS_FILE = path.join(DATA_DIR, 'items.json');
+// 快捷指令 inbox：默认 DATA_DIR/inbox，可经 CLOSET_INBOX_DIR 覆盖
+const INBOX_DIR = process.env.CLOSET_INBOX_DIR || path.join(DATA_DIR, 'inbox');
+// 只读快照输出路径
+const SNAPSHOT_FILE = path.join(DATA_DIR, 'snapshot.html');
 
-module.exports = { PORT, DATA_DIR, ITEMS_FILE, resolveDataDir };
+module.exports = { PORT, DATA_DIR, ITEMS_FILE, INBOX_DIR, SNAPSHOT_FILE, resolveDataDir };

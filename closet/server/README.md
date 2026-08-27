@@ -24,8 +24,26 @@ node server.js
 | GET  | `/api/items/:id` | 单条详情 |
 | PUT/PATCH | `/api/items/:id` | 编辑（合并补丁，`id` 不可改） |
 | DELETE | `/api/items/:id` | 删除 |
+| POST | `/api/inbox/process` | 处理 `inbox/` 下所有 `.json`，逐条写入 `items.json`；成功移 `done/`、失败移 `failed/` |
+| GET/POST | `/api/snapshot` | 生成只读 `snapshot.html`（按 owner 分组渲染全部物品） |
 
 `season` 过滤为精确匹配。真实数据取值为 `四季/夏/春秋/冬`（共 4 档，历史数据含 `四季`）；新增物品按需求文档采用 `春秋/夏/冬` 三档，旧 `四季` 数据原样保留、向后兼容。
+
+### 快捷指令 inbox（iOS 离线直写）
+
+`inbox/` 目录（默认 `DATA_DIR/inbox`，可经 `CLOSET_INBOX_DIR` 覆盖）下放一个或多个 `.json`，每个文件即一条物品：
+
+```json
+{ "owner": "洁梅", "category": "日用", "name": "卸妆水", "subType": "卸妆", "season": "四季", "brand": "XXX", "attrs": {"容量":"400ml"}, "qty": 1 }
+```
+
+- 调 `POST /api/inbox/process` 即合并进 `items.json`（经 `createItem`，自动补 `id`/`status=在册`）。
+- `qty>1` 拆成多条；缺 `name` 或 JSON 损坏的文件移到 `failed/`，不丢数据。
+- 苹果快捷指令把拍好的物品写成该目录文件即可离线入库，服务联网后处理。
+
+### 只读快照 snapshot.html
+
+`GET/POST /api/snapshot` 把全部物品按 owner 分组渲染成静态 HTML 写到 `DATA_DIR/snapshot.html`，任意浏览器/设备打开即看，不依赖服务运行。兼容现有字段、不重塑。
 
 ## 数据零丢失
 
@@ -37,4 +55,4 @@ node server.js
 node test/smoke.js
 ```
 
-使用临时副本、不触碰真实数据，覆盖 health / 列表 / owner·season·q 过滤 / 新增 / 读取 / 编辑 / 删除 / 原子写入无残留，14 项全过。
+使用临时副本、不触碰真实数据，覆盖 health / 列表 / owner·season·q 过滤 / 新增 / 读取 / 编辑 / 删除 / inbox 直写（含 qty 拆分与坏文件进 failed）/ snapshot 生成 / 原子写入无残留，22 项全过。

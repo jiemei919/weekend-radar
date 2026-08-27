@@ -1,4 +1,4 @@
-// 冒烟测试：起服务 → 调接口 → 验证 items.json 读写 + iCloud 路径回落
+// 冒烟测试：起服务 → 调接口 → 验证 items.json 读写 + iCloud 路径回落 + inbox + snapshot
 // 使用临时数据目录，绝不触碰真实 items.json
 const fs = require('fs');
 const os = require('os');
@@ -8,6 +8,7 @@ const SRC = '/Users/gongjiemei/WorkBuddy/travelling/closet/items.json';
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'closet-test-'));
 fs.copyFileSync(SRC, path.join(tmp, 'items.json'));
 process.env.CLOSET_DATA_DIR = tmp;
+process.env.CLOSET_INBOX_DIR = path.join(tmp, 'inbox');
 process.env.CLOSET_PORT = '8799';
 
 const server = require('../server.js');
@@ -77,8 +78,41 @@ async function main() {
   r = await fetch(base + '/api/items/' + created.id);
   ok(r.status === 404, '删除后 404');
 
+  // ===== inbox 离线直写 =====
+  const inboxDir = path.join(tmp, 'inbox');
+  fs.mkdirSync(inboxDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(inboxDir, 'in1.json'),
+    JSON.stringify({ owner: '洁梅', category: '日用', name: 'inbox测试物品', season: '四季', qty: 2 })
+  );
+  // 一个缺 name 的坏文件，应进 failed/
+  fs.writeFileSync(path.join(inboxDir, 'bad.json'), JSON.stringify({ category: '日用' }));
+
+  r = await fetch(base + '/api/inbox/process', { method: 'POST' });
+  let ib = await r.json();
+  ok(r.ok && ib.processed === 1, 'inbox 处理 1 条成功 (processed=' + ib.processed + ')');
+  ok(ib.failed === 1, 'inbox 坏文件 1 条进 failed (failed=' + ib.failed + ')');
+
+  r = await fetch(base + '/api/items?q=' + encodeURIComponent('inbox测试物品'));
+  let ibItems = await r.json();
+  ok(ibItems.length === 2, 'inbox 写入 2 件 (qty=2)');
+  ok(fs.existsSync(path.join(inboxDir, 'done', 'in1.json')), '成功文件移到 done/');
+  ok(fs.existsSync(path.join(inboxDir, 'failed', 'bad.json')), '坏文件移到 failed/');
+  // 清理 inbox 写入的 2 件，回到 299
+  for (const it of ibItems) {
+    await fetch(base + '/api/items/' + it.id, { method: 'DELETE' });
+  }
+
+  // ===== snapshot 只读快照 =====
+  r = await fetch(base + '/api/snapshot', { method: 'POST' });
+  let sn = await r.json();
+  ok(r.ok && sn.count === 299, 'snapshot 生成，count=299');
+  ok(fs.existsSync(sn.file), 'snapshot.html 已写出');
+  const snapHtml = fs.readFileSync(sn.file, 'utf8');
+  ok(snapHtml.includes('nike') && snapHtml.includes('洁梅'), 'snapshot 含真实物品(按 owner 分组渲染)');
+
   const after = JSON.parse(fs.readFileSync(path.join(tmp, 'items.json'), 'utf8'));
-  ok(after.length === 299, '文件在 新增+删除 后回到 299 条（原子写入无残留）');
+  ok(after.length === 299, '文件在 新增+删除+inbox+清理 后回到 299 条（原子写入无残留）');
 
   server.close();
   console.log(`\n结果: ${pass} 通过, ${fail} 失败`);

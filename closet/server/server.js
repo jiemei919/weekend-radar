@@ -2,8 +2,10 @@
 // 零依赖：仅用 Node 内置 http，免 npm install。洁梅只需 `node server.js`。
 const http = require('http');
 const { URL } = require('url');
-const { PORT, ITEMS_FILE, DATA_DIR } = require('./config');
+const { PORT, ITEMS_FILE, DATA_DIR, INBOX_DIR, SNAPSHOT_FILE } = require('./config');
 const data = require('./closet-data');
+const inbox = require('./inbox');
+const snapshot = require('./snapshot');
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -40,6 +42,30 @@ const server = http.createServer(async (req, res) => {
   const p = url.pathname;
 
   if (p === '/health') return send(res, 200, { ok: true, dataDir: DATA_DIR, itemsFile: ITEMS_FILE });
+
+  // 快捷指令 inbox 离线直写：处理 inbox/ 下所有 .json
+  if (p === '/api/inbox/process') {
+    if (req.method !== 'POST') return send(res, 405, { error: 'method not allowed' });
+    try {
+      const results = inbox.processInbox(INBOX_DIR);
+      return send(res, 200, { ok: true, ...results });
+    } catch (e) {
+      return send(res, 500, { error: e.message });
+    }
+  }
+
+  // 只读快照：生成 snapshot.html
+  if (p === '/api/snapshot') {
+    if (req.method !== 'GET' && req.method !== 'POST')
+      return send(res, 405, { error: 'method not allowed' });
+    try {
+      const items = data.loadItems();
+      const file = snapshot.generateSnapshot(items, SNAPSHOT_FILE);
+      return send(res, 200, { ok: true, file, count: items.length });
+    } catch (e) {
+      return send(res, 500, { error: e.message });
+    }
+  }
 
   const m = p.match(/^\/api\/items(?:\/([^/]+))?$/);
   if (!m) return send(res, 404, { error: 'unknown route' });
