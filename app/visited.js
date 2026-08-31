@@ -697,6 +697,19 @@ window.VISITED = {
    "policy": "exclude"
   },
   {
+   "name": "天露山",
+   "region": "广东",
+   "city": "云浮",
+   "policy": "block",
+   "blockReason": "去过非常不好玩，永不推"
+  },
+  {
+   "name": "南沙滨海",
+   "region": "广东",
+   "city": "广州",
+   "policy": "exclude"
+  },
+  {
    "name": "南武当",
    "region": "江西",
    "city": "",
